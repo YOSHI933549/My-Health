@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [claude/x-post-analysis-automation-q3c52t]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
