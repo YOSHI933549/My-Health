@@ -200,6 +200,34 @@ main#app {
   color: var(--text);
 }
 
+.settings-group > summary,
+.settings-details > summary {
+  cursor: pointer;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.settings-group > summary {
+  font-size: 14.5px;
+}
+
+.settings-group[open] > summary {
+  margin-bottom: 16px;
+}
+
+.settings-section {
+  border-top: 1px solid var(--border);
+  margin-top: 18px;
+  padding-top: 18px;
+}
+
+.settings-details {
+  border-top: 1px solid var(--border);
+  margin-top: 14px;
+  padding-top: 12px;
+  font-size: 13px;
+}
+
 .notice {
   background: var(--primary-tint);
   border: 1px solid var(--primary);
