@@ -7,7 +7,8 @@
     "build:web": "node scripts/build-web.mjs",
     "ios:sync": "npm run build:web && cap sync ios",
     "ios:open": "npm run ios:sync && cap open ios",
-    "check": "node --check js/app.js && node --check js/sync.js && node --check js/n8n-sync.js && node --check js/ocr.js && node --check js/exercise-icons.js && node --check sw.js"
+    "check": "node --check js/app.js && node --check js/codex-sync.js && node --check js/sync.js && node --check js/n8n-sync.js && node --check js/ocr.js && node --check js/exercise-icons.js && node --check scripts/encrypt-meal.mjs && node --check scripts/test-encrypted-inbox.mjs && node --check sw.js",
+    "test:encrypted-inbox": "node scripts/test-encrypted-inbox.mjs"
   },
   "dependencies": {
     "@capacitor/core": "^7.4.3",

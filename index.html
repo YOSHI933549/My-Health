@@ -89,10 +89,18 @@
       <input type="date" id="mealsDate">
     </div>
 
-    <div class="card">
-      <h3>Codexから登録</h3>
-      <p class="hint">チャットの登録リンクをコピーしてから、下のボタンを押してください。</p>
-      <button type="button" class="btn primary" id="importMealClipboardBtn">コピーした食事を登録</button>
+    <div class="card" id="codexSyncCard">
+      <h3>Codex自動登録</h3>
+      <p class="hint" id="codexSyncStatus">接続を準備しています...</p>
+      <div class="field-row">
+        <button type="button" class="btn primary" id="codexConnectionBtn">接続コードをコピー</button>
+        <button type="button" class="btn ghost hidden" id="codexCheckBtn">今すぐ確認</button>
+      </div>
+      <details style="margin-top:10px">
+        <summary class="hint">反映されない場合</summary>
+        <p class="hint">以前の登録リンクをコピーした場合は、下のボタンから取り込めます。</p>
+        <button type="button" class="btn ghost" id="importMealClipboardBtn">コピーした食事を登録</button>
+      </details>
     </div>
 
     <div class="card">
@@ -532,6 +540,7 @@
 
 <script src="js/exercise-icons.js"></script>
 <script src="js/app.js"></script>
+<script src="js/codex-sync.js"></script>
 <script src="js/sync.js"></script>
 <script src="js/n8n-sync.js"></script>
 <script src="js/ocr.js"></script>
