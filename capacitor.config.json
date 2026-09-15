@@ -1,0 +1,8 @@
+{
+  "appId": "com.yoshi.healthtracker",
+  "appName": "YOSHI Health",
+  "webDir": "www",
+  "server": {
+    "iosScheme": "https"
+  }
+}
