@@ -4,6 +4,7 @@
    ========================================================================== */
 
 const STORAGE_KEY = "yoshi-health-tracker-v1";
+const MEAL_LINK_HASH_PREFIX = "#meal=";
 
 /** @typedef {{height:number age:number gender:string activity:string targetWeight:number surplus:number fatRatio:number}} Profile */
 
@@ -50,6 +51,85 @@ function saveState() {
 
 function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+
+// -------------------------------------------------------------------------
+// One-tap meal links
+// -------------------------------------------------------------------------
+// Codex can put one meal in the URL fragment as base64url-encoded JSON. URL
+// fragments are not sent to GitHub Pages, so the meal stays between the chat
+// and this browser. Tapping the link is the user's explicit import action.
+function decodeBase64UrlJson(value) {
+  const base64 = value.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = base64 + "=".repeat((4 - (base64.length % 4)) % 4);
+  const bytes = Uint8Array.from(atob(padded), (char) => char.charCodeAt(0));
+  return JSON.parse(new TextDecoder().decode(bytes));
+}
+
+function finiteNonNegative(value) {
+  const number = Number(value);
+  return Number.isFinite(number) && number >= 0 ? number : null;
+}
+
+function importMealFromLink() {
+  if (!location.hash.startsWith(MEAL_LINK_HASH_PREFIX)) return false;
+
+  // Remove the payload immediately so it is not left in browser history or
+  // accidentally imported again by a reload.
+  const encoded = location.hash.slice(MEAL_LINK_HASH_PREFIX.length);
+  history.replaceState(null, "", location.pathname + location.search);
+
+  try {
+    if (!encoded || encoded.length > 6000) throw new Error("invalid payload size");
+    const meal = decodeBase64UrlJson(encoded);
+    const importId = String(meal.importId || "").trim();
+    const name = String(meal.name || "").trim();
+    const date = String(meal.date || "");
+    const time = String(meal.time || "");
+    const type = String(meal.type || "");
+    const calories = finiteNonNegative(meal.calories);
+    const protein = finiteNonNegative(meal.protein);
+    const fat = finiteNonNegative(meal.fat);
+    const carbs = finiteNonNegative(meal.carbs);
+
+    if (!/^[A-Za-z0-9_-]{8,100}$/.test(importId)) throw new Error("invalid import id");
+    if (!name || name.length > 160) throw new Error("invalid name");
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error("invalid date");
+    if (!/^\d{2}:\d{2}$/.test(time)) throw new Error("invalid time");
+    if (!["朝食", "昼食", "夕食", "間食"].includes(type)) throw new Error("invalid meal type");
+    if ([calories, protein, fat, carbs].includes(null)) throw new Error("invalid nutrition");
+
+    const receiptId = `link:${importId}`;
+    const imported = new Set((state.importedMealIds || []).map(String));
+    if (imported.has(receiptId)) {
+      setTimeout(() => toast("この食事は登録済みです"), 0);
+      return false;
+    }
+
+    state.meals.push({
+      id: uid(),
+      date,
+      time,
+      type,
+      name,
+      calories,
+      protein,
+      fat,
+      carbs,
+      memo: String(meal.memo || "").slice(0, 500),
+      photo: null,
+      source: "codex-link",
+    });
+    imported.add(receiptId);
+    state.importedMealIds = [...imported];
+    saveState();
+    setTimeout(() => toast("昼食を登録しました"), 0);
+    return true;
+  } catch (error) {
+    console.error("meal link import failed", error);
+    setTimeout(() => toast("登録リンクを読み込めませんでした"), 0);
+    return false;
+  }
 }
 
 // -------------------------------------------------------------------------
@@ -2131,7 +2211,9 @@ function init() {
   initWeight();
   initTrends();
   initSettings();
+  const mealImported = importMealFromLink();
   renderAll();
+  if (mealImported) switchTab("meals");
   window.addEventListener("resize", () => {
     renderWeightChart("weightChart", state.weightLogs, 30);
     const days = weightChartRange === "all" ? null : Number(weightChartRange);
