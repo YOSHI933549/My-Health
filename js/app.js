@@ -123,12 +123,44 @@ function importMealFromLink() {
     imported.add(receiptId);
     state.importedMealIds = [...imported];
     saveState();
-    setTimeout(() => toast("昼食を登録しました"), 0);
+    setTimeout(() => toast(`${type}を登録しました`), 0);
     return true;
   } catch (error) {
     console.error("meal link import failed", error);
     setTimeout(() => toast("登録リンクを読み込めませんでした"), 0);
     return false;
+  }
+}
+
+function mealPayloadFromText(text) {
+  const match = String(text || "").match(/#meal=([A-Za-z0-9_-]+)/);
+  return match ? match[1] : "";
+}
+
+async function importMealFromClipboard() {
+  let text = "";
+  try {
+    text = await navigator.clipboard.readText();
+  } catch (error) {
+    // iOS may deny clipboard access until the user explicitly pastes.
+  }
+
+  let encoded = mealPayloadFromText(text);
+  if (!encoded) {
+    const pasted = prompt("Codexの登録リンクを貼り付けてください");
+    if (!pasted) return;
+    encoded = mealPayloadFromText(pasted);
+  }
+  if (!encoded) {
+    toast("登録リンクを確認してください");
+    return;
+  }
+
+  location.hash = `${MEAL_LINK_HASH_PREFIX}${encoded}`;
+  const imported = importMealFromLink();
+  if (imported) {
+    renderAll();
+    switchTab("meals");
   }
 }
 
@@ -324,6 +356,7 @@ function initMeals() {
   });
 
   document.getElementById("mealTime").value = nowTimeStr();
+  document.getElementById("importMealClipboardBtn").addEventListener("click", importMealFromClipboard);
 
   // 材料を複数選んで「＋ 材料に追加」で積み上げ、合計をカロリー・PFC欄に自動反映する
   const foodPreset = document.getElementById("mealFoodPreset");
