@@ -38,3 +38,5 @@ This repository contains the owner's personal health-support application. It tra
 ## Food-recording automation
 
 The existing `.claude/skills/record-meal/SKILL.md` documents the previous Claude workflow. Use it only as product history. Do not claim that a meal was recorded unless the required n8n connection is available and the inserted row has been read back successfully.
+
+When n8n is unavailable, use the app's one-tap meal-link format instead. Encode a validated meal JSON payload as UTF-8 base64url and append it to the deployed app URL as `#meal=<payload>`. Use a new random `importId` for each meal. Tell the user that the link is ready and that tapping it performs the local registration; do not claim the record is present until the user confirms it in the app. Never commit the generated link or its health data to the repository.
