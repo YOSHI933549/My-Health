@@ -89,20 +89,6 @@
       <input type="date" id="mealsDate">
     </div>
 
-    <div class="card" id="codexSyncCard">
-      <h3>Codex自動登録</h3>
-      <p class="hint" id="codexSyncStatus">接続を準備しています...</p>
-      <div class="field-row">
-        <button type="button" class="btn primary" id="codexConnectionBtn">接続コードをコピー</button>
-        <button type="button" class="btn ghost hidden" id="codexCheckBtn">今すぐ確認</button>
-      </div>
-      <details style="margin-top:10px">
-        <summary class="hint">反映されない場合</summary>
-        <p class="hint">以前の登録リンクをコピーした場合は、下のボタンから取り込めます。</p>
-        <button type="button" class="btn ghost" id="importMealClipboardBtn">コピーした食事を登録</button>
-      </details>
-    </div>
-
     <div class="card">
       <div class="chart-head">
         <h3>カロリー推移グラフ</h3>
@@ -447,73 +433,9 @@
       <div id="targetSummary" class="target-summary"></div>
     </div>
 
-    <div class="card" id="syncCard">
-      <h3>他の端末と同期</h3>
-      <p id="syncNotConfigured" class="hint hidden">
-        同期機能は準備中です(Google側の設定が未完了)。それまでは下の「JSONをエクスポート/インポート」で手動で移せます。
-      </p>
-      <p id="syncLoadFailed" class="hint hidden">
-        同期機能を読み込めませんでした。通信環境や広告ブロッカーの影響の可能性があります。
-        ページを再読み込みすると再試行します。それまでは下の「JSONをエクスポート/インポート」で手動で移せます。
-      </p>
-      <div id="syncSignedOut" class="hidden">
-        <p class="hint">
-          Googleアカウントでログインすると、記録するたびにGoogle Driveへ自動保存され、
-          PC・iPhoneなど別の端末で開いたときも同じデータになります(アプリからしか読み書きしない専用領域を使うので、
-          あなたのDrive上の他のファイルは見えません)。
-        </p>
-        <button type="button" class="btn primary" id="syncSignInBtn">Googleでログインして同期</button>
-      </div>
-      <div id="syncSignedIn" class="hidden">
-        <div class="sync-status">
-          <span id="syncStatusText">同期中...</span>
-        </div>
-        <div class="field-row">
-          <button type="button" class="btn ghost" id="syncNowBtn">今すぐ同期</button>
-          <button type="button" class="btn ghost" id="syncSignOutBtn">ログアウト</button>
-        </div>
-        <p class="hint" style="margin-top:10px">
-          iPhoneのSafariはログインしたままでも自動更新が効かないことがあります。その場合は「今すぐ同期」を1回タップしてください。
-        </p>
-      </div>
-    </div>
-
     <div class="card">
-      <h3>体重計と自動連携(iPhone ヘルスケア → n8n)</h3>
-      <p class="hint">
-        Apple Healthに記録された体重を、iPhoneの「ショートカット」自動化とn8nを経由してこのアプリに取り込みます。
-        下の欄に、n8nから発行された「取得用URL」を貼り付けてください(URLはあなただけの秘密の値を含むので、他人に共有しないでください)。
-      </p>
-      <label>取得用URL
-        <input type="text" id="n8nFetchUrl" placeholder="https://.../webhook/yoshi-weight-out?token=...">
-      </label>
-      <div class="field-row">
-        <button type="button" class="btn ghost" id="n8nSaveUrlBtn">保存</button>
-        <button type="button" class="btn ghost" id="n8nFetchNowBtn">今すぐ取得</button>
-      </div>
-      <p id="n8nStatusText" class="hint" style="margin-top:10px"></p>
-    </div>
-
-    <div class="card">
-      <h3>調べた食事を自動で取り込む(Claude → n8n → アプリ)</h3>
-      <p class="hint">
-        チャットで調べてもらった食事の栄養(外食メニューなど)を、手入力せずにこのアプリへ取り込みます。
-        下の欄に、n8nから発行された「食事の取得用URL」を貼り付けてください(URLはあなただけの秘密の値を含むので、他人に共有しないでください)。
-        取り込んだ記録は「食事」タブに通常の記録として入り、内容の修正や削除もできます。
-      </p>
-      <label>食事の取得用URL
-        <input type="text" id="n8nMealUrl" placeholder="https://.../webhook/yoshi-meal-out?token=...">
-      </label>
-      <div class="field-row">
-        <button type="button" class="btn ghost" id="n8nMealSaveBtn">保存</button>
-        <button type="button" class="btn ghost" id="n8nMealFetchBtn">今すぐ取得</button>
-      </div>
-      <p id="n8nMealStatusText" class="hint" style="margin-top:10px"></p>
-    </div>
-
-    <div class="card">
-      <h3>データのバックアップ</h3>
-      <p class="hint">このアプリのデータはブラウザ内(localStorage)にのみ保存されます。機種変更やブラウザ変更の前に必ずエクスポートしてください。</p>
+      <h3>データ・アプリ管理</h3>
+      <p class="hint">機種変更の前には、記録をJSONで保存してください。</p>
       <div class="field-row">
         <button type="button" class="btn ghost" id="exportBtn">JSONをエクスポート</button>
         <label class="btn ghost file-btn">
@@ -521,16 +443,74 @@
           <input type="file" id="importInput" accept="application/json" class="hidden">
         </label>
       </div>
-      <button type="button" class="btn danger" id="resetBtn">全データを削除</button>
+      <button type="button" class="btn ghost" id="hardRefreshBtn">キャッシュを消して最新版に更新</button>
+      <details class="settings-details">
+        <summary>全データを削除</summary>
+        <p class="hint">プロフィールを含む端末内の全記録を削除します。</p>
+        <button type="button" class="btn danger" id="resetBtn">全データを削除</button>
+      </details>
     </div>
 
-    <div class="card">
-      <h3>アプリの更新</h3>
-      <p class="hint">
-        新機能を追加したのに画面が変わらない場合、端末に古い表示がキャッシュされている可能性があります。
-        このボタンでキャッシュを消して最新版を取得し直します(記録データは消えません)。
-      </p>
-      <button type="button" class="btn ghost" id="hardRefreshBtn">キャッシュを消して最新版に更新</button>
+    <details class="card settings-group">
+      <summary>その他の連携（使う場合のみ）</summary>
+      <div class="settings-group-body">
+        <section id="syncCard">
+          <h3>Google Drive同期</h3>
+          <p id="syncNotConfigured" class="hint hidden">現在は未設定です。</p>
+          <p id="syncLoadFailed" class="hint hidden">同期機能を読み込めませんでした。ページを再読み込みしてください。</p>
+          <div id="syncSignedOut" class="hidden">
+            <p class="hint">別の端末でも同じ記録を使うための機能です。</p>
+            <button type="button" class="btn primary" id="syncSignInBtn">Googleでログインして同期</button>
+          </div>
+          <div id="syncSignedIn" class="hidden">
+            <div class="sync-status"><span id="syncStatusText">同期中...</span></div>
+            <div class="field-row">
+              <button type="button" class="btn ghost" id="syncNowBtn">今すぐ同期</button>
+              <button type="button" class="btn ghost" id="syncSignOutBtn">ログアウト</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="settings-section">
+          <h3>体重計連携</h3>
+          <p class="hint">Apple Healthの体重をn8n経由で取り込む場合に設定します。</p>
+          <label>取得用URL
+            <input type="text" id="n8nFetchUrl" placeholder="https://.../webhook/...">
+          </label>
+          <div class="field-row">
+            <button type="button" class="btn ghost" id="n8nSaveUrlBtn">保存</button>
+            <button type="button" class="btn ghost" id="n8nFetchNowBtn">今すぐ取得</button>
+          </div>
+          <p id="n8nStatusText" class="hint" style="margin-top:10px"></p>
+        </section>
+
+        <section class="settings-section">
+          <h3>旧n8n食事連携</h3>
+          <p class="hint">以前のn8n受け取りを引き続き使う場合だけ設定します。</p>
+          <label>食事の取得用URL
+            <input type="text" id="n8nMealUrl" placeholder="https://.../webhook/...">
+          </label>
+          <div class="field-row">
+            <button type="button" class="btn ghost" id="n8nMealSaveBtn">保存</button>
+            <button type="button" class="btn ghost" id="n8nMealFetchBtn">今すぐ取得</button>
+          </div>
+          <p id="n8nMealStatusText" class="hint" style="margin-top:10px"></p>
+        </section>
+      </div>
+    </details>
+
+    <div class="card" id="codexSyncCard">
+      <h3>Codex自動登録</h3>
+      <p class="hint" id="codexSyncStatus">接続を準備しています...</p>
+      <div class="field-row">
+        <button type="button" class="btn primary" id="codexConnectionBtn">接続コードをコピー</button>
+        <button type="button" class="btn ghost hidden" id="codexCheckBtn">今すぐ確認</button>
+      </div>
+      <details class="settings-details">
+        <summary>以前の登録リンクを使う</summary>
+        <p class="hint">登録リンクをコピーしてから押してください。</p>
+        <button type="button" class="btn ghost" id="importMealClipboardBtn">コピーした食事を登録</button>
+      </details>
     </div>
   </section>
 
