@@ -175,6 +175,7 @@ async function pollCodexInbox(showToast = false) {
 
     const imported = new Set((state.importedMealIds || []).map(String));
     let added = 0;
+    let latestImportedDate = "";
     for (const entry of inbox.entries) {
       const entryId = entry && String(entry.id || "");
       if (!/^[A-Za-z0-9_-]{8,100}$/.test(entryId)) continue;
@@ -183,7 +184,9 @@ async function pollCodexInbox(showToast = false) {
       if (imported.has(receiptId)) continue;
       try {
         const meal = await decryptCodexMeal(entry, device.privateKey);
-        state.meals.push(codexMealRecord(meal));
+        const record = codexMealRecord(meal);
+        state.meals.push(record);
+        latestImportedDate = record.date;
         imported.add(receiptId);
         added++;
       } catch (error) {
@@ -194,11 +197,13 @@ async function pollCodexInbox(showToast = false) {
     if (added > 0) {
       state.importedMealIds = [...imported];
       saveState();
+      const mealsDate = document.getElementById("mealsDate");
+      if (mealsDate && latestImportedDate) mealsDate.value = latestImportedDate;
       renderAll();
       switchTab("meals");
       toast(`Codexから食事を${added}件登録しました`);
     } else if (showToast) {
-      toast("新しい食事はありませんでした");
+      toast("新しい食事はありません（受信済みです）");
     }
     setCodexStatus("Codexと接続済みです。アプリを開くと自動反映されます。", true);
   } catch (error) {
