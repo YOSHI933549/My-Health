@@ -38,15 +38,70 @@ function loadState() {
   }
 }
 
+// localStorage は1オリジンあたり5MB程度しか無く、食事写真を貯めると先に埋まる。
+// 溢れたときに黙って落ちると、画面上は登録済みに見えるのにアプリを開き直すと
+// 消えている、という一番たちの悪い壊れ方をするので、
+//   1. まず普通に書く
+//   2. 失敗したら古い写真から捨てて、入るところまで詰めて書き直す
+//      (栄養の数値やメモは消さない。写真より記録本体のほうが大事なので)
+//   3. それでも書けなければ、消えるかもしれないことを画面に出したままにする
+// という順で粘る。
 function saveState() {
+  if (writeState()) {
+    setSaveErrorBanner(false);
+    return;
+  }
+
+  const dropped = dropOldestPhotosUntilItFits();
+  if (dropped > 0) {
+    setSaveErrorBanner(false);
+    renderAll();
+    toast(`保存容量が一杯のため、古い写真${dropped}枚を削除して保存しました`);
+    return;
+  }
+
+  setSaveErrorBanner(true);
+}
+
+function writeState() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     // js/sync.js defines this when Google Drive sync is configured & signed in.
     if (typeof scheduleSyncPush === "function") scheduleSyncPush();
+    return true;
   } catch (e) {
     console.error("state save failed", e);
-    toast("保存に失敗しました(容量オーバーの可能性)。写真サイズを減らすか、古い記録を削除してください。");
+    return false;
   }
+}
+
+// 古い写真から1枚ずつ捨てて、書けるようになった時点で止める。捨てた枚数を返す
+// (1枚も捨てられなかった=写真が無いのに溢れている場合は0)。
+function dropOldestPhotosUntilItFits() {
+  const withPhoto = state.meals
+    .filter((m) => m.photo)
+    .sort((a, b) => `${a.date} ${a.time || ""}`.localeCompare(`${b.date} ${b.time || ""}`));
+
+  // 全部捨てても書けなかった場合に備えて控えを取る。書けていない以上
+  // localStorage 側には写真が残っているので、メモリ側も戻して辻褄を合わせる。
+  const backup = withPhoto.map((m) => m.photo);
+
+  let dropped = 0;
+  for (const meal of withPhoto) {
+    meal.photo = null;
+    dropped++;
+    if (writeState()) return dropped;
+  }
+
+  withPhoto.forEach((m, i) => (m.photo = backup[i]));
+  return 0; // 写真以外が原因で溢れている。呼び出し側で警告する
+}
+
+// 保存できていないことを消えない帯で出す。トーストだと見逃した時点で
+// 「保存されたつもり」に戻ってしまうため。
+function setSaveErrorBanner(show) {
+  const el = document.getElementById("saveErrorBanner");
+  if (el) el.classList.toggle("hidden", !show);
 }
 
 function uid() {
