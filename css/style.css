@@ -17,15 +17,6 @@
   --accent-purple: #6a5b9e;
   --danger: #c23b1e;
   --danger-tint: #fbe3da;
-  /* 筋トレカレンダーの部位カラー */
-  --grp-chest: #e2551c;
-  --grp-back: #2e7dbd;
-  --grp-legs: #2f8f3e;
-  --grp-shoulder: #a87b00;
-  --grp-arm: #6a5b9e;
-  --grp-core: #1f9c9c;
-  --grp-other: #777c70;
-  --grp-ink: #fff; /* チップの文字色: ライトは濃い地に白 */
   --shadow: 0 2px 10px rgba(20, 20, 15, 0.06);
   --radius: 10px;
   --radius-lg: 18px;
@@ -50,15 +41,7 @@
     --accent-purple: #a58de0;
     --danger: #ff5a45;
     --danger-tint: #3a2018;
-    --grp-chest: #ff6a30;
-  --grp-back: #55b4e6;
-  --grp-legs: #5fd66f;
-  --grp-shoulder: #e8bb3c;
-  --grp-arm: #a58de0;
-  --grp-core: #4ed3d3;
-  --grp-other: #9aa093;
-  --grp-ink: #16181a; /* ダークは明るい地なので黒文字にする */
-  --shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+    --shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
   }
 }
 :root[data-theme="dark"] {
@@ -76,14 +59,6 @@
   --accent-purple: #a58de0;
   --danger: #ff5a45;
   --danger-tint: #3a2018;
-  --grp-chest: #ff6a30;
-  --grp-back: #55b4e6;
-  --grp-legs: #5fd66f;
-  --grp-shoulder: #e8bb3c;
-  --grp-arm: #a58de0;
-  --grp-core: #4ed3d3;
-  --grp-other: #9aa093;
-  --grp-ink: #16181a; /* ダークは明るい地なので黒文字にする */
   --shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
 }
 
@@ -691,8 +666,8 @@ input:focus, select:focus {
   color: var(--text-muted);
 }
 .wcal-day.has-log {
-  background: var(--surface-alt);
-  border-color: var(--border);
+  background: var(--primary-tint);
+  border-color: color-mix(in srgb, var(--primary) 35%, transparent);
 }
 .wcal-day.has-log .wcal-dnum { color: var(--text); }
 .wcal-day.is-today .wcal-dnum {
@@ -708,52 +683,29 @@ input:focus, select:focus {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 2px;
+  gap: 3px;
   min-height: 14px;
 }
+/* 部位は色分けせず文字だけで出す。7色を並べると月表示がチカチカして、
+   肝心の「どの日にやったか」が読み取りにくくなるため。 */
 .wcal-chip {
   display: inline-block;
-  min-width: 14px;
-  padding: 1px 2px;
-  border-radius: 4px;
   font-size: 10px;
   line-height: 1.2;
   font-style: normal;
-  color: var(--grp-ink);
-  background: var(--grp-other);
+  color: var(--text);
 }
-.wcal-chip.grp-chest { background: var(--grp-chest); }
-.wcal-chip.grp-back { background: var(--grp-back); }
-.wcal-chip.grp-legs { background: var(--grp-legs); }
-.wcal-chip.grp-shoulder { background: var(--grp-shoulder); }
-.wcal-chip.grp-arm { background: var(--grp-arm); }
-.wcal-chip.grp-core { background: var(--grp-core); }
-.wcal-chip.is-more {
-  color: var(--text-muted);
-  background: transparent;
-}
+.wcal-chip.is-more { color: var(--text-muted); }
 
 .wcal-foot {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 6px;
+  justify-content: flex-end;
   margin-top: 10px;
   padding-top: 9px;
   border-top: 1px solid var(--border);
   font-size: 11px;
   color: var(--text-muted);
-}
-.wcal-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.wcal-legend-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
 }
 .wcal-summary {
   font-family: var(--font-mono);

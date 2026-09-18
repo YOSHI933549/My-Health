@@ -818,9 +818,10 @@ function renderPrevWorkoutHint(dateStr) {
 
 // --- 筋トレカレンダー -----------------------------------------------------
 // 「どの日に何をやったか」を月表示で一目で追えるようにする。セルには部位を1文字
-// (胸・背・脚…)の色付きチップで出し、正確な種目名は日付をタップして下の
-// 「記録一覧」で見る、という二段構えにしている。スマホ幅だとセルが40px前後しか
-// 無く、種目名をそのまま並べると読めないため。
+// (胸・背・脚…)の文字で出し、正確な種目名は日付をタップして下の「記録一覧」で
+// 見る、という二段構えにしている。スマホ幅だとセルが40px前後しか無く、種目名を
+// そのまま並べると読めないため。
+// 色は「記録がある日」の地の色ひとつだけに絞ってある(部位ごとの色分けはしない)。
 
 const WORKOUT_GROUP_SHORT = {
   "胸": "胸",
@@ -830,15 +831,6 @@ const WORKOUT_GROUP_SHORT = {
   "腕": "腕",
   "体幹・腹筋": "腹",
   "その他": "他",
-};
-const WORKOUT_GROUP_KEY = {
-  "胸": "chest",
-  "背中": "back",
-  "脚": "legs",
-  "肩": "shoulder",
-  "腕": "arm",
-  "体幹・腹筋": "core",
-  "その他": "other",
 };
 
 let workoutCalMonth = null; // 表示中の月 "YYYY-MM"
@@ -914,14 +906,7 @@ function renderWorkoutCalendar() {
 
     const shown = groups.slice(0, 3);
     const chips =
-      shown
-        .map(
-          (g) =>
-            `<span class="wcal-chip grp-${WORKOUT_GROUP_KEY[g] || "other"}">${escapeHTML(
-              WORKOUT_GROUP_SHORT[g] || "他"
-            )}</span>`
-        )
-        .join("") +
+      shown.map((g) => `<span class="wcal-chip">${escapeHTML(WORKOUT_GROUP_SHORT[g] || "他")}</span>`).join("") +
       (groups.length > shown.length ? `<span class="wcal-chip is-more">+${groups.length - shown.length}</span>` : "");
 
     const dow = new Date(y, m - 1, d).getDay();
@@ -940,18 +925,6 @@ function renderWorkoutCalendar() {
     </button>`;
   }
   grid.innerHTML = html;
-
-  const legendEl = document.getElementById("wcalLegend");
-  if (legendEl) {
-    legendEl.innerHTML = usedGroups
-      .map(
-        (g) =>
-          `<span class="wcal-legend-item"><i class="wcal-chip grp-${WORKOUT_GROUP_KEY[g] || "other"}">${escapeHTML(
-            WORKOUT_GROUP_SHORT[g] || "他"
-          )}</i>${escapeHTML(g)}</span>`
-      )
-      .join("");
-  }
 
   const summaryEl = document.getElementById("wcalSummary");
   if (summaryEl) {
