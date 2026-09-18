@@ -17,6 +17,11 @@
   --accent-purple: #6a5b9e;
   --danger: #c23b1e;
   --danger-tint: #fbe3da;
+  /* 筋トレカレンダー: 上半身/下半身の2色と、どちらでもない部位の無彩色 */
+  --body-upper: #2e7dbd;
+  --body-lower: #2f8f3e;
+  --body-neutral: #777c70;
+  --body-ink: #fff;
   --shadow: 0 2px 10px rgba(20, 20, 15, 0.06);
   --radius: 10px;
   --radius-lg: 18px;
@@ -41,7 +46,11 @@
     --accent-purple: #a58de0;
     --danger: #ff5a45;
     --danger-tint: #3a2018;
-    --shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+    --body-upper: #55b4e6;
+  --body-lower: #5fd66f;
+  --body-neutral: #9aa093;
+  --body-ink: #16181a; /* ダークは地が明るいので黒文字 */
+  --shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
   }
 }
 :root[data-theme="dark"] {
@@ -59,6 +68,10 @@
   --accent-purple: #a58de0;
   --danger: #ff5a45;
   --danger-tint: #3a2018;
+  --body-upper: #55b4e6;
+  --body-lower: #5fd66f;
+  --body-neutral: #9aa093;
+  --body-ink: #16181a; /* ダークは地が明るいので黒文字 */
   --shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
 }
 
@@ -666,8 +679,8 @@ input:focus, select:focus {
   color: var(--text-muted);
 }
 .wcal-day.has-log {
-  background: var(--primary-tint);
-  border-color: color-mix(in srgb, var(--primary) 35%, transparent);
+  background: var(--surface-alt);
+  border-color: var(--border);
 }
 .wcal-day.has-log .wcal-dnum { color: var(--text); }
 .wcal-day.is-today .wcal-dnum {
@@ -690,22 +703,42 @@ input:focus, select:focus {
    肝心の「どの日にやったか」が読み取りにくくなるため。 */
 .wcal-chip {
   display: inline-block;
+  padding: 1px 3px;
+  border-radius: 4px;
   font-size: 10px;
   line-height: 1.2;
   font-style: normal;
-  color: var(--text);
+  color: var(--body-ink);
+  background: var(--body-neutral);
 }
-.wcal-chip.is-more { color: var(--text-muted); }
+.wcal-chip.body-upper { background: var(--body-upper); }
+.wcal-chip.body-lower { background: var(--body-lower); }
+.wcal-chip.is-more {
+  color: var(--text-muted);
+  background: transparent;
+}
 
 .wcal-foot {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
   margin-top: 10px;
   padding-top: 9px;
   border-top: 1px solid var(--border);
   font-size: 11px;
   color: var(--text-muted);
+}
+.wcal-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.wcal-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
 }
 .wcal-summary {
   font-family: var(--font-mono);

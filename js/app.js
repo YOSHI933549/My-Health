@@ -821,7 +821,18 @@ function renderPrevWorkoutHint(dateStr) {
 // (胸・背・脚…)の文字で出し、正確な種目名は日付をタップして下の「記録一覧」で
 // 見る、という二段構えにしている。スマホ幅だとセルが40px前後しか無く、種目名を
 // そのまま並べると読めないため。
-// 色は「記録がある日」の地の色ひとつだけに絞ってある(部位ごとの色分けはしない)。
+// 色は上半身/下半身の2色だけ。部位ごとに7色を並べるとチカチカして、肝心の
+// 「どの日にやったか」が読み取りにくかったため。体幹・その他はどちらにも寄せず
+// 無彩色にしてある。
+
+// 部位 -> 上半身/下半身。体幹・腹筋とその他はどちらでもないので無彩色(neutral)。
+const WORKOUT_GROUP_BODY = {
+  "胸": "upper",
+  "背中": "upper",
+  "肩": "upper",
+  "腕": "upper",
+  "脚": "lower",
+};
 
 const WORKOUT_GROUP_SHORT = {
   "胸": "胸",
@@ -906,7 +917,14 @@ function renderWorkoutCalendar() {
 
     const shown = groups.slice(0, 3);
     const chips =
-      shown.map((g) => `<span class="wcal-chip">${escapeHTML(WORKOUT_GROUP_SHORT[g] || "他")}</span>`).join("") +
+      shown
+        .map(
+          (g) =>
+            `<span class="wcal-chip body-${WORKOUT_GROUP_BODY[g] || "neutral"}">${escapeHTML(
+              WORKOUT_GROUP_SHORT[g] || "他"
+            )}</span>`
+        )
+        .join("") +
       (groups.length > shown.length ? `<span class="wcal-chip is-more">+${groups.length - shown.length}</span>` : "");
 
     const dow = new Date(y, m - 1, d).getDay();
