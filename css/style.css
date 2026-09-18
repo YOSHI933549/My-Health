@@ -72,7 +72,7 @@ html, body {
   -webkit-tap-highlight-color: transparent;
 }
 
-h1, h2, h3, .tab-btn span, .macro-hero-info .mh-label, .card-title-mono {
+h1, h2, h3, .tab-btn span, .macro-ring-card .mrc-label, .card-title-mono {
   font-family: var(--font-display);
 }
 
@@ -249,27 +249,33 @@ main#app {
 }
 .notice p { margin: 0 0 10px; font-size: 14px; }
 
-/* --- カロリー: リングゲージ + PFCの細いバー(旧: 4枚同サイズのカード) --- */
-.macro-hero {
+/* --- カロリー/たんぱく質/脂質/炭水化物を、同じ大きさのリングゲージ4枚に統一 --- */
+.macro-ring-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.macro-ring-card {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 18px;
+  gap: 8px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 18px;
-  margin-bottom: 10px;
+  padding: 14px 10px 12px;
   box-shadow: var(--shadow);
 }
 
-.ring-gauge {
-  --size: 104px;
-  --thickness: 11px;
+.ring-gauge-sm {
+  --size: 72px;
+  --thickness: 8px;
   width: var(--size);
   height: var(--size);
   border-radius: 50%;
-  flex-shrink: 0;
-  background: conic-gradient(var(--accent-orange) calc(var(--pct, 0) * 1%), var(--surface-alt) 0);
+  background: conic-gradient(var(--ring-color, var(--primary)) calc(var(--pct, 0) * 1%), var(--surface-alt) 0);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -277,7 +283,7 @@ main#app {
   transition: background .3s ease;
 }
 
-.ring-gauge::before {
+.ring-gauge-sm::before {
   content: "";
   position: absolute;
   inset: var(--thickness);
@@ -285,108 +291,35 @@ main#app {
   background: var(--surface);
 }
 
-.ring-gauge .ring-value {
+.ring-gauge-sm .rg-value {
   position: relative;
   font-family: var(--font-mono);
   font-weight: 700;
-  font-size: 22px;
-  line-height: 1.1;
-  text-align: center;
+  font-size: 15px;
 }
 
-.ring-gauge .ring-value small {
-  display: block;
-  margin-top: 2px;
-  font-size: 10.5px;
+.ring-gauge-sm .rg-value small {
+  font-size: 9px;
   font-weight: 500;
   color: var(--text-muted);
 }
 
-.macro-hero-info { flex: 1; min-width: 0; }
-
-.macro-hero-info .mh-label {
+.macro-ring-card .mrc-label {
   font-size: 12px;
   color: var(--text-muted);
 }
 
-.macro-hero-info .mh-value {
-  font-family: var(--font-mono);
-  font-size: 19px;
-  font-weight: 700;
-  margin-top: 2px;
-}
-
-.macro-hero-info .mh-value small {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-muted);
-}
-
-.macro-hero-info .mh-remain {
-  font-size: 13px;
-  color: var(--text-muted);
-  margin-top: 5px;
-}
-
-.macro-hero-info .mh-remain.over { color: var(--accent-orange); }
-
-.macro-mini-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 18px;
-}
-
-.macro-mini {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 10px 12px;
-}
-
-.macro-mini .mm-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.macro-mini.protein .mm-dot { background: var(--primary); }
-.macro-mini.fat .mm-dot { background: var(--accent-purple); }
-.macro-mini.carb .mm-dot { background: var(--accent-blue); }
-
-.macro-mini .mm-label {
-  width: 68px;
-  flex-shrink: 0;
-  font-size: 13px;
-  color: var(--text-muted);
-}
-
-.macro-mini .mm-track {
-  flex: 1;
-  height: 6px;
-  border-radius: 3px;
-  background: var(--surface-alt);
-  overflow: hidden;
-}
-
-.macro-mini .mm-fill {
-  height: 100%;
-  border-radius: 3px;
-  transition: width .25s ease;
-}
-.macro-mini.protein .mm-fill { background: var(--primary); }
-.macro-mini.fat .mm-fill { background: var(--accent-purple); }
-.macro-mini.carb .mm-fill { background: var(--accent-blue); }
-
-.macro-mini .mm-value {
+.macro-ring-card .mrc-value {
   font-family: var(--font-mono);
   font-size: 12px;
   color: var(--text);
   white-space: nowrap;
-  flex-shrink: 0;
+}
+
+.macro-ring-card .mrc-value.over { color: var(--accent-orange); }
+
+@media (min-width: 480px) {
+  .macro-ring-grid { grid-template-columns: repeat(4, 1fr); }
 }
 
 .bar-track {
@@ -775,6 +708,12 @@ input:focus, select:focus {
   border-radius: var(--radius);
   white-space: nowrap;
 }
+
+/* 食事の区分(朝食/昼食/夕食/間食)ごとに色を分け、一覧で見分けやすくする */
+.list-item .title-row .tag.meal-breakfast { color: var(--accent-orange); background: color-mix(in srgb, var(--accent-orange) 16%, var(--surface)); }
+.list-item .title-row .tag.meal-lunch { color: var(--accent-blue); background: color-mix(in srgb, var(--accent-blue) 16%, var(--surface)); }
+.list-item .title-row .tag.meal-dinner { color: var(--accent-purple); background: color-mix(in srgb, var(--accent-purple) 16%, var(--surface)); }
+.list-item .title-row .tag.meal-snack { color: var(--primary); background: var(--primary-tint); }
 
 .list-item .meta {
   font-size: 12px;
