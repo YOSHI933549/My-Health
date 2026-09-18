@@ -65,8 +65,6 @@ function saveState() {
 function writeState() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    // js/sync.js defines this when Google Drive sync is configured & signed in.
-    if (typeof scheduleSyncPush === "function") scheduleSyncPush();
     return true;
   } catch (e) {
     console.error("state save failed", e);

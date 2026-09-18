@@ -203,8 +203,12 @@ async function fetchFromN8n(showToast) {
     const rows = await res.json();
     if (!Array.isArray(rows)) throw new Error("unexpected response shape");
 
-    // 日付ごとに既存の記録を引けるようにしておく
-    const byDate = new Map(state.weightLogs.map((l) => [l.date, l]));
+    // 日付ごとに「n8n から取り込んだ記録」だけを引けるようにしておく。手入力の
+    // 記録(1日に何度でも残せる)は対象にしない。日付だけで引くと、その日すでに
+    // 手入力の記録があるときにn8nの分が引っかかって取り込まれなくなるため。
+    const byDateFromN8n = new Map(
+      state.weightLogs.filter((l) => l.source === N8N_SOURCE).map((l) => [l.date, l])
+    );
     let added = 0;
     let updated = 0;
     rows.forEach((row) => {
@@ -212,21 +216,21 @@ async function fetchFromN8n(showToast) {
       const weight = row && Number(row.weight);
       if (!date || !weight) return;
 
-      const existing = byDate.get(date);
+      const existing = byDateFromN8n.get(date);
       if (!existing) {
-        // まだ無い日付は新規に追加する。source を残しておくことで、
-        // 次回以降この記録が n8n 由来かどうかを判定できるようにする
+        // その日にn8n取り込みの記録がまだ無ければ新規に追加する。手入力の記録が
+        // 同じ日に既にあっても構わない(体重は1日に何度でも記録できるため)。
+        // source を残しておくことで、次回以降この記録がn8n由来かどうかを判定する。
         const entry = { id: uid(), date, weight, source: N8N_SOURCE };
         state.weightLogs.push(entry);
-        byDate.set(date, entry);
+        byDateFromN8n.set(date, entry);
         added++;
         return;
       }
 
-      // すでにある日付でも、n8n から取り込んだ記録なら最新の値で更新する
+      // 同じ日にn8n取り込みの記録が既にあれば、最新の値で上書きする
       // (体重計で測り直した場合や、以前の取り込みが古い値だった場合のため)。
-      // アプリ内で手入力・編集した記録には source が無いので、常に手入力側を優先する。
-      if (existing.source === N8N_SOURCE && existing.weight !== weight) {
+      if (existing.weight !== weight) {
         existing.weight = weight;
         updated++;
       }

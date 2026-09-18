@@ -8,7 +8,7 @@
    the newest deploy, even if this file itself hasn't changed. Bumping
    CACHE_VERSION is still good practice (it prunes old cache entries) but is
    no longer required just to ship an update. */
-const CACHE_VERSION = "v26";
+const CACHE_VERSION = "v27";
 const CACHE_NAME = `yoshi-health-tracker-${CACHE_VERSION}`;
 
 const APP_SHELL = [
@@ -18,7 +18,6 @@ const APP_SHELL = [
   "./js/app.js",
   "./js/exercise-icons.js",
   "./js/codex-sync.js",
-  "./js/sync.js",
   "./js/n8n-sync.js",
   "./js/ocr.js",
   "./manifest.json",
