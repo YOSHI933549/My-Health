@@ -317,24 +317,49 @@ function renderDashboard() {
     : `<div class="empty-state">この日のトレーニング記録はまだありません。「筋トレ」タブから追加してください。</div>`;
 }
 
-function macroCardHTML(cls, label, value, target, unit) {
+function calorieHeroHTML(value, target) {
+  const pct = target > 0 ? Math.min(100, Math.round((value / target) * 100)) : 0;
+  const remain = Math.round(target - value);
+  const over = target > 0 && value > target;
+  const remainText = target > 0
+    ? (over ? `目標より ${Math.abs(remain)}kcal オーバー` : `残り ${remain}kcal`)
+    : "目標未設定";
+  return `
+  <div class="macro-hero cal">
+    <div class="ring-gauge" style="--pct:${pct}">
+      <div class="ring-value">${pct}<small>%</small></div>
+    </div>
+    <div class="macro-hero-info">
+      <div class="mh-label">カロリー</div>
+      <div class="mh-value">${Math.round(value)}<small> / ${target}kcal</small></div>
+      <div class="mh-remain${over ? " over" : ""}">${over ? "🔥 " : ""}${remainText}</div>
+    </div>
+  </div>`;
+}
+
+function macroMiniHTML(cls, label, value, target, unit) {
   const pct = target > 0 ? Math.min(100, Math.round((value / target) * 100)) : 0;
   const over = target > 0 && value > target;
   return `
-  <div class="macro-card ${cls}">
-    <div class="label"><span>${label}</span><span>${over ? "🔥 " : ""}${Math.round(value)}/${target}${unit}</span></div>
-    <div class="value">${pct}<small>%</small></div>
-    <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+  <div class="macro-mini ${cls}">
+    <span class="mm-dot"></span>
+    <span class="mm-label">${label}</span>
+    <span class="mm-track"><span class="mm-fill" style="width:${pct}%"></span></span>
+    <span class="mm-value">${over ? "🔥 " : ""}${Math.round(value)}/${target}${unit}</span>
   </div>`;
 }
 
 function renderMacroCards(totals, targets) {
-  const el = document.getElementById("macroCards");
-  el.innerHTML =
-    macroCardHTML("cal", "カロリー", totals.calories, targets.calories, "kcal") +
-    macroCardHTML("protein", "たんぱく質", totals.protein, targets.protein, "g") +
-    macroCardHTML("fat", "脂質", totals.fat, targets.fat, "g") +
-    macroCardHTML("carb", "炭水化物", totals.carbs, targets.carb, "g");
+  const heroEl = document.getElementById("macroCards");
+  heroEl.innerHTML = calorieHeroHTML(totals.calories, targets.calories);
+
+  const miniEl = document.getElementById("macroMiniGrid");
+  if (miniEl) {
+    miniEl.innerHTML =
+      macroMiniHTML("protein", "たんぱく質", totals.protein, targets.protein, "g") +
+      macroMiniHTML("fat", "脂質", totals.fat, targets.fat, "g") +
+      macroMiniHTML("carb", "炭水化物", totals.carbs, targets.carb, "g");
+  }
 }
 
 // -------------------------------------------------------------------------
@@ -1056,28 +1081,64 @@ function renderLineChart(canvasId, points, days, opts) {
     ctx.fillText(opts.targetLabel(opts.targetValue), padL + 4, ty - 4);
   }
 
-  // line
-  ctx.beginPath();
+  // smoothed line path (quadratic curve through the midpoints of each
+  // segment), reused for both the stroke and the gradient fill below it
+  const linePath = new Path2D();
   windowed.forEach((p, i) => {
     const px = x(i);
     const py = y(p.value);
-    if (i === 0) ctx.moveTo(px, py);
-    else ctx.lineTo(px, py);
+    if (i === 0) {
+      linePath.moveTo(px, py);
+    } else {
+      const prevX = x(i - 1);
+      const prevY = y(windowed[i - 1].value);
+      const midX = (prevX + px) / 2;
+      const midY = (prevY + py) / 2;
+      linePath.quadraticCurveTo(prevX, prevY, midX, midY);
+      linePath.quadraticCurveTo(midX, midY, px, py);
+    }
   });
-  ctx.strokeStyle = primary;
-  ctx.lineWidth = 2;
-  ctx.stroke();
 
-  // points — open circles (colored ring, light fill) rather than solid dots
+  // soft gradient fill under the line to give it some depth
+  const fillPath = new Path2D(linePath);
+  fillPath.lineTo(x(windowed.length - 1), padT + plotH);
+  fillPath.lineTo(x(0), padT + plotH);
+  fillPath.closePath();
+  const gradient = ctx.createLinearGradient(0, padT, 0, padT + plotH);
+  gradient.addColorStop(0, color_mix_fallback(primary, 0.22));
+  gradient.addColorStop(1, color_mix_fallback(primary, 0));
+  ctx.fillStyle = gradient;
+  ctx.fill(fillPath);
+
+  ctx.strokeStyle = primary;
+  ctx.lineWidth = 2.25;
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
+  ctx.stroke(linePath);
+
+  // points — open circles (colored ring, light fill) rather than solid dots,
+  // with the latest point drawn larger and solid to draw the eye to "now"
   windowed.forEach((p, i) => {
+    const isLast = i === windowed.length - 1;
     ctx.beginPath();
-    ctx.arc(x(i), y(p.value), 3.2, 0, Math.PI * 2);
-    ctx.fillStyle = surfaceAlt;
+    ctx.arc(x(i), y(p.value), isLast ? 4.5 : 3.2, 0, Math.PI * 2);
+    ctx.fillStyle = isLast ? primary : surfaceAlt;
     ctx.fill();
     ctx.lineWidth = 2;
     ctx.strokeStyle = primary;
     ctx.stroke();
   });
+}
+
+// createLinearGradient wants real rgba() stops, but our CSS vars are hex —
+// this fakes an alpha-blended color without pulling in a color-parsing lib.
+function color_mix_fallback(hex, alpha) {
+  const h = hex.replace("#", "");
+  const full = h.length === 3 ? h.split("").map((c) => c + c).join("") : h;
+  const r = parseInt(full.slice(0, 2), 16) || 0;
+  const g = parseInt(full.slice(2, 4), 16) || 0;
+  const b = parseInt(full.slice(4, 6), 16) || 0;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
 function renderWeightChart(canvasId, logs, days, targetWeight) {
