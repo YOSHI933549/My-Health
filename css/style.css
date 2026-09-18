@@ -1014,19 +1014,3 @@ canvas { width: 100%; display: block; }
 .weight-trend .up { color: var(--accent-orange); }
 .weight-trend .down { color: var(--accent-blue); }
 
-.sync-status {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: var(--text-muted);
-  margin-bottom: 12px;
-}
-.sync-status::before {
-  content: "";
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--primary);
-  flex-shrink: 0;
-}

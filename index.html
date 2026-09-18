@@ -19,8 +19,6 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="健康トラッカー">
 
-<!-- Google Drive同期用(js/sync.js から利用) -->
-<script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 
@@ -452,23 +450,6 @@
     <details class="card settings-group">
       <summary>その他の連携（使う場合のみ）</summary>
       <div class="settings-group-body">
-        <section id="syncCard">
-          <h3>Google Drive同期</h3>
-          <p id="syncNotConfigured" class="hint hidden">現在は未設定です。</p>
-          <p id="syncLoadFailed" class="hint hidden">同期機能を読み込めませんでした。ページを再読み込みしてください。</p>
-          <div id="syncSignedOut" class="hidden">
-            <p class="hint">別の端末でも同じ記録を使うための機能です。</p>
-            <button type="button" class="btn primary" id="syncSignInBtn">Googleでログインして同期</button>
-          </div>
-          <div id="syncSignedIn" class="hidden">
-            <div class="sync-status"><span id="syncStatusText">同期中...</span></div>
-            <div class="field-row">
-              <button type="button" class="btn ghost" id="syncNowBtn">今すぐ同期</button>
-              <button type="button" class="btn ghost" id="syncSignOutBtn">ログアウト</button>
-            </div>
-          </div>
-        </section>
-
         <section class="settings-section">
           <h3>体重計連携</h3>
           <p class="hint">Apple Healthの体重をn8n経由で取り込む場合に設定します。</p>
@@ -519,7 +500,6 @@
 <script src="js/exercise-icons.js"></script>
 <script src="js/app.js"></script>
 <script src="js/codex-sync.js"></script>
-<script src="js/sync.js"></script>
 <script src="js/n8n-sync.js"></script>
 <script src="js/ocr.js"></script>
 </body>
