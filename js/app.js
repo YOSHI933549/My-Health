@@ -317,49 +317,35 @@ function renderDashboard() {
     : `<div class="empty-state">この日のトレーニング記録はまだありません。「筋トレ」タブから追加してください。</div>`;
 }
 
-function calorieHeroHTML(value, target) {
-  const pct = target > 0 ? Math.min(100, Math.round((value / target) * 100)) : 0;
-  const remain = Math.round(target - value);
-  const over = target > 0 && value > target;
-  const remainText = target > 0
-    ? (over ? `目標より ${Math.abs(remain)}kcal オーバー` : `残り ${remain}kcal`)
-    : "目標未設定";
-  return `
-  <div class="macro-hero cal">
-    <div class="ring-gauge" style="--pct:${pct}">
-      <div class="ring-value">${pct}<small>%</small></div>
-    </div>
-    <div class="macro-hero-info">
-      <div class="mh-label">カロリー</div>
-      <div class="mh-value">${Math.round(value)}<small> / ${target}kcal</small></div>
-      <div class="mh-remain${over ? " over" : ""}">${over ? "🔥 " : ""}${remainText}</div>
-    </div>
-  </div>`;
-}
+// 4つの栄養素(カロリー/たんぱく質/脂質/炭水化物)を、同じ大きさのリング
+// ゲージで並べる。色の役割(cal=橙, protein=緑, fat=紫, carb=青)は据え置き。
+const MACRO_RING_COLOR_VAR = {
+  cal: "--accent-orange",
+  protein: "--primary",
+  fat: "--accent-purple",
+  carb: "--accent-blue",
+};
 
-function macroMiniHTML(cls, label, value, target, unit) {
+function macroRingCardHTML(cls, label, value, target, unit) {
   const pct = target > 0 ? Math.min(100, Math.round((value / target) * 100)) : 0;
   const over = target > 0 && value > target;
   return `
-  <div class="macro-mini ${cls}">
-    <span class="mm-dot"></span>
-    <span class="mm-label">${label}</span>
-    <span class="mm-track"><span class="mm-fill" style="width:${pct}%"></span></span>
-    <span class="mm-value">${over ? "🔥 " : ""}${Math.round(value)}/${target}${unit}</span>
+  <div class="macro-ring-card ${cls}">
+    <div class="ring-gauge-sm" style="--pct:${pct}; --ring-color:var(${MACRO_RING_COLOR_VAR[cls]})">
+      <div class="rg-value">${pct}<small>%</small></div>
+    </div>
+    <div class="mrc-label">${label}</div>
+    <div class="mrc-value${over ? " over" : ""}">${over ? "🔥 " : ""}${Math.round(value)}/${target}${unit}</div>
   </div>`;
 }
 
 function renderMacroCards(totals, targets) {
-  const heroEl = document.getElementById("macroCards");
-  heroEl.innerHTML = calorieHeroHTML(totals.calories, targets.calories);
-
-  const miniEl = document.getElementById("macroMiniGrid");
-  if (miniEl) {
-    miniEl.innerHTML =
-      macroMiniHTML("protein", "たんぱく質", totals.protein, targets.protein, "g") +
-      macroMiniHTML("fat", "脂質", totals.fat, targets.fat, "g") +
-      macroMiniHTML("carb", "炭水化物", totals.carbs, targets.carb, "g");
-  }
+  const el = document.getElementById("macroCards");
+  el.innerHTML =
+    macroRingCardHTML("cal", "カロリー", totals.calories, targets.calories, "kcal") +
+    macroRingCardHTML("protein", "たんぱく質", totals.protein, targets.protein, "g") +
+    macroRingCardHTML("fat", "脂質", totals.fat, targets.fat, "g") +
+    macroRingCardHTML("carb", "炭水化物", totals.carbs, targets.carb, "g");
 }
 
 // -------------------------------------------------------------------------
@@ -577,19 +563,28 @@ function initMeals() {
   });
 }
 
+// 区分(朝食/昼食/夕食/間食)ごとにタグの色分けクラスを振る
+const MEAL_TYPE_TAG_CLASS = {
+  朝食: "meal-breakfast",
+  昼食: "meal-lunch",
+  夕食: "meal-dinner",
+  間食: "meal-snack",
+};
+
 function mealItemHTML(m, withDelete = true) {
   const macros = `
     <span>🔥 ${m.calories}kcal</span>
     <span>P ${m.protein}g</span>
     ${m.fat ? `<span>F ${m.fat}g</span>` : ""}
     ${m.carbs ? `<span>C ${m.carbs}g</span>` : ""}`;
+  const tagClass = MEAL_TYPE_TAG_CLASS[m.type] || "";
   return `
   <div class="list-item">
     ${m.photo ? `<img src="${m.photo}" alt="">` : ""}
     <div class="info">
       <div class="title-row">
         <span class="name">${escapeHTML(m.name)}</span>
-        <span class="tag">${m.type}</span>
+        <span class="tag ${tagClass}">${m.type}</span>
       </div>
       <div class="meta">${fmtDate(m.date)} ${m.time || ""}${m.memo ? " ・ " + escapeHTML(m.memo) : ""}</div>
       <div class="macros">${macros}</div>
