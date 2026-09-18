@@ -665,6 +665,7 @@ function initWorkouts() {
   });
 
   initExercisePicker(exerciseSelect);
+  initWorkoutCalendar();
 
   document.getElementById("workoutForm").addEventListener("submit", (e) => {
     e.preventDefault();
@@ -790,6 +791,7 @@ function workoutItemHTML(w, withDelete = true) {
 function renderWorkouts() {
   const dateStr = document.getElementById("workoutsDate").value || todayStr();
   renderPrevWorkoutHint(dateStr);
+  renderWorkoutCalendar();
   const items = state.workouts.filter((w) => w.date === dateStr);
   const el = document.getElementById("workoutsList");
   el.innerHTML = items.length
@@ -812,6 +814,150 @@ function renderPrevWorkoutHint(dateStr) {
   const names = [...new Set(state.workouts.filter((w) => w.date === lastDate).map((w) => w.name))];
   el.classList.remove("hidden");
   el.innerHTML = `<span>前回(${fmtDate(lastDate)})</span><b>${names.map(escapeHTML).join("・")}</b>`;
+}
+
+// --- 筋トレカレンダー -----------------------------------------------------
+// 「どの日に何をやったか」を月表示で一目で追えるようにする。セルには部位を1文字
+// (胸・背・脚…)の色付きチップで出し、正確な種目名は日付をタップして下の
+// 「記録一覧」で見る、という二段構えにしている。スマホ幅だとセルが40px前後しか
+// 無く、種目名をそのまま並べると読めないため。
+
+const WORKOUT_GROUP_SHORT = {
+  "胸": "胸",
+  "背中": "背",
+  "脚": "脚",
+  "肩": "肩",
+  "腕": "腕",
+  "体幹・腹筋": "腹",
+  "その他": "他",
+};
+const WORKOUT_GROUP_KEY = {
+  "胸": "chest",
+  "背中": "back",
+  "脚": "legs",
+  "肩": "shoulder",
+  "腕": "arm",
+  "体幹・腹筋": "core",
+  "その他": "other",
+};
+
+let workoutCalMonth = null; // 表示中の月 "YYYY-MM"
+
+// 部位はexerciseMuscleGroup()(selectのoptgroupが出どころ)を使う。
+// 自由入力の種目は部位が無いので、カレンダー上では「その他」にまとめる。
+function exerciseGroupOf(name) {
+  return exerciseMuscleGroup(name) || "その他";
+}
+
+function initWorkoutCalendar() {
+  const grid = document.getElementById("wcalGrid");
+  if (!grid) return;
+
+  document.getElementById("wcalPrev").addEventListener("click", () => shiftWorkoutCalMonth(-1));
+  document.getElementById("wcalNext").addEventListener("click", () => shiftWorkoutCalMonth(1));
+  document.getElementById("wcalToday").addEventListener("click", () => selectWorkoutDate(todayStr()));
+
+  grid.addEventListener("click", (e) => {
+    const cell = e.target.closest(".wcal-day");
+    if (!cell || !cell.dataset.date) return;
+    selectWorkoutDate(cell.dataset.date);
+  });
+}
+
+function shiftWorkoutCalMonth(delta) {
+  const base = workoutCalMonth || todayStr().slice(0, 7);
+  const [y, m] = base.split("-").map(Number);
+  const d = new Date(y, m - 1 + delta, 1);
+  workoutCalMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  renderWorkoutCalendar();
+}
+
+// カレンダーの日付タップ = 記録日の選択。フォームの日付とも連動させて、
+// そのまま種目を追記できるようにする。
+function selectWorkoutDate(dateStr) {
+  const input = document.getElementById("workoutsDate");
+  if (input) input.value = dateStr;
+  workoutCalMonth = dateStr.slice(0, 7);
+  renderWorkouts();
+}
+
+function renderWorkoutCalendar() {
+  const grid = document.getElementById("wcalGrid");
+  if (!grid) return;
+
+  const selected = document.getElementById("workoutsDate").value || todayStr();
+  if (!workoutCalMonth) workoutCalMonth = selected.slice(0, 7);
+  const [y, m] = workoutCalMonth.split("-").map(Number);
+  document.getElementById("wcalTitle").textContent = `${y}年${m}月`;
+
+  const daysInMonth = new Date(y, m, 0).getDate();
+  const lead = new Date(y, m - 1, 1).getDay();
+  const today = todayStr();
+
+  const byDate = {};
+  state.workouts.forEach((w) => {
+    if (!w.date || w.date.slice(0, 7) !== workoutCalMonth) return;
+    (byDate[w.date] = byDate[w.date] || []).push(w.name);
+  });
+
+  const usedGroups = [];
+  let html = "";
+  for (let i = 0; i < lead; i++) html += `<div class="wcal-blank"></div>`;
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    const names = byDate[dateStr] || [];
+    const groups = [...new Set(names.map(exerciseGroupOf))];
+    groups.forEach((g) => {
+      if (!usedGroups.includes(g)) usedGroups.push(g);
+    });
+
+    const shown = groups.slice(0, 3);
+    const chips =
+      shown
+        .map(
+          (g) =>
+            `<span class="wcal-chip grp-${WORKOUT_GROUP_KEY[g] || "other"}">${escapeHTML(
+              WORKOUT_GROUP_SHORT[g] || "他"
+            )}</span>`
+        )
+        .join("") +
+      (groups.length > shown.length ? `<span class="wcal-chip is-more">+${groups.length - shown.length}</span>` : "");
+
+    const dow = new Date(y, m - 1, d).getDay();
+    const cls = ["wcal-day"];
+    if (names.length) cls.push("has-log");
+    if (dateStr === selected) cls.push("is-selected");
+    if (dateStr === today) cls.push("is-today");
+    if (dow === 0) cls.push("is-sun");
+    if (dow === 6) cls.push("is-sat");
+
+    const label = names.length ? `${fmtDate(dateStr)} ${names.join("・")}` : `${fmtDate(dateStr)} 記録なし`;
+    html += `
+    <button type="button" class="${cls.join(" ")}" data-date="${dateStr}" title="${escapeHTML(label)}" aria-label="${escapeHTML(label)}"${dateStr === selected ? ' aria-current="date"' : ""}>
+      <span class="wcal-dnum">${d}</span>
+      <span class="wcal-chips">${chips}</span>
+    </button>`;
+  }
+  grid.innerHTML = html;
+
+  const legendEl = document.getElementById("wcalLegend");
+  if (legendEl) {
+    legendEl.innerHTML = usedGroups
+      .map(
+        (g) =>
+          `<span class="wcal-legend-item"><i class="wcal-chip grp-${WORKOUT_GROUP_KEY[g] || "other"}">${escapeHTML(
+            WORKOUT_GROUP_SHORT[g] || "他"
+          )}</i>${escapeHTML(g)}</span>`
+      )
+      .join("");
+  }
+
+  const summaryEl = document.getElementById("wcalSummary");
+  if (summaryEl) {
+    const days = Object.keys(byDate).length;
+    summaryEl.textContent = days ? `この月のトレーニング ${days}日` : "この月の記録はまだありません";
+  }
 }
 
 // -------------------------------------------------------------------------
