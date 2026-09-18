@@ -926,7 +926,21 @@ input:focus, select:focus {
 }
 .save-error b { color: var(--danger); }
 
+.toast-undo {
+  margin-left: 12px;
+  padding: 4px 10px;
+  border: 1px solid var(--bg);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--bg);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 .toast {
+  display: flex;
+  align-items: center;
   position: fixed;
   bottom: 90px;
   left: 50%;

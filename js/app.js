@@ -10,7 +10,7 @@ const MEAL_LINK_HASH_PREFIX = "#meal=";
 
 const DEFAULT_STATE = {
   profile: null, // Profile | null
-  weightLogs: [], // {id, date, weight}
+  weightLogs: [], // {id, date, time, weight}  ※timeは後から足したので、古い記録には無い
   meals: [], // {id, date, time, type, name, calories, protein, fat, carbs, memo, photo}
   workouts: [], // {id, date, name, memo}
   // n8n から取り込み済みの食事の行ID。取り込んだ記録をアプリ側で削除しても
@@ -268,8 +268,18 @@ function switchTab(tab) {
 // -------------------------------------------------------------------------
 // Nutrition target calculation
 // -------------------------------------------------------------------------
+// 体重は1日に何度でも記録できるので、日付だけでなく時刻まで見て並べる。
+// 時刻を持たない古い記録は、その日の先頭として扱う。
+function weightSortKey(log) {
+  return `${log.date} ${log.time || "00:00"}`;
+}
+
+function sortedWeightLogs() {
+  return [...state.weightLogs].sort((a, b) => weightSortKey(a).localeCompare(weightSortKey(b)));
+}
+
 function getWeightAsOf(dateStr) {
-  const logs = [...state.weightLogs].sort((a, b) => a.date.localeCompare(b.date));
+  const logs = sortedWeightLogs();
   if (logs.length === 0) return null;
   const upTo = logs.filter((l) => l.date <= dateStr);
   if (upTo.length > 0) return upTo[upTo.length - 1];
@@ -277,7 +287,7 @@ function getWeightAsOf(dateStr) {
 }
 
 function getLatestWeight() {
-  const logs = [...state.weightLogs].sort((a, b) => a.date.localeCompare(b.date));
+  const logs = sortedWeightLogs();
   return logs.length ? logs[logs.length - 1] : null;
 }
 
@@ -608,11 +618,7 @@ function initMeals() {
   document.getElementById("mealsList").addEventListener("click", (e) => {
     const btn = e.target.closest(".del");
     if (!btn) return;
-    const id = btn.dataset.id;
-    if (!confirm("この記録を削除しますか?")) return;
-    state.meals = state.meals.filter((m) => m.id !== id);
-    saveState();
-    renderMeals();
+    deleteWithUndo("meals", btn.dataset.id, renderMeals, "食事の記録");
   });
 }
 
@@ -747,10 +753,7 @@ function initWorkouts() {
   document.getElementById("workoutsList").addEventListener("click", (e) => {
     const btn = e.target.closest(".del");
     if (!btn) return;
-    if (!confirm("この記録を削除しますか?")) return;
-    state.workouts = state.workouts.filter((w) => w.id !== btn.dataset.id);
-    saveState();
-    renderWorkouts();
+    deleteWithUndo("workouts", btn.dataset.id, renderWorkouts, "トレーニングの記録");
   });
 }
 
@@ -1009,21 +1012,26 @@ function renderWorkoutCalendar() {
 // -------------------------------------------------------------------------
 function initWeight() {
   document.getElementById("weightDate").value = todayStr();
+  document.getElementById("weightTime").value = nowTimeStr();
 
   document.getElementById("weightForm").addEventListener("submit", (e) => {
     e.preventDefault();
     const date = document.getElementById("weightDate").value || todayStr();
+    const time = document.getElementById("weightTime").value || nowTimeStr();
     const weight = Number(document.getElementById("weightValue").value);
     if (!weight) return;
-    const existing = state.weightLogs.find((l) => l.date === date);
+    // 同じ日でも時刻が違えば別の記録として残す(朝晩それぞれ量れるように)。
+    // 同じ日時への記録だけは、打ち間違いの訂正とみなして上書きする。
+    const existing = state.weightLogs.find((l) => l.date === date && (l.time || "") === time);
     if (existing) {
       existing.weight = weight;
     } else {
-      state.weightLogs.push({ id: uid(), date, weight });
+      state.weightLogs.push({ id: uid(), date, time, weight });
     }
     saveState();
     e.target.reset();
     document.getElementById("weightDate").value = todayStr();
+    document.getElementById("weightTime").value = nowTimeStr();
     renderWeight();
     toast("体重を記録しました");
   });
@@ -1031,10 +1039,7 @@ function initWeight() {
   document.getElementById("weightList").addEventListener("click", (e) => {
     const btn = e.target.closest(".del");
     if (!btn) return;
-    if (!confirm("この記録を削除しますか?")) return;
-    state.weightLogs = state.weightLogs.filter((l) => l.id !== btn.dataset.id);
-    saveState();
-    renderWeight();
+    deleteWithUndo("weightLogs", btn.dataset.id, renderWeight, "体重の記録");
   });
 
   document.getElementById("weightRangeGroup").addEventListener("click", (e) => {
@@ -1050,7 +1055,7 @@ function initWeight() {
 
 function renderWeightTrend(logs) {
   const el = document.getElementById("weightTrend");
-  const sorted = [...logs].sort((a, b) => a.date.localeCompare(b.date));
+  const sorted = [...logs].sort((a, b) => weightSortKey(a).localeCompare(weightSortKey(b)));
   if (sorted.length === 0) {
     el.innerHTML = "";
     return;
@@ -1068,6 +1073,15 @@ function renderWeightTrend(logs) {
     `<span>記録数 ${sorted.length}件</span>`,
   ];
 
+  // 1日に複数回量った日があると、グラフの値(その日の平均)と履歴の値が食い違って
+  // 見えるので、そのときだけ理由を添える。
+  const daysWithMultiple = new Set(
+    sorted.map((l) => l.date).filter((d, i, arr) => arr.indexOf(d) !== i)
+  ).size;
+  if (daysWithMultiple > 0) {
+    parts.push(`<span>グラフは1日の平均</span>`);
+  }
+
   const targetWeight = state.profile && state.profile.targetWeight;
   if (targetWeight) {
     const remain = +(targetWeight - latest.weight).toFixed(1);
@@ -1080,7 +1094,7 @@ function renderWeightTrend(logs) {
 }
 
 function renderWeight() {
-  const sorted = [...state.weightLogs].sort((a, b) => b.date.localeCompare(a.date));
+  const sorted = sortedWeightLogs().reverse();
   const el = document.getElementById("weightList");
   el.innerHTML = sorted.length
     ? sorted
@@ -1094,7 +1108,7 @@ function renderWeight() {
           <div class="info">
             <div class="title-row">
               <span class="name">${l.weight}kg</span>
-              <span class="tag">${fmtDate(l.date)}</span>
+              <span class="tag">${fmtDate(l.date)}${l.time ? " " + l.time : ""}</span>
             </div>
             ${diffText ? `<div class="meta">前回比 ${diffText}</div>` : ""}
           </div>
@@ -1326,10 +1340,24 @@ function color_mix_fallback(hex, alpha) {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
+// 1日に何度も量ると同じ日に複数の記録が並ぶので、グラフはその日の平均を1点として
+// 描く。横軸が日付である以上、朝と晩を別の点として打っても線が上下に震えるだけで、
+// 肝心の増減の傾きが読めなくなるため。
+function dailyAverageWeights(logs) {
+  const byDate = {};
+  logs.forEach((l) => {
+    (byDate[l.date] = byDate[l.date] || []).push(l.weight);
+  });
+  return Object.entries(byDate).map(([date, weights]) => ({
+    date,
+    value: +(weights.reduce((a, b) => a + b, 0) / weights.length).toFixed(1),
+  }));
+}
+
 function renderWeightChart(canvasId, logs, days, targetWeight) {
   renderLineChart(
     canvasId,
-    logs.map((l) => ({ date: l.date, value: l.weight })),
+    dailyAverageWeights(logs),
     days,
     {
       targetValue: targetWeight,
@@ -1539,12 +1567,52 @@ function resetAllData() {
 // Toast
 // -------------------------------------------------------------------------
 let toastTimer = null;
-function toast(msg) {
+
+// onUndo を渡すと「元に戻す」ボタン付きになり、表示時間も長めになる。
+function toast(msg, onUndo) {
   const el = document.getElementById("toast");
-  el.textContent = msg;
+  el.textContent = "";
+  el.append(msg);
+
+  if (onUndo) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "toast-undo";
+    btn.textContent = "元に戻す";
+    btn.addEventListener("click", () => {
+      el.classList.add("hidden");
+      clearTimeout(toastTimer);
+      onUndo();
+    });
+    el.append(btn);
+  }
+
   el.classList.remove("hidden");
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.add("hidden"), 2400);
+  toastTimer = setTimeout(() => el.classList.add("hidden"), onUndo ? 6000 : 2400);
+}
+
+// -------------------------------------------------------------------------
+// 取り消せる削除
+// -------------------------------------------------------------------------
+// 削除の確認ダイアログは出さない。毎回「はい」を押させても誤操作は防げず、
+// 押した後に戻せないことのほうが困るので、すぐ消して数秒だけ取り消せるようにする。
+// 消した位置に戻すのは、並び順が記録順に依存する箇所があるため。
+function deleteWithUndo(listName, id, rerender, label) {
+  const list = state[listName];
+  const index = list.findIndex((item) => item.id === id);
+  if (index === -1) return;
+  const [removed] = list.splice(index, 1);
+
+  saveState();
+  rerender();
+
+  toast(`${label}を削除しました`, () => {
+    state[listName].splice(index, 0, removed);
+    saveState();
+    rerender();
+    toast(`${label}を元に戻しました`);
+  });
 }
 
 // -------------------------------------------------------------------------
