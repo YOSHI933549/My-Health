@@ -231,6 +231,28 @@
       <input type="date" id="workoutsDate">
     </div>
 
+    <!-- 月カレンダー: どの日にどの部位を鍛えたかが一目でわかる。日付をタップすると
+         その日の記録(種目・メモ)が下の「記録一覧」に出る。 -->
+    <div class="card workout-cal">
+      <div class="wcal-head">
+        <button type="button" class="wcal-nav" id="wcalPrev" aria-label="前の月">‹</button>
+        <div class="wcal-title" id="wcalTitle"></div>
+        <button type="button" class="wcal-nav" id="wcalNext" aria-label="次の月">›</button>
+        <button type="button" class="wcal-today" id="wcalToday">今日</button>
+      </div>
+      <div class="wcal-weekdays" aria-hidden="true">
+        <span class="is-sun">日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span class="is-sat">土</span>
+      </div>
+      <div class="wcal-grid" id="wcalGrid"></div>
+      <div class="wcal-foot">
+        <div class="wcal-legend">
+          <span class="wcal-legend-item"><i class="wcal-chip body-upper">胸</i>上半身</span>
+          <span class="wcal-legend-item"><i class="wcal-chip body-lower">脚</i>下半身</span>
+        </div>
+        <div class="wcal-summary" id="wcalSummary"></div>
+      </div>
+    </div>
+
     <div class="prev-workout-hint hidden" id="prevWorkoutHint"></div>
 
     <form class="card form" id="workoutForm">
