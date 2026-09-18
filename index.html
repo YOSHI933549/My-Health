@@ -368,54 +368,6 @@
     </div>
   </section>
 
-  <!-- ============ TRENDS ============ -->
-  <!-- 一旦非表示: タブから外しただけで、DOM・ロジックは残してある(復活しやすいように) -->
-  <section class="tab-panel hidden" id="panel-trends">
-    <div class="panel-head">
-      <h2>分析</h2>
-    </div>
-
-    <div class="card">
-      <div class="chart-head">
-        <h3>集計期間</h3>
-        <div class="range-group" id="trendRangeGroup">
-          <button type="button" class="range-btn" data-range="7">1週間</button>
-          <button type="button" class="range-btn active" data-range="30">1ヶ月</button>
-          <button type="button" class="range-btn" data-range="90">3ヶ月</button>
-          <button type="button" class="range-btn" data-range="all">全期間</button>
-        </div>
-      </div>
-      <p class="hint" style="margin-bottom:0">選んだ期間の記録から、平均達成率・体重ペース・トレーニング頻度を集計します。</p>
-    </div>
-
-    <div id="trendsEmpty" class="notice hidden">
-      <p>この期間の記録がまだありません。食事・体重・トレーニングを記録すると、ここに分析とアドバイスが表示されます。</p>
-    </div>
-
-    <div id="trendsContent">
-      <div class="card">
-        <h3>サマリー</h3>
-        <div id="trendStats" class="target-summary"></div>
-      </div>
-
-      <div class="card">
-        <h3>週別 たんぱく質達成率</h3>
-        <canvas id="trendChart" height="160"></canvas>
-      </div>
-
-      <div class="card">
-        <h3>気づき</h3>
-        <div id="trendInsights" class="insight-list"></div>
-      </div>
-
-      <div class="card">
-        <h3>専門家アドバイス</h3>
-        <p class="hint" style="margin-top:-6px">記録の「時間帯」「食事の種類」「トレーニングした日/しない日」を比較して、具体的な対策を提案します。</p>
-        <div id="expertAdvice" class="insight-list"></div>
-      </div>
-    </div>
-  </section>
-
   <!-- ============ SETTINGS ============ -->
   <section class="tab-panel" id="panel-settings">
     <div class="panel-head">
