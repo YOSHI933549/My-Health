@@ -1000,30 +1000,6 @@ canvas { width: 100%; display: block; }
 .weight-trend .up { color: var(--accent-orange); }
 .weight-trend .down { color: var(--accent-blue); }
 
-.insight-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.insight-item {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  padding: 10px 12px;
-  border-radius: var(--radius);
-  background: var(--surface-alt);
-  border-left: 3px solid var(--border);
-  font-size: 13px;
-  line-height: 1.6;
-}
-
-.insight-item .icon { flex-shrink: 0; }
-
-.insight-item.good { border-left-color: var(--primary); }
-.insight-item.warning { border-left-color: var(--accent-orange); }
-.insight-item.info { border-left-color: var(--accent-blue); }
-
 .sync-status {
   display: flex;
   align-items: center;
