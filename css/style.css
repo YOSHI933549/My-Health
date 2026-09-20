@@ -468,116 +468,33 @@ input:focus, select:focus {
   outline-offset: 1px;
 }
 
-.exercise-picker {
-  position: relative;
+.body-part-picker {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
 }
 
-.exercise-picker-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
+.body-part-btn {
+  padding: 10px 6px;
   font-size: 15px;
-  padding: 7px 10px;
   border-radius: var(--radius);
   border: 1px solid var(--border);
   background: var(--surface-alt);
   color: var(--text);
   cursor: pointer;
-  text-align: left;
+  text-align: center;
 }
 
-.exercise-picker-btn:focus {
+.body-part-btn:focus {
   outline: 2px solid var(--primary);
   outline-offset: 1px;
 }
 
-.exercise-picker-icon {
-  width: 28px;
-  height: 28px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text);
-}
-.exercise-picker-icon svg { width: 100%; height: 100%; }
-
-.exercise-picker-label {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.exercise-picker-label.placeholder {
-  color: var(--text-muted);
-}
-
-.exercise-picker-chevron {
-  color: var(--text-muted);
-  font-size: 12px;
-}
-
-.exercise-picker-panel {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  right: 0;
-  z-index: 20;
-  max-height: 320px;
-  overflow-y: auto;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 6px;
-}
-
-.exercise-group-label {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-muted);
-  padding: 8px 8px 4px;
-}
-
-.exercise-option {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 7px 8px;
-  border: none;
-  background: none;
-  border-radius: var(--radius);
-  cursor: pointer;
-  color: var(--text);
-  font-size: 14px;
-  text-align: left;
-}
-.exercise-option:hover,
-.exercise-option:focus {
+.body-part-btn.is-selected {
   background: var(--primary-tint);
-  outline: none;
-}
-
-.exercise-option-icon {
-  width: 30px;
-  height: 30px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text);
-}
-.exercise-option-icon svg { width: 100%; height: 100%; }
-
-.exercise-option-label { flex: 1; }
-
-.exercise-option.is-custom {
-  border-top: 1px solid var(--border);
-  margin-top: 4px;
-  padding-top: 10px;
-  color: var(--text-muted);
+  border-color: var(--primary);
+  color: var(--primary);
+  font-weight: 700;
 }
 
 .photo-field input[type="file"] {
