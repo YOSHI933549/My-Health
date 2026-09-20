@@ -711,39 +711,23 @@ function initWorkouts() {
   dateInput.value = todayStr();
   dateInput.addEventListener("change", renderWorkouts);
 
-  const exerciseSelect = document.getElementById("exerciseSelect");
-  const customField = document.getElementById("exerciseCustomField");
-  const customInput = document.getElementById("exerciseCustomName");
-
-  exerciseSelect.addEventListener("change", () => {
-    const isCustom = exerciseSelect.value === "__custom__";
-    customField.classList.toggle("hidden", !isCustom);
-    if (isCustom) customInput.focus();
-  });
-
-  initExercisePicker(exerciseSelect);
   initWorkoutCalendar();
+  initBodyPartPicker();
 
   document.getElementById("workoutForm").addEventListener("submit", (e) => {
     e.preventDefault();
-    const name =
-      exerciseSelect.value === "__custom__" ? customInput.value.trim() : exerciseSelect.value;
+    if (!selectedBodyPart) return; // 部位を選ばずに送信された(ボタン以外からの送信など)
 
     const workout = {
       id: uid(),
       date: dateInput.value || todayStr(),
-      name,
+      name: selectedBodyPart,
       memo: document.getElementById("workoutMemo").value.trim(),
     };
-    if (!workout.name) {
-      if (exerciseSelect.value === "__custom__") customInput.focus();
-      return;
-    }
     state.workouts.push(workout);
     saveState();
     e.target.reset();
-    customField.classList.add("hidden");
-    exerciseSelect.dispatchEvent(new Event("change")); // 種目ピッカーの表示(アイコン・名前)を先頭の種目に戻す
+    setSelectedBodyPart(null);
     renderWorkouts();
     toast("トレーニングを記録しました");
   });
@@ -755,78 +739,27 @@ function initWorkouts() {
   });
 }
 
-// 種目名の横に小さい絵(線画アイコン)をつけた一覧から種目を選べるようにする。
-// 種目リストの実体は index.html の <select id="exerciseSelect"> のまま(隠して残す)にして、
-// そこから読み取って見た目だけを作る。値の保存や他の処理は今まで通り exerciseSelect(隠しselect)が担当する。
-function initExercisePicker(nativeSelect) {
-  const picker = document.getElementById("exercisePicker");
-  const btn = document.getElementById("exercisePickerBtn");
-  const btnIcon = document.getElementById("exercisePickerIcon");
-  const btnLabel = document.getElementById("exercisePickerLabel");
-  const panel = document.getElementById("exercisePickerPanel");
-  if (!picker || !btn || !panel) return;
+// どの種目をやったかではなく、どの部位を鍛えたかだけを選ぶ。細かい種目や
+// 重量・回数はメモ欄に自由に書いてもらう想定(種目リストを維持するコストを無くすため)。
+let selectedBodyPart = null;
 
-  const iconFor = (value) =>
-    (value === "__custom__" ? window.EXERCISE_ICON_CUSTOM : window.EXERCISE_ICONS && window.EXERCISE_ICONS[value]) ||
-    "";
+function initBodyPartPicker() {
+  const picker = document.getElementById("bodyPartPicker");
+  if (!picker) return;
 
-  let panelHTML = "";
-  Array.from(nativeSelect.children).forEach((node) => {
-    if (node.tagName === "OPTGROUP") {
-      panelHTML += `<div class="exercise-group-label">${escapeHTML(node.label)}</div>`;
-      Array.from(node.children).forEach((opt) => (panelHTML += exerciseOptionHTML(opt)));
-    } else if (node.tagName === "OPTION") {
-      panelHTML += exerciseOptionHTML(node);
-    }
+  picker.addEventListener("click", (e) => {
+    const btn = e.target.closest(".body-part-btn");
+    if (!btn) return;
+    setSelectedBodyPart(btn.dataset.part === selectedBodyPart ? null : btn.dataset.part);
   });
-  panel.innerHTML = panelHTML;
+}
 
-  function exerciseOptionHTML(opt) {
-    const isCustom = opt.value === "__custom__";
-    return `
-    <button type="button" class="exercise-option${isCustom ? " is-custom" : ""}" data-value="${escapeHTML(opt.value)}">
-      <span class="exercise-option-icon">${iconFor(opt.value)}</span>
-      <span class="exercise-option-label">${escapeHTML(opt.textContent)}</span>
-    </button>`;
-  }
-
-  function syncButtonFromSelect() {
-    const opt = nativeSelect.selectedOptions[0];
-    btnIcon.innerHTML = opt ? iconFor(opt.value) : "";
-    btnLabel.textContent = opt ? opt.textContent : "種目を選択";
-  }
-
-  function openPanel() {
-    panel.classList.remove("hidden");
-    btn.setAttribute("aria-expanded", "true");
-  }
-  function closePanel() {
-    panel.classList.add("hidden");
-    btn.setAttribute("aria-expanded", "false");
-  }
-
-  btn.addEventListener("click", () => {
-    panel.classList.contains("hidden") ? openPanel() : closePanel();
+function setSelectedBodyPart(part) {
+  selectedBodyPart = part;
+  document.querySelectorAll("#bodyPartPicker .body-part-btn").forEach((btn) => {
+    btn.classList.toggle("is-selected", btn.dataset.part === part);
+    btn.setAttribute("aria-checked", String(btn.dataset.part === part));
   });
-
-  panel.addEventListener("click", (e) => {
-    const optBtn = e.target.closest(".exercise-option");
-    if (!optBtn) return;
-    nativeSelect.value = optBtn.dataset.value;
-    nativeSelect.dispatchEvent(new Event("change"));
-    closePanel();
-  });
-
-  document.addEventListener("click", (e) => {
-    if (!picker.contains(e.target)) closePanel();
-  });
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closePanel();
-  });
-
-  // 隠しselectの値が変わったら(一覧からのクリック・フォームリセットどちらでも)ボタン表示を追従させる
-  nativeSelect.addEventListener("change", syncButtonFromSelect);
-  syncButtonFromSelect();
 }
 
 function workoutItemHTML(w, withDelete = true) {
@@ -900,10 +833,39 @@ const WORKOUT_GROUP_SHORT = {
 
 let workoutCalMonth = null; // 表示中の月 "YYYY-MM"
 
-// 部位はexerciseMuscleGroup()(selectのoptgroupが出どころ)を使う。
-// 自由入力の種目は部位が無いので、カレンダー上では「その他」にまとめる。
+// 新規記録は部位名(胸/背中/脚/肩/腕/体幹・腹筋)がそのまま name。
+// 種目選択UIがあった頃の記録(name が具体的な種目名)は、下の
+// LEGACY_EXERCISE_GROUP で部位に変換する。どちらにも当てはまらなければ「その他」。
+const CANONICAL_BODY_PARTS = ["胸", "背中", "脚", "肩", "腕", "体幹・腹筋"];
+const LEGACY_EXERCISE_GROUP = {
+  "ベンチプレス": "胸",
+  "インクラインベンチプレス": "胸",
+  "ダンベルフライ": "胸",
+  "腕立て伏せ(プッシュアップ)": "胸",
+  "デッドリフト": "背中",
+  "懸垂(チンニング)": "背中",
+  "ラットプルダウン": "背中",
+  "ベントオーバーロウ": "背中",
+  "ダンベルロウ": "背中",
+  "スクワット": "脚",
+  "レッグプレス": "脚",
+  "レッグエクステンション": "脚",
+  "レッグカール": "脚",
+  "ランジ": "脚",
+  "カーフレイズ": "脚",
+  "ショルダープレス": "肩",
+  "サイドレイズ": "肩",
+  "リアレイズ": "肩",
+  "アームカール(バイセップスカール)": "腕",
+  "トライセプスエクステンション": "腕",
+  "ディップス": "腕",
+  "プランク": "体幹・腹筋",
+  "クランチ(腹筋)": "体幹・腹筋",
+  "レッグレイズ": "体幹・腹筋",
+};
 function exerciseGroupOf(name) {
-  return exerciseMuscleGroup(name) || "その他";
+  if (CANONICAL_BODY_PARTS.includes(name)) return name;
+  return LEGACY_EXERCISE_GROUP[name] || "その他";
 }
 
 function initWorkoutCalendar() {

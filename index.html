@@ -260,66 +260,19 @@
     <div class="prev-workout-hint hidden" id="prevWorkoutHint"></div>
 
     <form class="card form" id="workoutForm">
-      <h3>種目を追加</h3>
-      <div class="field-row">
-        <label>種目名
-          <div class="exercise-picker" id="exercisePicker">
-            <button type="button" class="exercise-picker-btn" id="exercisePickerBtn" aria-haspopup="listbox" aria-expanded="false">
-              <span class="exercise-picker-icon" id="exercisePickerIcon"></span>
-              <span class="exercise-picker-label" id="exercisePickerLabel">種目を選択</span>
-              <span class="exercise-picker-chevron">▾</span>
-            </button>
-            <div class="exercise-picker-panel hidden" id="exercisePickerPanel" role="listbox"></div>
-          </div>
-          <select id="exerciseSelect" class="hidden" aria-hidden="true" tabindex="-1">
-            <optgroup label="胸">
-              <option value="ベンチプレス">ベンチプレス</option>
-              <option value="インクラインベンチプレス">インクラインベンチプレス</option>
-              <option value="ダンベルフライ">ダンベルフライ</option>
-              <option value="腕立て伏せ(プッシュアップ)">腕立て伏せ(プッシュアップ)</option>
-            </optgroup>
-            <optgroup label="背中">
-              <option value="デッドリフト">デッドリフト</option>
-              <option value="懸垂(チンニング)">懸垂(チンニング)</option>
-              <option value="ラットプルダウン">ラットプルダウン</option>
-              <option value="ベントオーバーロウ">ベントオーバーロウ</option>
-              <option value="ダンベルロウ">ダンベルロウ</option>
-            </optgroup>
-            <optgroup label="脚">
-              <option value="スクワット">スクワット</option>
-              <option value="レッグプレス">レッグプレス</option>
-              <option value="レッグエクステンション">レッグエクステンション</option>
-              <option value="レッグカール">レッグカール</option>
-              <option value="ランジ">ランジ</option>
-              <option value="カーフレイズ">カーフレイズ</option>
-            </optgroup>
-            <optgroup label="肩">
-              <option value="ショルダープレス">ショルダープレス</option>
-              <option value="サイドレイズ">サイドレイズ</option>
-              <option value="リアレイズ">リアレイズ</option>
-            </optgroup>
-            <optgroup label="腕">
-              <option value="アームカール(バイセップスカール)">アームカール(バイセップスカール)</option>
-              <option value="トライセプスエクステンション">トライセプスエクステンション</option>
-              <option value="ディップス">ディップス</option>
-            </optgroup>
-            <optgroup label="体幹・腹筋">
-              <option value="プランク">プランク</option>
-              <option value="クランチ(腹筋)">クランチ(腹筋)</option>
-              <option value="レッグレイズ">レッグレイズ</option>
-            </optgroup>
-            <option value="__custom__">＋ その他(自由入力)</option>
-          </select>
-        </label>
+      <h3>部位を追加</h3>
+      <div class="body-part-picker" id="bodyPartPicker" role="radiogroup" aria-label="鍛えた部位">
+        <button type="button" class="body-part-btn" data-part="胸">胸</button>
+        <button type="button" class="body-part-btn" data-part="背中">背中</button>
+        <button type="button" class="body-part-btn" data-part="脚">脚</button>
+        <button type="button" class="body-part-btn" data-part="肩">肩</button>
+        <button type="button" class="body-part-btn" data-part="腕">腕</button>
+        <button type="button" class="body-part-btn" data-part="体幹・腹筋">体幹・腹筋</button>
       </div>
-      <label id="exerciseCustomField" class="hidden">
-        種目名(自由入力)
-        <input type="text" id="exerciseCustomName" placeholder="例: ケーブルクロスオーバー">
-      </label>
       <label>メモ
-        <input type="text" id="workoutMemo" placeholder="任意(体調・フォームの気づきなど)">
+        <input type="text" id="workoutMemo" placeholder="任意(種目・重量・回数など)">
       </label>
-      <button type="submit" class="btn primary">種目を記録</button>
+      <button type="submit" class="btn primary">部位を記録</button>
     </form>
 
     <div class="card">
@@ -497,7 +450,6 @@
 
 <div id="toast" class="toast hidden"></div>
 
-<script src="js/exercise-icons.js"></script>
 <script src="js/app.js"></script>
 <script src="js/codex-sync.js"></script>
 <script src="js/n8n-sync.js"></script>
