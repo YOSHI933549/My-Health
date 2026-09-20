@@ -291,7 +291,6 @@ manifest.json   PWAマニフェスト(アプリ名・アイコン・スタンド
 sw.js           Service Worker(アプリ本体をオフラインキャッシュ)
 icons/          ホーム画面アイコン(192/512/Apple touch icon/favicon)
 .github/workflows/deploy-pages.yml  GitHub Pagesへの自動デプロイ
-docs/           別プロジェクト(SNS/YouTube自動収集のn8nワークフロー)のドキュメント
 ```
 
 外部ライブラリやビルドツールには依存していないため、オフラインでもそのまま動作します。
