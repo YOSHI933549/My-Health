@@ -24,7 +24,26 @@
 
 <header class="app-header">
   <div class="brand">
-    <span class="brand-mark">💪</span>
+    <!-- 鉛筆で描いた力こぶ(装飾のみ) -->
+    <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 48 48" focusable="false">
+      <defs>
+        <pattern id="bdHatch" width="2.6" height="2.6" patternUnits="userSpaceOnUse" patternTransform="rotate(-52)"><path d="M0 1.3H2.6" stroke="#c9623f" stroke-width="1" stroke-opacity=".85"/></pattern>
+        <pattern id="bdShade" width="2.4" height="2.4" patternUnits="userSpaceOnUse" patternTransform="rotate(38)"><path d="M0 1.2H2.4" stroke="#7a3a22" stroke-width=".8" stroke-opacity=".55"/></pattern>
+        <filter id="bdRough" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="1.3" xChannelSelector="R" yChannelSelector="G"/></filter>
+        <path id="bdArm" d="M5 27 C 7 15.5 22 11 28.5 22.5 C 27.6 19.8 26 17.6 24.6 15.6 C 21.6 11 23.6 4 29.4 4 C 35 4 38.2 7.6 37.2 12 C 38.6 14 39.6 16.2 40.6 19 C 42.6 25 44 32 42 37 C 40.5 41.5 35 43 29 42.4 C 21 41.8 12 41.6 5 41 C 3.8 37 3.8 31 5 27 Z"/>
+      </defs>
+      <g filter="url(#bdRough)" stroke-linecap="round" stroke-linejoin="round">
+        <use href="#bdArm" fill="#f2d3c4" fill-opacity=".55"/>
+        <use href="#bdArm" fill="url(#bdHatch)"/>
+        <path d="M6 38.2 C 15 39 25 39.6 32 39.2 C 37 38.8 40 35.5 41 30 L 42.6 33 C 41.6 39.5 37 42.8 29 42.4 C 21 41.8 12 41.6 5 41 Z" fill="url(#bdShade)"/>
+        <g fill="none" stroke="#3a3936">
+          <use href="#bdArm" stroke-width="1.5"/>
+          <path d="M5.8 26 C 8.6 16.4 21.4 12.6 27.6 21.4 M 25 15 C 22.4 10.6 24.6 4.8 29.8 4.8 C 34.6 4.8 37.4 8 36.6 11.6 M 41.4 21 C 43 27 43.4 32.4 41.4 37.2 M 29.6 43.1 C 21.6 42.6 12.4 42.4 5.6 41.8" stroke-width=".8" stroke-opacity=".55"/>
+          <path d="M24.4 9.6 C 26.4 10.6 28.4 10.6 30.4 9.4 M 24.4 12.8 C 26.4 13.8 29 13.6 31 12.4 M 31.2 5.8 C 33.4 7.4 33.8 10.2 32 12.4 M 13.5 27.5 C 16.5 25.5 20.5 26 22.6 28.6" stroke-width=".9" stroke-opacity=".8"/>
+          <path d="M6.6 13.4 L 4.4 10.6 M 11.8 9.8 L 11.2 6.2 M 17.6 9.4 L 19 6" stroke-width="1.2"/>
+        </g>
+      </g>
+    </svg></span>
     <div>
       <h1>健康・筋トレ・増量トラッカー</h1>
       <p class="tagline">①健康 ②筋肉トレーニング ③体重を上げる ― 3つの目標を1つの記録で管理</p>

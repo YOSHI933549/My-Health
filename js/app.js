@@ -1185,18 +1185,24 @@ function renderLineChart(canvasId, points, days, opts) {
   const y = (v) => padT + plotH - ((v - min) / (max - min)) * plotH;
 
   // horizontal gridlines + y-axis labels on the right
-  ctx.strokeStyle = border;
+  // (紙のテーマ: 目盛り線は鉛筆で薄く手引きしたように少し揺らす)
+  const graphite = styles.getPropertyValue("--graphite").trim() || border;
+  ctx.strokeStyle = graphite;
   ctx.fillStyle = muted;
   ctx.font = "10px 'Kalam', 'Klee One', sans-serif";
   ctx.lineWidth = 1;
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
   const gridLines = 3;
   for (let i = 0; i <= gridLines; i++) {
     const val = min + ((max - min) * i) / gridLines;
     const yy = y(val);
+    ctx.save();
+    ctx.globalAlpha = 0.22;
     ctx.beginPath();
-    ctx.moveTo(padL, yy);
-    ctx.lineTo(cssWidth - padR, yy);
+    pencilLineTo(ctx, padL, yy, cssWidth - padR, yy, i + 1);
     ctx.stroke();
+    ctx.restore();
     ctx.fillText(opts.axisLabel(val), cssWidth - padR + 6, yy + 3);
   }
 
@@ -1209,12 +1215,12 @@ function renderLineChart(canvasId, points, days, opts) {
   )];
   ctx.save();
   ctx.setLineDash([2, 3]);
-  ctx.strokeStyle = border;
+  ctx.strokeStyle = graphite;
+  ctx.globalAlpha = 0.18;
   labelIndices.forEach((i) => {
     const px = x(i);
     ctx.beginPath();
-    ctx.moveTo(px, padT);
-    ctx.lineTo(px, padT + plotH);
+    pencilLineTo(ctx, px, padT, px, padT + plotH, i + 11);
     ctx.stroke();
   });
   ctx.restore();
@@ -1235,11 +1241,10 @@ function renderLineChart(canvasId, points, days, opts) {
     const ty = y(Number(opts.targetValue));
     ctx.save();
     ctx.strokeStyle = orange;
-    ctx.setLineDash([4, 4]);
-    ctx.lineWidth = 1.5;
+    ctx.setLineDash([5, 4]);
+    ctx.lineWidth = 1.4;
     ctx.beginPath();
-    ctx.moveTo(padL, ty);
-    ctx.lineTo(cssWidth - padR, ty);
+    pencilLineTo(ctx, padL, ty, cssWidth - padR, ty, 7);
     ctx.stroke();
     ctx.restore();
     ctx.fillStyle = orange;
@@ -1264,7 +1269,8 @@ function renderLineChart(canvasId, points, days, opts) {
     }
   });
 
-  // soft gradient fill under the line to give it some depth
+  // fill under the line: colored-pencil hatching (paper theme) instead of a
+  // smooth gradient, falling back to the gradient if patterns are unavailable
   const fillPath = new Path2D(linePath);
   fillPath.lineTo(x(windowed.length - 1), padT + plotH);
   fillPath.lineTo(x(0), padT + plotH);
@@ -1272,14 +1278,22 @@ function renderLineChart(canvasId, points, days, opts) {
   const gradient = ctx.createLinearGradient(0, padT, 0, padT + plotH);
   gradient.addColorStop(0, color_mix_fallback(primary, 0.22));
   gradient.addColorStop(1, color_mix_fallback(primary, 0));
-  ctx.fillStyle = gradient;
+  ctx.fillStyle = pencilHatch(ctx, primary, dpr) || gradient;
   ctx.fill(fillPath);
 
+  // the line itself: one firm pencil pass plus a lighter, slightly offset
+  // second pass, like a line drawn twice by hand
   ctx.strokeStyle = primary;
-  ctx.lineWidth = 2.25;
+  ctx.lineWidth = 2.1;
   ctx.lineJoin = "round";
   ctx.lineCap = "round";
   ctx.stroke(linePath);
+  ctx.save();
+  ctx.translate(0.8, -0.7);
+  ctx.globalAlpha = 0.45;
+  ctx.lineWidth = 1.1;
+  ctx.stroke(linePath);
+  ctx.restore();
 
   // points — open circles (colored ring, light fill) rather than solid dots,
   // with the latest point drawn larger and solid to draw the eye to "now"
@@ -1293,6 +1307,47 @@ function renderLineChart(canvasId, points, days, opts) {
     ctx.strokeStyle = primary;
     ctx.stroke();
   });
+}
+
+// 鉛筆の線(グラフの見た目だけ): 14pxごとに線に垂直な向きへ最大0.9pxずらして、
+// 手で引いた線のようにわずかに揺らす。揺れは seed と区間番号から決まるので、
+// 再描画しても同じ形になる(ちらつかない)。
+function pencilLineTo(ctx, x1, y1, x2, y2, seed) {
+  const len = Math.hypot(x2 - x1, y2 - y1) || 1;
+  const steps = Math.max(2, Math.round(len / 14));
+  const nx = -(y2 - y1) / len;
+  const ny = (x2 - x1) / len;
+  ctx.moveTo(x1, y1);
+  for (let k = 1; k <= steps; k++) {
+    const t = k / steps;
+    const n = k === steps ? 0 : ((Math.sin(k * 12.9898 + seed * 78.233) * 43758.5453) % 1) * 0.9;
+    ctx.lineTo(x1 + (x2 - x1) * t + nx * n, y1 + (y2 - y1) * t + ny * n);
+  }
+}
+
+// 色鉛筆の斜線で塗るためのパターン(グラフの見た目だけ)。6px角に斜線1本。
+function pencilHatch(ctx, hex, dpr) {
+  const size = 6;
+  const tile = document.createElement("canvas");
+  tile.width = tile.height = Math.round(size * dpr);
+  const t = tile.getContext("2d");
+  if (!t) return null;
+  t.scale(dpr, dpr);
+  t.strokeStyle = color_mix_fallback(hex, 0.34);
+  t.lineWidth = 1;
+  t.beginPath();
+  t.moveTo(-1, size + 1);
+  t.lineTo(size + 1, -1);
+  t.moveTo(-1, 1);
+  t.lineTo(1, -1);
+  t.moveTo(size - 1, size + 1);
+  t.lineTo(size + 1, size - 1);
+  t.stroke();
+  const pattern = ctx.createPattern(tile, "repeat");
+  if (pattern && pattern.setTransform && typeof DOMMatrix === "function") {
+    pattern.setTransform(new DOMMatrix([1 / dpr, 0, 0, 1 / dpr, 0, 0]));
+  }
+  return pattern;
 }
 
 // createLinearGradient wants real rgba() stops, but our CSS vars are hex —
