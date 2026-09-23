@@ -931,3 +931,202 @@ canvas { width: 100%; display: block; }
 .weight-trend .up { color: var(--accent-orange); }
 .weight-trend .down { color: var(--accent-blue); }
 
+
+/* =========================================================================
+   「紙とペン」テーマ
+   ナプキンや罫線ノートに鉛筆・ペンで書いたような見た目。上の既存スタイルを
+   上書きする形でまとめてあるので、この節を消せば元の見た目に戻る。
+   ========================================================================= */
+:root {
+  --bg: #e9e4d8;
+  --surface: #fbf8f0;
+  --surface-alt: #f3eee2;
+  --text: #2d2a25;
+  --text-muted: #857d6f;
+  --border: #cfc6b3;
+  --primary: #c0643e;
+  --primary-dark: #9d4a28;
+  --primary-tint: #f6e3d8;
+  --accent-orange: #c0643e;
+  --accent-blue: #3f5f9e;
+  --accent-purple: #7a5a8c;
+  --danger: #b8402e;
+  --danger-tint: #f7ded7;
+  --body-upper: #3f5f9e;
+  --body-lower: #5b8a4a;
+  --body-neutral: #8f877a;
+  --body-ink: #fff;
+  --rule: rgba(95, 125, 170, 0.16);
+  --shadow: 1px 2px 0 rgba(60, 45, 20, 0.08), 0 6px 14px rgba(60, 45, 20, 0.07);
+  --radius: 4px 6px 5px 7px / 7px 4px 6px 5px;
+  --radius-lg: 3px 5px 4px 6px / 6px 3px 5px 4px;
+  --font-display: "Klee One", "Hiragino Maru Gothic ProN", cursive;
+  --font-mono: "Klee One", "Hiragino Maru Gothic ProN", cursive;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #23211d;
+    --surface: #2e2b26;
+    --surface-alt: #37332c;
+    --text: #ece5d6;
+    --text-muted: #a39a89;
+    --border: #4a453b;
+    --primary: #e08a60;
+    --primary-dark: #c9714a;
+    --primary-tint: #45322a;
+    --accent-orange: #e08a60;
+    --accent-blue: #8aa6db;
+    --accent-purple: #b89acb;
+    --danger: #ec7a64;
+    --danger-tint: #4a2c25;
+    --body-upper: #8aa6db;
+    --body-lower: #92c07e;
+    --body-neutral: #a39a89;
+    --body-ink: #23211d;
+    --rule: rgba(236, 229, 214, 0.06);
+    --shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #23211d;
+  --surface: #2e2b26;
+  --surface-alt: #37332c;
+  --text: #ece5d6;
+  --text-muted: #a39a89;
+  --border: #4a453b;
+  --primary: #e08a60;
+  --primary-dark: #c9714a;
+  --primary-tint: #45322a;
+  --accent-orange: #e08a60;
+  --accent-blue: #8aa6db;
+  --accent-purple: #b89acb;
+  --danger: #ec7a64;
+  --danger-tint: #4a2c25;
+  --body-upper: #8aa6db;
+  --body-lower: #92c07e;
+  --body-neutral: #a39a89;
+  --body-ink: #23211d;
+  --rule: rgba(236, 229, 214, 0.06);
+  --shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
+}
+
+html, body {
+  font-family: "Klee One", "Hiragino Maru Gothic ProN", "Yu Gothic", sans-serif;
+  background-color: var(--bg);
+  /* 紙の繊維っぽいかすかなムラ */
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.35), transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(120, 90, 40, 0.05), transparent 45%);
+  background-attachment: fixed;
+}
+
+h1, h2, h3 { font-weight: 600; letter-spacing: 0.02em; }
+
+/* ヘッダー: 塗りつぶしをやめ、紙の上に手書きで題字を書いた感じに */
+.app-header {
+  background: transparent;
+  color: var(--text);
+  padding-bottom: 6px;
+}
+.brand h1 {
+  font-size: 20px;
+  padding-bottom: 4px;
+  border-bottom: 2.5px solid color-mix(in srgb, var(--primary) 70%, transparent);
+  border-radius: 0 0 60% 40% / 0 0 5px 3px;
+}
+.tagline { color: var(--text-muted); opacity: 1; }
+
+/* カード: 罫線入りのメモ用紙。角は少しいびつ */
+.card {
+  background-color: var(--surface);
+  background-image: repeating-linear-gradient(
+    to bottom, transparent 0, transparent 27px, var(--rule) 27px, var(--rule) 28px);
+  background-position: 0 14px;
+  border: 1.5px solid var(--border);
+  box-shadow: var(--shadow);
+}
+.card h3 {
+  font-size: 17px;
+  display: inline-block;
+  padding-bottom: 2px;
+  border-bottom: 2px solid color-mix(in srgb, var(--text) 55%, transparent);
+  border-radius: 0 0 40% 60% / 0 0 4px 3px;
+}
+
+.panel-head h2 {
+  font-size: 20px;
+  white-space: nowrap;
+}
+
+/* ボタン: ペンで囲った枠 */
+.btn {
+  border: 1.8px solid var(--text);
+  background: var(--surface);
+  font-weight: 600;
+  font-family: inherit;
+  box-shadow: 2px 2px 0 color-mix(in srgb, var(--text) 18%, transparent);
+}
+.btn:active { transform: translate(1px, 1px); box-shadow: none; }
+.btn.primary {
+  background: var(--primary-tint);
+  color: var(--primary-dark);
+  border-color: var(--primary);
+  box-shadow: 2px 2px 0 color-mix(in srgb, var(--primary) 35%, transparent);
+}
+.btn.ghost { border-style: dashed; box-shadow: none; }
+.btn.danger { border-color: var(--danger); }
+
+/* 入力欄: 下線だけのノート書き込み風 */
+input[type="text"],
+input[type="number"],
+input[type="date"],
+input[type="time"],
+select {
+  font-family: inherit;
+  background: transparent;
+  border: none;
+  border-bottom: 1.5px solid color-mix(in srgb, var(--text) 45%, transparent);
+  border-radius: 0;
+  padding-left: 2px;
+}
+input:focus, select:focus {
+  outline: none;
+  border-bottom-color: var(--primary);
+  background: color-mix(in srgb, var(--primary-tint) 50%, transparent);
+}
+
+/* 下のタブ: 紙の端に書いたインデックス */
+.tabbar {
+  background: var(--surface);
+  border-top: 1.5px dashed var(--border);
+}
+.tab-btn { font-family: inherit; }
+.tab-btn.active::before {
+  width: 32px;
+  height: 3px;
+  top: 2px;
+  border-radius: 2px 6px 3px 5px;
+}
+
+/* 選択系ボタン(部位・量・期間) */
+.body-part-btn,
+.serving-btn,
+.range-btn {
+  font-family: inherit;
+  border: 1.5px solid var(--border);
+  background: transparent;
+}
+.body-part-btn.is-selected,
+.serving-btn.active,
+.range-btn.active {
+  border-color: var(--primary);
+  background: var(--primary-tint);
+  color: var(--primary-dark);
+}
+
+.list-item {
+  border-bottom: 1px dashed var(--border);
+}
+
+.toast { font-family: inherit; border-radius: var(--radius); }
