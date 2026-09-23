@@ -1296,16 +1296,31 @@ function renderLineChart(canvasId, points, days, opts) {
   ctx.restore();
 
   // points — open circles (colored ring, light fill) rather than solid dots,
-  // with the latest point drawn larger and solid to draw the eye to "now"
+  // with the latest point drawn larger and solid to draw the eye to "now".
+  // 手で描いた丸: 少しゆがませて傾け、もう1回ずらして軽くなぞる。
+  // ゆがみは点の番号から決まる固定値なので、描き直しても形は変わらない。
+  const jit = (i, k) => {
+    const s = Math.sin(i * 12.9898 + k * 78.233) * 43758.5453;
+    return s - Math.floor(s) - 0.5;
+  };
   windowed.forEach((p, i) => {
     const isLast = i === windowed.length - 1;
+    const r = isLast ? 4.5 : 3.2;
+    const cx = x(i);
+    const cy = y(p.value);
     ctx.beginPath();
-    ctx.arc(x(i), y(p.value), isLast ? 4.5 : 3.2, 0, Math.PI * 2);
+    ctx.ellipse(cx, cy, r + jit(i, 7) * 0.8, r + jit(i, 8) * 0.8, jit(i, 9), 0, Math.PI * 2);
     ctx.fillStyle = isLast ? primary : surfaceAlt;
     ctx.fill();
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 1.7;
     ctx.strokeStyle = primary;
     ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(cx + 0.5, cy - 0.4, r + 0.6, -2.4 + jit(i, 10), 0.9 + jit(i, 11));
+    ctx.lineWidth = 0.8;
+    ctx.globalAlpha = 0.5;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
   });
 }
 
@@ -1657,15 +1672,22 @@ function init() {
   const mealImported = importMealFromLink();
   renderAll();
   if (mealImported) switchTab("meals");
-  window.addEventListener("resize", () => {
-    renderWeightChart("weightChart", state.weightLogs, 30);
-    const days = weightChartRange === "all" ? null : Number(weightChartRange);
-    renderWeightChart("weightChartFull", state.weightLogs, days, state.profile && state.profile.targetWeight);
-    const dailyTotals = mealDailyTotals();
-    renderCalorieChart("calorieChart", dailyTotals, 30, currentTargetCalories());
-    const calorieDays = calorieChartRange === "all" ? null : Number(calorieChartRange);
-    renderCalorieChart("calorieChartFull", dailyTotals, calorieDays, currentTargetCalories());
-  });
+  window.addEventListener("resize", redrawCharts);
+  // グラフの字は canvas に描くので、手書きフォントの読み込みが終わる前に描いた分は
+  // 代わりのフォントのまま残る。読み込みが終わったら1回だけ描き直す(見た目だけ)。
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(redrawCharts).catch(() => {});
+  }
+}
+
+function redrawCharts() {
+  renderWeightChart("weightChart", state.weightLogs, 30);
+  const days = weightChartRange === "all" ? null : Number(weightChartRange);
+  renderWeightChart("weightChartFull", state.weightLogs, days, state.profile && state.profile.targetWeight);
+  const dailyTotals = mealDailyTotals();
+  renderCalorieChart("calorieChart", dailyTotals, 30, currentTargetCalories());
+  const calorieDays = calorieChartRange === "all" ? null : Number(calorieChartRange);
+  renderCalorieChart("calorieChartFull", dailyTotals, calorieDays, currentTargetCalories());
 }
 
 document.addEventListener("DOMContentLoaded", init);
