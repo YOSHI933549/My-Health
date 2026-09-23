@@ -933,200 +933,289 @@ canvas { width: 100%; display: block; }
 
 
 /* =========================================================================
-   「紙とペン」テーマ
-   ナプキンや罫線ノートに鉛筆・ペンで書いたような見た目。上の既存スタイルを
-   上書きする形でまとめてあるので、この節を消せば元の見た目に戻る。
+   「紙とペン」テーマ(参考: 手書きナプキン風UI)
+   - 机(ベージュグレーのざらついた地)の上に、ナプキン紙・罫線ノートを置いた構成
+   - 入力やグラフのカードは「ナプキン」: 繊維の質感 + 内側に点線の縁取り
+   - 一覧のカードは「罫線ノート」: 青い罫線、見出しの下に赤い線
+   - ボタンはペンで2回なぞったような二重線、見出しは手書きの下線
+   - 参考デザインに合わせて明るい紙の見た目で固定(ダークモードでも紙のまま)
+   この節を消せば元の見た目に戻る。
    ========================================================================= */
-:root {
-  --bg: #e9e4d8;
-  --surface: #fbf8f0;
-  --surface-alt: #f3eee2;
-  --text: #2d2a25;
-  --text-muted: #857d6f;
-  --border: #cfc6b3;
-  --primary: #c0643e;
-  --primary-dark: #9d4a28;
-  --primary-tint: #f6e3d8;
-  --accent-orange: #c0643e;
-  --accent-blue: #3f5f9e;
+:root,
+:root:not([data-theme="light"]),
+:root[data-theme="dark"] {
+  color-scheme: light;
+  --bg: #e4dfd5;
+  --surface: #f7f4ec;
+  --surface-alt: #efe9dc;
+  --notebook: #f8f1df;
+  --text: #2b2925;
+  --text-muted: #77716a;
+  --border: #d3cbbb;
+  --primary: #c9623f;
+  --primary-dark: #a44a2b;
+  --primary-tint: #f4ddd2;
+  --accent-orange: #c9623f;
+  --accent-blue: #3b5ba5;
   --accent-purple: #7a5a8c;
-  --danger: #b8402e;
-  --danger-tint: #f7ded7;
-  --body-upper: #3f5f9e;
+  --ink-blue: #3b5ba5;
+  --ink-red: #b8322a;
+  --danger: #b8322a;
+  --danger-tint: #f6ddd6;
+  --body-upper: #3b5ba5;
   --body-lower: #5b8a4a;
   --body-neutral: #8f877a;
   --body-ink: #fff;
-  --rule: rgba(95, 125, 170, 0.16);
-  --shadow: 1px 2px 0 rgba(60, 45, 20, 0.08), 0 6px 14px rgba(60, 45, 20, 0.07);
-  --radius: 4px 6px 5px 7px / 7px 4px 6px 5px;
-  --radius-lg: 3px 5px 4px 6px / 6px 3px 5px 4px;
-  --font-display: "Klee One", "Hiragino Maru Gothic ProN", cursive;
-  --font-mono: "Klee One", "Hiragino Maru Gothic ProN", cursive;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #23211d;
-    --surface: #2e2b26;
-    --surface-alt: #37332c;
-    --text: #ece5d6;
-    --text-muted: #a39a89;
-    --border: #4a453b;
-    --primary: #e08a60;
-    --primary-dark: #c9714a;
-    --primary-tint: #45322a;
-    --accent-orange: #e08a60;
-    --accent-blue: #8aa6db;
-    --accent-purple: #b89acb;
-    --danger: #ec7a64;
-    --danger-tint: #4a2c25;
-    --body-upper: #8aa6db;
-    --body-lower: #92c07e;
-    --body-neutral: #a39a89;
-    --body-ink: #23211d;
-    --rule: rgba(236, 229, 214, 0.06);
-    --shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
-  }
-}
-:root[data-theme="dark"] {
-  --bg: #23211d;
-  --surface: #2e2b26;
-  --surface-alt: #37332c;
-  --text: #ece5d6;
-  --text-muted: #a39a89;
-  --border: #4a453b;
-  --primary: #e08a60;
-  --primary-dark: #c9714a;
-  --primary-tint: #45322a;
-  --accent-orange: #e08a60;
-  --accent-blue: #8aa6db;
-  --accent-purple: #b89acb;
-  --danger: #ec7a64;
-  --danger-tint: #4a2c25;
-  --body-upper: #8aa6db;
-  --body-lower: #92c07e;
-  --body-neutral: #a39a89;
-  --body-ink: #23211d;
-  --rule: rgba(236, 229, 214, 0.06);
-  --shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
+  --rule-blue: rgba(96, 128, 190, 0.28);
+  --rule-red: rgba(201, 98, 63, 0.55);
+  --shadow: 0 1px 1px rgba(60, 45, 20, 0.08), 0 8px 18px -6px rgba(60, 45, 20, 0.18);
+  --radius: 3px 7px 4px 6px / 6px 3px 7px 4px;
+  --radius-lg: 2px;
+  --font-hand: "Kalam", "Yomogi", "Klee One", cursive;
+  --font-body: "Kalam", "Klee One", "Hiragino Maru Gothic ProN", sans-serif;
+  --font-type: "Courier Prime", "Courier New", monospace;
+  --font-display: var(--font-hand);
+  --font-mono: var(--font-hand);
 }
 
 html, body {
-  font-family: "Klee One", "Hiragino Maru Gothic ProN", "Yu Gothic", sans-serif;
+  font-family: var(--font-body);
   background-color: var(--bg);
-  /* 紙の繊維っぽいかすかなムラ */
-  background-image:
-    radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.35), transparent 40%),
-    radial-gradient(circle at 80% 70%, rgba(120, 90, 40, 0.05), transparent 45%);
-  background-attachment: fixed;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .3 0 0 0 0 .22 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-h1, h2, h3 { font-weight: 600; letter-spacing: 0.02em; }
-
-/* ヘッダー: 塗りつぶしをやめ、紙の上に手書きで題字を書いた感じに */
-.app-header {
-  background: transparent;
-  color: var(--text);
-  padding-bottom: 6px;
+h1, h2, h3, .tab-btn span, .macro-ring-card .mrc-label {
+  font-family: var(--font-hand);
+  font-weight: 700;
 }
+
+/* ---- ヘッダー: 紙に手書きの題字 ---- */
+.app-header { background: transparent; color: var(--text); padding: 22px 16px 4px; }
+.brand-mark { filter: sepia(.35) saturate(.9); }
 .brand h1 {
-  font-size: 20px;
-  padding-bottom: 4px;
-  border-bottom: 2.5px solid color-mix(in srgb, var(--primary) 70%, transparent);
-  border-radius: 0 0 60% 40% / 0 0 5px 3px;
+  font-size: 19px;
+  font-weight: 400;
+  letter-spacing: .01em;
+  padding-bottom: 6px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 10' preserveAspectRatio='none'%3E%3Cpath d='M2 6 C 50 3, 120 8, 198 4' stroke='%232b2925' stroke-width='2.2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") left bottom / 100% 8px no-repeat;
 }
-.tagline { color: var(--text-muted); opacity: 1; }
+.tagline { color: var(--text-muted); opacity: 1; font-size: 12.5px; }
 
-/* カード: 罫線入りのメモ用紙。角は少しいびつ */
-.card {
+.panel-head h2 { font-size: 24px; font-weight: 400; white-space: nowrap; }
+
+/* ---- カード共通: ナプキン紙(繊維 + 内側の点線の縁) ---- */
+.card, .macro-ring-card {
+  position: relative;
   background-color: var(--surface);
-  background-image: repeating-linear-gradient(
-    to bottom, transparent 0, transparent 27px, var(--rule) 27px, var(--rule) 28px);
-  background-position: 0 14px;
-  border: 1.5px solid var(--border);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.02 .6' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 .4 0 0 0 0 .36 0 0 0 0 .3 0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+  border: none;
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow);
 }
-.card h3 {
-  font-size: 17px;
+.card { padding: 22px 20px; }
+.card::after, .macro-ring-card::after {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  border: 1px dashed rgba(120, 110, 95, 0.32);
+  pointer-events: none;
+}
+.card > *, .macro-ring-card > * { position: relative; z-index: 1; }
+
+/* 見出し: 手書きの下線(スウッシュ) */
+.card h3, .chart-head h3 {
   display: inline-block;
-  padding-bottom: 2px;
-  border-bottom: 2px solid color-mix(in srgb, var(--text) 55%, transparent);
-  border-radius: 0 0 40% 60% / 0 0 4px 3px;
+  font-size: 19px;
+  padding: 0 2px 7px;
+  margin-bottom: 14px;
+  border: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 10' preserveAspectRatio='none'%3E%3Cpath d='M2 6 C 50 3, 120 8, 198 4' stroke='%232b2925' stroke-width='2.2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") left bottom / 100% 7px no-repeat;
 }
 
-.panel-head h2 {
-  font-size: 20px;
-  white-space: nowrap;
+/* ---- 一覧カード: 罫線ノート ---- */
+.card:has(> .list) {
+  background-color: var(--notebook);
+  background-image:
+    linear-gradient(to bottom, transparent 58px, var(--rule-red) 58px, var(--rule-red) 59.5px, transparent 59.5px),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.02 .6' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 .4 0 0 0 0 .36 0 0 0 0 .3 0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+  padding-top: 18px;
 }
+.card:has(> .list)::after { display: none; }
+.card:has(> .list) h3 { background: none; padding-bottom: 0; margin-bottom: 22px; }
+.list-item {
+  border: none;
+  border-bottom: 1.2px solid var(--rule-blue);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding-inline: 2px;
+}
+.list { gap: 0; }
+.list-item .title-row .name { font-family: var(--font-hand); font-size: 16px; }
+.list-item .meta, .list-item .macros { color: var(--text-muted); }
+.list-item .title-row .tag {
+  background: transparent !important;
+  border: 1.3px solid currentColor;
+  border-radius: 50% 40% 55% 45% / 55% 50% 45% 50%;
+  font-family: var(--font-hand);
+}
+.list-item .del { color: var(--ink-red); background: transparent; font-family: var(--font-hand); }
+.empty-state { font-family: var(--font-hand); color: var(--text-muted); }
 
-/* ボタン: ペンで囲った枠 */
+/* ---- グラフカード: 方眼をやめてナプキンのまま ---- */
+.card:has(canvas) { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.02 .6' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 .4 0 0 0 0 .36 0 0 0 0 .3 0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E"); background-color: var(--surface); }
+
+/* ---- ボタン: ペンで2回なぞった二重線 ---- */
 .btn {
-  border: 1.8px solid var(--text);
-  background: var(--surface);
-  font-weight: 600;
-  font-family: inherit;
-  box-shadow: 2px 2px 0 color-mix(in srgb, var(--text) 18%, transparent);
+  position: relative;
+  font-family: var(--font-hand);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--text);
+  background: transparent;
+  border: 2px solid var(--text);
+  border-radius: var(--radius);
+  box-shadow: none;
 }
-.btn:active { transform: translate(1px, 1px); box-shadow: none; }
+.btn::before {
+  content: "";
+  position: absolute;
+  inset: -4px -3px -3px -4px;
+  border: 1.4px solid currentColor;
+  border-radius: 6px 3px 7px 4px / 4px 7px 3px 6px;
+  transform: rotate(-.5deg);
+  opacity: .75;
+  pointer-events: none;
+}
+.btn:active { transform: translate(1px, 1px); }
 .btn.primary {
+  color: var(--text);
   background: var(--primary-tint);
-  color: var(--primary-dark);
   border-color: var(--primary);
-  box-shadow: 2px 2px 0 color-mix(in srgb, var(--primary) 35%, transparent);
 }
-.btn.ghost { border-style: dashed; box-shadow: none; }
-.btn.danger { border-color: var(--danger); }
+.btn.primary::before { border-color: var(--primary); }
+.btn.ghost { border-width: 1.5px; }
+.btn.ghost::before { display: none; }
+.btn.danger { color: var(--ink-red); border-color: var(--ink-red); background: transparent; }
 
-/* 入力欄: 下線だけのノート書き込み風 */
+/* ---- 入力欄: 下線だけ ---- */
 input[type="text"],
 input[type="number"],
 input[type="date"],
 input[type="time"],
 select {
-  font-family: inherit;
+  font-family: var(--font-hand);
+  font-size: 17px;
   background: transparent;
   border: none;
-  border-bottom: 1.5px solid color-mix(in srgb, var(--text) 45%, transparent);
+  border-bottom: 1.5px solid rgba(43, 41, 37, 0.55);
   border-radius: 0;
-  padding-left: 2px;
+  padding: 6px 2px;
+  color: var(--text);
 }
+input::placeholder { color: #a59e92; }
 input:focus, select:focus {
   outline: none;
-  border-bottom-color: var(--primary);
-  background: color-mix(in srgb, var(--primary-tint) 50%, transparent);
+  border-bottom: 2px solid var(--primary);
+  background: rgba(201, 98, 63, 0.06);
 }
-
-/* 下のタブ: 紙の端に書いたインデックス */
-.tabbar {
-  background: var(--surface);
-  border-top: 1.5px dashed var(--border);
-}
-.tab-btn { font-family: inherit; }
-.tab-btn.active::before {
-  width: 32px;
-  height: 3px;
-  top: 2px;
-  border-radius: 2px 6px 3px 5px;
-}
-
-/* 選択系ボタン(部位・量・期間) */
-.body-part-btn,
-.serving-btn,
-.range-btn {
-  font-family: inherit;
-  border: 1.5px solid var(--border);
+form.form label { font-family: var(--font-hand); color: var(--text-muted); }
+input[type="file"]::file-selector-button {
+  font-family: var(--font-hand);
+  border: 1.5px solid var(--text);
+  border-radius: var(--radius);
   background: transparent;
+  padding: 4px 10px;
+  margin-right: 8px;
 }
-.body-part-btn.is-selected,
-.serving-btn.active,
-.range-btn.active {
-  border-color: var(--primary);
+
+/* ---- 選択ボタン(部位・量・期間): キーキャップ風の小さな枠 ---- */
+.body-part-btn, .serving-btn, .range-btn, .wcal-nav, .wcal-today {
+  font-family: var(--font-hand);
+  font-size: 16px;
+  background: transparent;
+  border: 1.5px solid rgba(43, 41, 37, 0.6);
+  border-radius: var(--radius);
+  color: var(--text);
+  box-shadow: 1px 1.5px 0 rgba(43, 41, 37, 0.25);
+}
+.body-part-btn.is-selected, .serving-btn.active, .range-btn.active {
   background: var(--primary-tint);
-  color: var(--primary-dark);
+  border: 2px solid var(--primary);
+  color: var(--text);
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.2px rgba(201, 98, 63, 0.7);
+}
+.range-group { background: transparent; border: none; }
+
+/* ---- リング・バー: 鉛筆のハッチング ---- */
+.ring-gauge-sm::before { display: none; }
+.ring-gauge-sm {
+  background:
+    radial-gradient(circle closest-side, var(--surface) 0 calc(100% - var(--thickness)), transparent calc(100% - var(--thickness) + .5px)),
+    conic-gradient(var(--ring-color, var(--primary)) calc(var(--pct, 0) * 1%), transparent 0),
+    repeating-linear-gradient(45deg, rgba(43,41,37,.18) 0 1.2px, transparent 1.2px 5px);
+  border: 1.3px solid rgba(43, 41, 37, 0.45);
+}
+.ring-gauge-sm .rg-value { font-family: var(--font-hand); font-size: 18px; }
+.macro-ring-card .mrc-value { font-family: var(--font-hand); font-size: 14px; }
+.macro-ring-card .mrc-value.over { color: var(--ink-red); }
+.bar-track { background: transparent; border: 1.3px solid rgba(43,41,37,.5); border-radius: 2px; }
+.bar-fill { background: repeating-linear-gradient(-55deg, var(--primary) 0 2px, transparent 2px 4.5px) !important; }
+
+/* ---- 区切り線: 波線 ---- */
+.settings-section, .settings-details, .wcal-foot {
+  border-top: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='8'%3E%3Cpath d='M0 4 Q 6 0 12 4 T 24 4' stroke='%236f6a60' stroke-width='1.3' fill='none'/%3E%3C/svg%3E") left top / 24px 8px repeat-x;
 }
 
-.list-item {
-  border-bottom: 1px dashed var(--border);
+/* ---- 筋トレカレンダー ---- */
+.wcal-title { font-family: var(--font-hand); font-size: 20px; }
+.wcal-day { font-family: var(--font-hand); background: transparent; }
+.wcal-day.has-log { background: rgba(255, 255, 255, 0.45); }
+.wcal-day.is-selected {
+  outline: none;
+  border: 2px solid var(--primary);
+  border-radius: 48% 52% 45% 55% / 52% 45% 55% 48%;
+}
+.wcal-day.is-today .wcal-dnum { color: var(--ink-red); text-decoration: underline wavy; }
+.wcal-chip { font-family: var(--font-hand); border-radius: 3px 5px 3px 4px; }
+.wcal-weekdays { font-family: var(--font-hand); }
+
+/* ---- 目標まとめ・前回ヒント・通知 ---- */
+.target-summary .ts-item .v { font-family: var(--font-hand); font-size: 18px; }
+.prev-workout-hint, .notice {
+  background: var(--surface);
+  border: 1.5px dashed rgba(43, 41, 37, 0.45);
+  border-radius: var(--radius);
+  font-family: var(--font-hand);
+}
+.weight-trend b { font-family: var(--font-hand); font-size: 16px; }
+.hint { font-family: var(--font-hand); }
+code, .mono { font-family: var(--font-type); }
+
+/* ---- 下のタブ: ノートの切れ端 ---- */
+.tabbar {
+  background-color: var(--notebook);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.02 .6' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 .4 0 0 0 0 .36 0 0 0 0 .3 0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+  border-top: none;
+  box-shadow: 0 -6px 14px -6px rgba(60, 45, 20, 0.2);
+}
+.tabbar::before {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; top: -5px; height: 6px;
+  background: radial-gradient(circle at 5px 6px, var(--notebook) 4px, transparent 4.5px) 0 0 / 10px 6px repeat-x;
+}
+.tab-btn { font-family: var(--font-hand); color: var(--text-muted); }
+.tab-btn span { font-size: 12.5px; }
+.tab-btn svg { stroke-width: 1.6; }
+.tab-btn.active { color: var(--text); }
+.tab-btn.active::before {
+  top: auto; bottom: 5px;
+  width: 38px; height: 7px;
+  border-radius: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 10' preserveAspectRatio='none'%3E%3Cpath d='M2 6 C 50 3, 120 8, 198 4' stroke='%23c9623f' stroke-width='2.2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
 }
 
-.toast { font-family: inherit; border-radius: var(--radius); }
+.toast { font-family: var(--font-hand); border-radius: var(--radius); }
+.save-error { font-family: var(--font-hand); }

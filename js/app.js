@@ -1135,13 +1135,13 @@ function renderLineChart(canvasId, points, days, opts) {
 
   if (windowed.length === 0) {
     ctx.fillStyle = muted;
-    ctx.font = "12px 'Klee One', sans-serif";
+    ctx.font = "12px 'Kalam', 'Klee One', sans-serif";
     ctx.fillText(opts.noDataText, 8, cssHeight / 2);
     return;
   }
   if (windowed.length === 1) {
     ctx.fillStyle = muted;
-    ctx.font = "12px 'Klee One', sans-serif";
+    ctx.font = "12px 'Kalam', 'Klee One', sans-serif";
     ctx.fillText(opts.singlePointText(windowed[0].value, windowed[0].date), 8, cssHeight / 2);
     return;
   }
@@ -1155,10 +1155,10 @@ function renderLineChart(canvasId, points, days, opts) {
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
   ctx.fillStyle = text;
-  ctx.font = "bold 15px 'Klee One', sans-serif";
+  ctx.font = "bold 15px 'Kalam', 'Klee One', sans-serif";
   const headline = opts.headline(latest.value);
   ctx.fillText(headline, 8, 14);
-  ctx.font = "10px 'Klee One', sans-serif";
+  ctx.font = "10px 'Kalam', 'Klee One', sans-serif";
   ctx.fillStyle = muted;
   ctx.fillText(fmtDate(latest.date), 8 + ctx.measureText(headline).width + 22, 14);
 
@@ -1187,7 +1187,7 @@ function renderLineChart(canvasId, points, days, opts) {
   // horizontal gridlines + y-axis labels on the right
   ctx.strokeStyle = border;
   ctx.fillStyle = muted;
-  ctx.font = "10px 'Klee One', sans-serif";
+  ctx.font = "10px 'Kalam', 'Klee One', sans-serif";
   ctx.lineWidth = 1;
   const gridLines = 3;
   for (let i = 0; i <= gridLines; i++) {
@@ -1220,7 +1220,7 @@ function renderLineChart(canvasId, points, days, opts) {
   ctx.restore();
 
   ctx.fillStyle = muted;
-  ctx.font = "10px 'Klee One', sans-serif";
+  ctx.font = "10px 'Kalam', 'Klee One', sans-serif";
   labelIndices.forEach((i, idx) => {
     const label = fmtDate(windowed[i].date);
     const w = ctx.measureText(label).width;
