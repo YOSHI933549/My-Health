@@ -940,7 +940,8 @@ canvas { width: 100%; display: block; }
      線の中に紙の白い粒が残る(作り方は css/tex/README.md)
      ・ボタンは鉛筆で2回なぞった二重線の枠(border-image)。主ボタンと選んだ物はテラコッタ
      ・リングやカレンダーの印は色鉛筆の斜線、見出しは払いと跳ねのある下線
-   - 字はくっきりした手書き書体のまま(質感は線と塗りだけに持たせる)
+   - 字は鉛筆の手書き(英数字は Gaegu、日本語はよもぎ)。見出しや数字・一覧の字は、
+     紙のくぼみで芯がかすれた質感(tex/lead.png のマスク)にする
    - 参考デザインに合わせて明るい紙の見た目で固定(ダークモードでも紙のまま)
    ========================================================================= */
 :root,
@@ -974,8 +975,9 @@ canvas { width: 100%; display: block; }
   --shadow: 0 1px 1.5px rgba(60, 45, 20, 0.12), 0 7px 16px -9px rgba(60, 45, 20, 0.36);
   --radius: 5px;
   --radius-lg: 0;
-  --font-hand: "Kalam", "Klee One", "Yomogi", cursive;
-  --font-body: "Kalam", "Klee One", "Hiragino Maru Gothic ProN", sans-serif;
+  /* 字は鉛筆の手書き: 英数字は Gaegu、日本語はよもぎ(Gaegu に無い字はよもぎで出る) */
+  --font-hand: "Gaegu", "Yomogi", cursive;
+  --font-body: "Gaegu", "Yomogi", "Hiragino Maru Gothic ProN", sans-serif;
   --font-type: "Courier Prime", "Courier New", monospace;
   --font-display: var(--font-hand);
   --font-mono: var(--font-hand);
@@ -983,6 +985,8 @@ canvas { width: 100%; display: block; }
   --line: 30px;
   /* 鉛筆の二重線の枠(9分割の画像。角は12pxぶん) */
   --frame: url("tex/frame-graphite.png") 36 / 12px / 0 round;
+  /* 鉛筆で書いた字のかすれ(マスク。48px角で敷き詰める) */
+  --lead: url("tex/lead.png") 0 0 / 48px 48px;
 }
 
 /* ---- 机 ---- */
@@ -991,16 +995,16 @@ body { font-family: var(--font-body); background: url("tex/desk.webp") 0 0 / 240
 
 h1, h2, h3, .tab-btn span, .macro-ring-card .mrc-label {
   font-family: var(--font-hand);
-  font-weight: 600;
+  font-weight: 400;
 }
 
 /* 見出しの下線: 左は細く入り、右端で上に跳ねる鉛筆の払い(3分割の画像なので長さは自由) */
 .brand h1::after, .card h3::after, .chart-head h3::after {
   content: "";
   position: absolute;
-  left: -3px;
-  right: -7px;
-  bottom: -2px;
+  left: 0;
+  right: 0;
+  bottom: 0;
   height: 12px;
   border-style: solid;
   border-color: transparent;
@@ -1020,15 +1024,38 @@ h1, h2, h3, .tab-btn span, .macro-ring-card .mrc-label {
 .brand h1 {
   position: relative;
   font-size: 19px;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: .01em;
   color: var(--text);
-  padding: 2px 2px 10px;
+  /* 下線(::after)が見出しの枠の内側に収まるよう、その分の余白を取って左へずらす */
+  padding: 2px 9px 12px 3px;
+  margin-left: -3px;
 }
 .tagline { color: var(--text-muted); opacity: 1; font-size: 12.5px; line-height: 1.7; margin-top: 8px; }
 
 .panel-head { margin-bottom: 14px; }
-.panel-head h2 { font-size: 25px; font-weight: 600; white-space: nowrap; color: var(--text); padding: 2px 2px 0; }
+.panel-head h2 { font-size: 25px; font-weight: 400; white-space: nowrap; color: var(--text); padding: 2px 2px 0; }
+
+/* ---- 字の太さ: 芯を強く押し付けた分だけ、うっすら縁取りして太らせる ----
+   よもぎには太字が無く、ブラウザの疑似太字はマーカーで塗ったように潰れて鉛筆らしくないので使わない */
+html { font-synthesis: none; }
+h1, h2, h3, .tab-btn span, .macro-ring-card .mrc-label, .list-item .title-row .name, .btn,
+.body-part-btn, .serving-btn, .range-btn, .wcal-title, .wcal-chip, .settings-group > summary, b, strong {
+  -webkit-text-stroke: .3px currentColor;
+}
+
+/* ---- 字: 鉛筆で書いた字 ----
+   紙のくぼみには芯が届かないので、字の中にところどころ紙の白い粒が残る(tex/lead.png)。
+   マスクは要素の枠の外を切ってしまうので、枠の外に飾りがはみ出さない要素にだけ付ける */
+.brand h1, .panel-head h2, .card h3, .chart-head h3, .tagline, .tab-btn span,
+.ring-gauge-sm .rg-value, .macro-ring-card .mrc-label, .macro-ring-card .mrc-value,
+.list-item .title-row .name, .list-item .meta, .list-item .macros, .empty-state,
+.wcal-title, .wcal-weekdays, .wcal-day, .wcal-foot > *,
+.target-summary .ts-item, .weight-trend, .hint, .settings-group > summary, .settings-details > summary,
+form.form label, .btn {
+  -webkit-mask: var(--lead);
+  mask: var(--lead);
+}
 
 /* ---- カード: ナプキン紙(細かい織り目) + 内側に押し型の二重線 ---- */
 .card, .macro-ring-card, .card:has(canvas) {
@@ -1057,9 +1084,10 @@ h1, h2, h3, .tab-btn span, .macro-ring-card .mrc-label {
   position: relative;
   display: inline-block;
   font-size: 19px;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--text);
-  padding: 0 4px 9px 2px;
+  padding: 0 11px 11px 5px;
+  margin-left: -3px;
   margin-bottom: 14px;
   border: none;
   background: none;
@@ -1113,7 +1141,7 @@ h1, h2, h3, .tab-btn span, .macro-ring-card .mrc-label {
 .list-item img { margin-top: 4px; border-radius: 2px; box-shadow: 1px 2px 0 rgba(78, 58, 30, 0.2); }
 .list-item .info > * { margin: 0; line-height: var(--line); }
 .list-item .title-row { align-items: baseline; }
-.list-item .title-row .name { font-family: var(--font-hand); font-size: 17px; font-weight: 600; color: var(--text); }
+.list-item .title-row .name { font-family: var(--font-hand); font-size: 17px; font-weight: 400; color: var(--text); }
 .list-item .meta { font-size: 13px; color: var(--text-muted); }
 .list-item .macros { font-size: 13px; color: var(--text-muted); gap: 0 10px; }
 /* 区分タグ: 鉛筆でぐるっと丸で囲む(タグの色の鉛筆) */
@@ -1170,7 +1198,7 @@ h1, h2, h3, .tab-btn span, .macro-ring-card .mrc-label {
   isolation: isolate;
   min-height: 46px;
   font-family: var(--font-hand);
-  font-weight: 600;
+  font-weight: 400;
   font-size: 16px;
   color: var(--text);
   background: transparent;
@@ -1209,7 +1237,13 @@ h1, h2, h3, .tab-btn span, .macro-ring-card .mrc-label {
 .btn.ghost::before { opacity: .8; }
 .btn.danger { color: var(--ink-red); background: transparent; }
 .btn.danger::before { border-image-source: url("tex/frame-red.png"); }
-.btn:focus-visible { outline: 1.5px dashed var(--primary); outline-offset: 4px; }
+/* かすれのマスクが枠の外を切るので、キーボードで選んだときの印は枠の内側に描く */
+.btn:focus-visible, .wcal-day:focus-visible { outline: 1.5px dashed var(--primary); outline-offset: -4px; }
+.settings-group > summary:focus-visible, .settings-details > summary:focus-visible {
+  outline: none;
+  text-decoration: underline dashed var(--primary);
+  text-underline-offset: 3px;
+}
 
 /* ---- 入力欄: 鉛筆で引いた記入線 ---- */
 input[type="text"],
@@ -1237,7 +1271,7 @@ form.form label, .serving-label { font-family: var(--font-body); color: var(--te
 input[type="file"] { font-family: var(--font-body); color: var(--text-muted); }
 input[type="file"]::file-selector-button {
   font-family: var(--font-hand);
-  font-weight: 600;
+  font-weight: 400;
   color: var(--text);
   background: transparent;
   border: 6px solid transparent;
@@ -1254,6 +1288,7 @@ input[type="file"]::file-selector-button {
   isolation: isolate;
   font-family: var(--font-hand);
   font-size: 16px;
+  font-weight: 400;
   background: transparent;
   border: 1px solid transparent;
   border-radius: 0;
@@ -1265,7 +1300,7 @@ input[type="file"]::file-selector-button {
   background: transparent;
   border: 1px solid transparent;
   color: var(--text);
-  font-weight: 600;
+  font-weight: 400;
   box-shadow: none;
 }
 .body-part-btn.is-selected::after, .serving-btn.active::after, .range-btn.active::after { inset: 2.5px; }
@@ -1322,7 +1357,7 @@ input[type="file"]::file-selector-button {
 }
 .ring-gauge-sm .rg-value { font-family: var(--font-hand); font-size: 19px; font-weight: 700; color: var(--text); padding: 0 2px; }
 .ring-gauge-sm .rg-value small { color: var(--text-muted); font-weight: 400; }
-.macro-ring-card .mrc-label { font-family: var(--font-body); font-weight: 600; color: var(--text-muted); font-size: 12.5px; }
+.macro-ring-card .mrc-label { font-family: var(--font-body); font-weight: 400; color: var(--text-muted); font-size: 12.5px; }
 .macro-ring-card .mrc-value { font-family: var(--font-hand); font-size: 14.5px; color: var(--text); padding: 0 2px; }
 .macro-ring-card .mrc-value.over { color: var(--ink-red); }
 .bar-track { background: transparent; border: 1.2px solid rgba(58, 57, 54, 0.5); border-radius: 1px; }
@@ -1335,8 +1370,8 @@ input[type="file"]::file-selector-button {
 }
 
 /* ---- 筋トレカレンダー ---- */
-.wcal-title { font-family: var(--font-hand); font-size: 21px; font-weight: 600; color: var(--text); }
-.wcal-nav, .wcal-today { font-weight: 600; }
+.wcal-title { font-family: var(--font-hand); font-size: 21px; font-weight: 400; color: var(--text); }
+.wcal-nav, .wcal-today { font-weight: 400; }
 .wcal-day { position: relative; isolation: isolate; font-family: var(--font-hand); background: transparent; border: none; border-radius: 0; }
 /* 記録のある日は鉛筆で薄く斜線を入れる */
 .wcal-day.has-log { background: transparent; border: none; }
@@ -1353,7 +1388,7 @@ input[type="file"]::file-selector-button {
 }
 /* 選んだ日は日付の数字を赤鉛筆でぐるっと囲む(部位の印にはかからない) */
 .wcal-day.is-selected { border: none; box-shadow: none; outline: none; }
-.wcal-day .wcal-dnum { position: relative; font-family: var(--font-hand); font-size: 13px; }
+.wcal-day .wcal-dnum { position: relative; font-family: var(--font-hand); font-size: 14.5px; }
 .wcal-day.is-selected .wcal-dnum::before {
   content: "";
   position: absolute;
@@ -1422,7 +1457,7 @@ input[type="file"]::file-selector-button {
 .weight-trend b { font-family: var(--font-hand); font-size: 17px; font-weight: 700; color: var(--text); padding: 0 1px; }
 .hint { font-family: var(--font-body); }
 code, .mono { font-family: var(--font-type); }
-.settings-group > summary { font-family: var(--font-hand); font-size: 17px; font-weight: 600; color: var(--text); }
+.settings-group > summary { font-family: var(--font-hand); font-size: 17px; font-weight: 400; color: var(--text); }
 .settings-details > summary { font-family: var(--font-hand); }
 /* 脂質の割合は1行で読めるよう2列ぶん使う */
 .field-row > label:has(#fatRatio) { grid-column: 1 / -1; white-space: nowrap; }

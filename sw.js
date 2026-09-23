@@ -8,7 +8,7 @@
    the newest deploy, even if this file itself hasn't changed. Bumping
    CACHE_VERSION is still good practice (it prunes old cache entries) but is
    no longer required just to ship an update. */
-const CACHE_VERSION = "v29";
+const CACHE_VERSION = "v30";
 const CACHE_NAME = `yoshi-health-tracker-${CACHE_VERSION}`;
 
 const APP_SHELL = [
@@ -37,6 +37,7 @@ const STATIC_ASSETS = [
   "./css/tex/grain.png",
   "./css/tex/hatch-dense.png",
   "./css/tex/hatch.png",
+  "./css/tex/lead.png",
   "./css/tex/loop-wide.png",
   "./css/tex/loop.png",
   "./css/tex/mascot.png",

@@ -25,6 +25,7 @@ iPhone の画面に合わせて CSS の 3 倍(紙は 2 倍、力こぶは 4 倍)
 | `desk.webp` / `napkin.webp` / `notebook.webp` / `tint-terra.webp` | 机・カード・ノート・主ボタンの塗りの紙(継ぎ目なしで敷き詰める) |
 | `mascot.png` | 見出しの力こぶの落書き(`index.html`) |
 | `grain.png` | グラフの線と塗りを紙の目で少しかすれさせる消しゴム(`js/app.js`) |
+| `lead.png` | 鉛筆で書いた字のかすれ。見出し・数字・一覧の字などにマスクで重ね、字の中に紙の白い粒を残す |
 
 ## 作り直すとき
 

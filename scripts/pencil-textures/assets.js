@@ -210,6 +210,17 @@ window.ASSETS = (() => {
     out[name] = { img: P.compose(S, S, [{ L: wash, color: '#e08c6c', opacity: 0.92 }, { L: fill, color: '#c95a38' }, { L: shade, color: '#9c4027', opacity: 0.5 }, { L: line, color: C.graphiteDark }]), note: '50 CSS @4x' };
   }
 
+  // handwriting mask: the same paper-tooth skipping, lighter, plus uneven pressure,
+  // so text masked with it reads as written in pencil instead of printed
+  function lead(name, seed) {
+    const T = 48 * R; const tooth = P.tooth(T, T, { seed }); const tone = P.noise(T, T, 9 * R, 9 * R, seed + 5); const img = new ImageData(T, T);
+    for (let i = 0; i < T * T; i++) {
+      const speck = P.clamp((0.22 - tooth[i]) / 0.16, 0, 1);
+      const a = (1 - 0.9 * speck) * (1 - 0.1 * tone(i % T, (i / T) | 0));
+      img.data[i * 4 + 3] = Math.round(P.clamp(a, 0, 1) * 255);
+    }
+    out[name] = { img, note: 'mask tile 48 CSS @3x' };
+  }
   // paper-tooth eraser for canvas charts: where the paper dips, the lead skips
   function grain(name, seed) {
     const T = 64 * R; const tooth = P.tooth(T, T, { seed }); const img = new ImageData(T, T);
@@ -244,6 +255,7 @@ window.ASSETS = (() => {
         'notebook': () => paper('notebook', C.notebook, 107, { T: 160, mottle: 45, mottleAmt: 0.03, mottle2: 0.014, grain: 0.026, grain2: 0.014, fibres: 60 }),
         'mascot': () => mascot('mascot', 109),
         'grain': () => grain('grain', 127),
+        'lead': () => lead('lead', 131),
       };
       for (const n of names || Object.keys(all)) all[n]();
       return Object.entries(out).map(([name, v]) => ({ name, w: v.img.width, h: v.img.height, note: v.note, type: v.type || 'image/png', url: P.encode(v.img, v.type || 'image/png', v.q) }));

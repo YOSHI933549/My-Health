@@ -1135,13 +1135,13 @@ function renderLineChart(canvasId, points, days, opts) {
 
   if (windowed.length === 0) {
     ctx.fillStyle = muted;
-    ctx.font = "12px 'Kalam', 'Klee One', sans-serif";
+    ctx.font = "12px 'Gaegu', 'Yomogi', sans-serif";
     ctx.fillText(opts.noDataText, 8, cssHeight / 2);
     return;
   }
   if (windowed.length === 1) {
     ctx.fillStyle = muted;
-    ctx.font = "12px 'Kalam', 'Klee One', sans-serif";
+    ctx.font = "12px 'Gaegu', 'Yomogi', sans-serif";
     ctx.fillText(opts.singlePointText(windowed[0].value, windowed[0].date), 8, cssHeight / 2);
     return;
   }
@@ -1155,10 +1155,10 @@ function renderLineChart(canvasId, points, days, opts) {
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
   ctx.fillStyle = text;
-  ctx.font = "bold 15px 'Kalam', 'Klee One', sans-serif";
+  ctx.font = "bold 15px 'Gaegu', 'Yomogi', sans-serif";
   const headline = opts.headline(latest.value);
   ctx.fillText(headline, 8, 14);
-  ctx.font = "10px 'Kalam', 'Klee One', sans-serif";
+  ctx.font = "10px 'Gaegu', 'Yomogi', sans-serif";
   ctx.fillStyle = muted;
   ctx.fillText(fmtDate(latest.date), 8 + ctx.measureText(headline).width + 22, 14);
 
@@ -1189,7 +1189,7 @@ function renderLineChart(canvasId, points, days, opts) {
   const graphite = styles.getPropertyValue("--graphite").trim() || border;
   ctx.strokeStyle = graphite;
   ctx.fillStyle = muted;
-  ctx.font = "10px 'Kalam', 'Klee One', sans-serif";
+  ctx.font = "10px 'Gaegu', 'Yomogi', sans-serif";
   ctx.lineWidth = 1;
   ctx.lineJoin = "round";
   ctx.lineCap = "round";
@@ -1226,7 +1226,7 @@ function renderLineChart(canvasId, points, days, opts) {
   ctx.restore();
 
   ctx.fillStyle = muted;
-  ctx.font = "10px 'Kalam', 'Klee One', sans-serif";
+  ctx.font = "10px 'Gaegu', 'Yomogi', sans-serif";
   labelIndices.forEach((i, idx) => {
     const label = fmtDate(windowed[i].date);
     const w = ctx.measureText(label).width;
@@ -1329,7 +1329,7 @@ function renderLineChart(canvasId, points, days, opts) {
   pencilGrain(ctx, padL - 6, padT - 6, plotW + 10, plotH + 10);
   if (opts.targetValue) {
     ctx.fillStyle = orange;
-    ctx.font = "10px 'Kalam', 'Klee One', sans-serif";
+    ctx.font = "10px 'Gaegu', 'Yomogi', sans-serif";
     ctx.fillText(opts.targetLabel(opts.targetValue), padL + 4, y(Number(opts.targetValue)) - 4);
   }
 }
