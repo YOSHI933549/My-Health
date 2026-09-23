@@ -716,18 +716,16 @@ function initWorkouts() {
 
   document.getElementById("workoutForm").addEventListener("submit", (e) => {
     e.preventDefault();
-    if (!selectedBodyPart) return; // 部位を選ばずに送信された(ボタン以外からの送信など)
+    if (selectedBodyParts.size === 0) return; // 部位を選ばずに送信された(ボタン以外からの送信など)
 
-    const workout = {
-      id: uid(),
-      date: dateInput.value || todayStr(),
-      name: selectedBodyPart,
-      memo: document.getElementById("workoutMemo").value.trim(),
-    };
-    state.workouts.push(workout);
+    const date = dateInput.value || todayStr();
+    const memo = document.getElementById("workoutMemo").value.trim();
+    selectedBodyParts.forEach((part) => {
+      state.workouts.push({ id: uid(), date, name: part, memo });
+    });
     saveState();
     e.target.reset();
-    setSelectedBodyPart(null);
+    setSelectedBodyParts(new Set());
     renderWorkouts();
     toast("トレーニングを記録しました");
   });
@@ -741,7 +739,8 @@ function initWorkouts() {
 
 // どの種目をやったかではなく、どの部位を鍛えたかだけを選ぶ。細かい種目や
 // 重量・回数はメモ欄に自由に書いてもらう想定(種目リストを維持するコストを無くすため)。
-let selectedBodyPart = null;
+// 1回のトレーニングで複数部位を鍛えることが多いので複数選択可(部位ごとに1件ずつ記録する)。
+let selectedBodyParts = new Set();
 
 function initBodyPartPicker() {
   const picker = document.getElementById("bodyPartPicker");
@@ -750,15 +749,22 @@ function initBodyPartPicker() {
   picker.addEventListener("click", (e) => {
     const btn = e.target.closest(".body-part-btn");
     if (!btn) return;
-    setSelectedBodyPart(btn.dataset.part === selectedBodyPart ? null : btn.dataset.part);
+    const next = new Set(selectedBodyParts);
+    if (next.has(btn.dataset.part)) {
+      next.delete(btn.dataset.part);
+    } else {
+      next.add(btn.dataset.part);
+    }
+    setSelectedBodyParts(next);
   });
 }
 
-function setSelectedBodyPart(part) {
-  selectedBodyPart = part;
+function setSelectedBodyParts(parts) {
+  selectedBodyParts = parts;
   document.querySelectorAll("#bodyPartPicker .body-part-btn").forEach((btn) => {
-    btn.classList.toggle("is-selected", btn.dataset.part === part);
-    btn.setAttribute("aria-checked", String(btn.dataset.part === part));
+    const isSelected = selectedBodyParts.has(btn.dataset.part);
+    btn.classList.toggle("is-selected", isSelected);
+    btn.setAttribute("aria-pressed", String(isSelected));
   });
 }
 

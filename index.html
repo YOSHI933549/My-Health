@@ -261,13 +261,13 @@
 
     <form class="card form" id="workoutForm">
       <h3>部位を追加</h3>
-      <div class="body-part-picker" id="bodyPartPicker" role="radiogroup" aria-label="鍛えた部位">
-        <button type="button" class="body-part-btn" data-part="胸">胸</button>
-        <button type="button" class="body-part-btn" data-part="背中">背中</button>
-        <button type="button" class="body-part-btn" data-part="脚">脚</button>
-        <button type="button" class="body-part-btn" data-part="肩">肩</button>
-        <button type="button" class="body-part-btn" data-part="腕">腕</button>
-        <button type="button" class="body-part-btn" data-part="体幹・腹筋">体幹・腹筋</button>
+      <div class="body-part-picker" id="bodyPartPicker" role="group" aria-label="鍛えた部位(複数選択可)">
+        <button type="button" class="body-part-btn" data-part="胸" aria-pressed="false">胸</button>
+        <button type="button" class="body-part-btn" data-part="背中" aria-pressed="false">背中</button>
+        <button type="button" class="body-part-btn" data-part="脚" aria-pressed="false">脚</button>
+        <button type="button" class="body-part-btn" data-part="肩" aria-pressed="false">肩</button>
+        <button type="button" class="body-part-btn" data-part="腕" aria-pressed="false">腕</button>
+        <button type="button" class="body-part-btn" data-part="体幹・腹筋" aria-pressed="false">体幹・腹筋</button>
       </div>
       <label>メモ
         <input type="text" id="workoutMemo" placeholder="任意(種目・重量・回数など)">
