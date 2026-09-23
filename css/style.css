@@ -933,74 +933,32 @@ canvas { width: 100%; display: block; }
 
 
 /* =========================================================================
-   「紙とペン」テーマ(参考: 手書きナプキン風UI) — 紙に鉛筆・色鉛筆で書いた版
-   - 机は明るいベージュの厚紙(粒は控えめ)。左上にコーヒーの輪じみ
-   - 質感は紙が持つ: カードはちぎれた縁のナプキン紙、一覧は罫線ノート(赤い余白線・青い罫線)
-   - 字と線は鉛筆: 見出しは Klee One の太字(600)、紙の目で少しかすれる。線は2回なぞる
-   - 塗りは色鉛筆の斜線: リング・主ボタン・選んだボタン・カレンダーの部位・タブの印。
-     筆圧のむらで所々薄くなり、紙の粒が白く抜ける
-   - 選んだボタンは赤鉛筆で太くなぞって塗る。選んでいないものは薄い鉛筆の枠だけ
-   - 質感はすべて静的な画像(data URIのSVG)。大きな面にはマスクやフィルタを使わない
-     (紙の縁は border-image、マスクはボタンや字など小さな要素だけ)
+   「紙とペン」テーマ(参考: 手書きナプキン風UI)
+   - 机は明るいベージュ。カードはナプキン紙(細かい織り目と押し型の二重線)、
+     一覧は罫線ノート(赤い余白線・青い罫線)、下のタブはちぎったノートの切れ端
+   - 鉛筆の線と塗りは css/tex/ の画像。紙の凹凸の山にだけ芯が乗る描き方で作ってあり、
+     線の中に紙の白い粒が残る(作り方は css/tex/README.md)
+     ・ボタンは鉛筆で2回なぞった二重線の枠(border-image)。主ボタンと選んだ物はテラコッタ
+     ・リングやカレンダーの印は色鉛筆の斜線、見出しは払いと跳ねのある下線
+   - 字はくっきりした手書き書体のまま(質感は線と塗りだけに持たせる)
    - 参考デザインに合わせて明るい紙の見た目で固定(ダークモードでも紙のまま)
-   この節を消せば元の見た目に戻る。
    ========================================================================= */
-
-/* 質感の素材(scratchpadの生成スクリプト gen.mjs で作った静的SVG) */
-:root {
-  --tex-desk: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='a' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .33 0 0 0 0 .28 0 0 0 0 .2 0.62 0 0 0 -0.25'/%3E%3C/filter%3E%3Cfilter id='b' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 .97 -0.65 0 0 0 0.27'/%3E%3C/filter%3E%3Cfilter id='c' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.009' numOctaves='3' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .38 0 0 0 0 .27 0.34 0 0 0 -0.12'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)'/%3E%3Crect width='100%25' height='100%25' filter='url(%23a)'/%3E%3Crect width='100%25' height='100%25' filter='url(%23b)'/%3E%3Cpath d='M163.7 169.6Q161.5 181.9 155.1 193.8' stroke='%23fff' stroke-opacity='.2' stroke-width='.77' fill='none'/%3E%3Cpath d='M194.5 144.1Q195 161.7 196.6 177.3' stroke='%235a4a35' stroke-opacity='.07' stroke-width='.59' fill='none'/%3E%3Cpath d='M88.4 126.7Q90.9 139.1 98 150.3' stroke='%235a4a35' stroke-opacity='.08' stroke-width='.92' fill='none'/%3E%3Cpath d='M257.7 246Q263.5 254.6 272.2 268.4' stroke='%235a4a35' stroke-opacity='.1' stroke-width='.65' fill='none'/%3E%3Cpath d='M46.9 237.9Q53 250.9 58.3 259.8' stroke='%23fff' stroke-opacity='.2' stroke-width='.92' fill='none'/%3E%3Cpath d='M262.5 123.1Q269.7 123.5 272.8 123.9' stroke='%235a4a35' stroke-opacity='.07' stroke-width='.75' fill='none'/%3E%3Cpath d='M235 28.4Q232.6 33.5 230.9 36.9' stroke='%235a4a35' stroke-opacity='.08' stroke-width='.73' fill='none'/%3E%3Cpath d='M112.9 15.4Q107.6 21.9 99.2 30.7' stroke='%235a4a35' stroke-opacity='.07' stroke-width='.92' fill='none'/%3E%3Cpath d='M51.3 37.9Q43.7 49.4 40.6 62.4' stroke='%23fff' stroke-opacity='.2' stroke-width='.97' fill='none'/%3E%3Cpath d='M272.9 201.6Q278.4 218.3 282.8 235.7' stroke='%23fff' stroke-opacity='.2' stroke-width='.76' fill='none'/%3E%3Cpath d='M2.8 281.8Q6.4 287.5 14.6 298.3' stroke='%235a4a35' stroke-opacity='.08' stroke-width='.76' fill='none'/%3E%3Cpath d='M33.1 179.1Q29.4 195.7 20.2 211.1' stroke='%235a4a35' stroke-opacity='.08' stroke-width='.74' fill='none'/%3E%3Cpath d='M30.2 208.6Q22.8 223.2 12.9 242.2' stroke='%23fff' stroke-opacity='.2' stroke-width='.82' fill='none'/%3E%3Cpath d='M311.1 109.9Q303.2 113.1 292.3 114.4' stroke='%23fff' stroke-opacity='.2' stroke-width='.64' fill='none'/%3E%3Cpath d='M212.5 157.6Q210.9 163.2 206.7 171.1' stroke='%23fff' stroke-opacity='.2' stroke-width='.78' fill='none'/%3E%3Cpath d='M121.9 57.9Q108.3 64.8 91.7 77.6' stroke='%23fff' stroke-opacity='.2' stroke-width='.93' fill='none'/%3E%3C/svg%3E");
-  --tex-paper: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='d' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' seed='21' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .4 0 0 0 0 .34 0 0 0 0 .25 0.85 0 0 0 -0.36'/%3E%3C/filter%3E%3Cfilter id='l' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.55' numOctaves='2' seed='26' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 .98 -1.5 0 0 0 0.74'/%3E%3C/filter%3E%3Cfilter id='c' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.018' numOctaves='2' seed='30' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .55 0 0 0 0 .47 0 0 0 0 .34 0.3 0 0 0 -0.12'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)'/%3E%3Crect width='100%25' height='100%25' filter='url(%23d)'/%3E%3Crect width='100%25' height='100%25' filter='url(%23l)'/%3E%3Cpath d='M103.7 107.3Q102.5 113.9 101 120.4' stroke='%237a6448' stroke-opacity='.18' stroke-width='.47' fill='none' stroke-linecap='round'/%3E%3Cpath d='M106.3 186.3Q108 192.4 111 197.9' stroke='%23fffdf6' stroke-opacity='.53' stroke-width='1.15' fill='none' stroke-linecap='round'/%3E%3Cpath d='M49.5 133Q50.9 130.3 52.3 127.5' stroke='%23fffdf6' stroke-opacity='.66' stroke-width='.88' fill='none' stroke-linecap='round'/%3E%3Cpath d='M23.5 160.5Q29.4 149.5 31.8 137.2' stroke='%237a6448' stroke-opacity='.11' stroke-width='.47' fill='none' stroke-linecap='round'/%3E%3Cpath d='M91.6 74.8Q86.3 69.9 82.2 64' stroke='%237a6448' stroke-opacity='.15' stroke-width='.61' fill='none' stroke-linecap='round'/%3E%3Cpath d='M75.5 207.5Q86.1 203.6 95.3 196.9' stroke='%23fffdf6' stroke-opacity='.64' stroke-width='.64' fill='none' stroke-linecap='round'/%3E%3Cpath d='M24.4 173.8Q17.2 182.7 7 187.8' stroke='%23fffdf6' stroke-opacity='.7' stroke-width='1.11' fill='none' stroke-linecap='round'/%3E%3Cpath d='M8.4 5.9Q11.6 9.6 15.4 12.6' stroke='%237a6448' stroke-opacity='.12' stroke-width='.69' fill='none' stroke-linecap='round'/%3E%3Cpath d='M51.4 216.3Q56.4 214 61.9 214.4' stroke='%23fffdf6' stroke-opacity='.53' stroke-width='1.06' fill='none' stroke-linecap='round'/%3E%3Cpath d='M197.1 173.3Q192.9 177.8 187 179.6' stroke='%23fffdf6' stroke-opacity='.74' stroke-width='.75' fill='none' stroke-linecap='round'/%3E%3Cpath d='M91 38.8Q83.5 39.3 78.1 34' stroke='%237a6448' stroke-opacity='.18' stroke-width='.48' fill='none' stroke-linecap='round'/%3E%3Cpath d='M99.7 176Q96.5 179.5 94.8 183.9' stroke='%237a6448' stroke-opacity='.15' stroke-width='.68' fill='none' stroke-linecap='round'/%3E%3Cpath d='M110.8 11.8Q110.2 9.3 108.7 7.2' stroke='%23fffdf6' stroke-opacity='.71' stroke-width='.99' fill='none' stroke-linecap='round'/%3E%3Cpath d='M64 122.6Q67.2 118.8 69.6 114.5' stroke='%23fffdf6' stroke-opacity='.64' stroke-width='.98' fill='none' stroke-linecap='round'/%3E%3Cpath d='M218.5 4Q219.7 -3.1 217.5 -10' stroke='%237a6448' stroke-opacity='.17' stroke-width='.55' fill='none' stroke-linecap='round'/%3E%3Cpath d='M157.4 199.9Q145.9 203.3 134 204.5' stroke='%23fffdf6' stroke-opacity='.56' stroke-width='.75' fill='none' stroke-linecap='round'/%3E%3Cpath d='M157 17.1Q159.4 9.8 155.4 3.3' stroke='%23fffdf6' stroke-opacity='.68' stroke-width='.86' fill='none' stroke-linecap='round'/%3E%3Cpath d='M25.9 79.7Q21.3 78 17 75.6' stroke='%23fffdf6' stroke-opacity='.56' stroke-width='1.12' fill='none' stroke-linecap='round'/%3E%3Cpath d='M234.7 148Q240.9 143.8 246.7 139.3' stroke='%23fffdf6' stroke-opacity='.62' stroke-width='.69' fill='none' stroke-linecap='round'/%3E%3Cpath d='M70.2 160.3Q61.6 165.6 51.9 162.6' stroke='%237a6448' stroke-opacity='.16' stroke-width='.5' fill='none' stroke-linecap='round'/%3E%3Cpath d='M199.6 144.3Q198.5 132.7 202.6 121.8' stroke='%23fffdf6' stroke-opacity='.66' stroke-width='1.06' fill='none' stroke-linecap='round'/%3E%3Cpath d='M211.7 51.7Q203.4 45.1 193.4 41.3' stroke='%237a6448' stroke-opacity='.12' stroke-width='.6' fill='none' stroke-linecap='round'/%3E%3Cpath d='M184.7 47.3Q177.4 37 166.8 30.4' stroke='%237a6448' stroke-opacity='.14' stroke-width='.68' fill='none' stroke-linecap='round'/%3E%3Cpath d='M136.4 27.5Q133 15.4 137.4 3.6' stroke='%237a6448' stroke-opacity='.1' stroke-width='.57' fill='none' stroke-linecap='round'/%3E%3Cpath d='M136.1 201.9Q126.7 201.3 120.1 194.5' stroke='%237a6448' stroke-opacity='.12' stroke-width='.53' fill='none' stroke-linecap='round'/%3E%3Cpath d='M217.4 193.4Q210.9 189.9 204.2 187' stroke='%237a6448' stroke-opacity='.1' stroke-width='.54' fill='none' stroke-linecap='round'/%3E%3Cpath d='M186.8 192.1Q182.4 181.9 175.8 172.9' stroke='%23fffdf6' stroke-opacity='.64' stroke-width='.71' fill='none' stroke-linecap='round'/%3E%3Cpath d='M104 97.8Q104.1 109.3 107 120.4' stroke='%237a6448' stroke-opacity='.11' stroke-width='.39' fill='none' stroke-linecap='round'/%3E%3Cpath d='M217.6 148.6Q206.9 143 196.4 136.8' stroke='%23fffdf6' stroke-opacity='.59' stroke-width='.65' fill='none' stroke-linecap='round'/%3E%3Cpath d='M208.5 153.7Q205.1 156.5 200.8 155.6' stroke='%23fffdf6' stroke-opacity='.5' stroke-width='.65' fill='none' stroke-linecap='round'/%3E%3Cpath d='M100.6 46.8Q94.1 47.2 87.7 46' stroke='%23fffdf6' stroke-opacity='.53' stroke-width='.74' fill='none' stroke-linecap='round'/%3E%3Cpath d='M15.5 236.6Q6.1 233.4 -2.9 229.1' stroke='%237a6448' stroke-opacity='.15' stroke-width='.5' fill='none' stroke-linecap='round'/%3E%3Cpath d='M69.2 28.6Q77.5 20.1 89.4 19.6' stroke='%237a6448' stroke-opacity='.13' stroke-width='.55' fill='none' stroke-linecap='round'/%3E%3Cpath d='M168.7 165.8Q164 162.8 158.5 162.7' stroke='%23fffdf6' stroke-opacity='.68' stroke-width='1.15' fill='none' stroke-linecap='round'/%3E%3Cpath d='M94.3 197.7Q106.5 199 118.4 196.3' stroke='%23fffdf6' stroke-opacity='.7' stroke-width='.79' fill='none' stroke-linecap='round'/%3E%3Cpath d='M179 147.1Q178 139.5 173.3 133.5' stroke='%23fffdf6' stroke-opacity='.62' stroke-width='.85' fill='none' stroke-linecap='round'/%3E%3Cpath d='M.6 29.5Q9.4 28.9 16.3 34.3' stroke='%237a6448' stroke-opacity='.15' stroke-width='.53' fill='none' stroke-linecap='round'/%3E%3Cpath d='M184.9 36.6Q181.4 33.1 179.7 28.4' stroke='%237a6448' stroke-opacity='.11' stroke-width='.7' fill='none' stroke-linecap='round'/%3E%3Cpath d='M145.8 117.7Q141.8 120.5 137.1 121.9' stroke='%23fffdf6' stroke-opacity='.53' stroke-width='.88' fill='none' stroke-linecap='round'/%3E%3Cpath d='M132.6 175.4Q136.1 180 138.7 185.1' stroke='%23fffdf6' stroke-opacity='.75' stroke-width='.9' fill='none' stroke-linecap='round'/%3E%3Cpath d='M126.2 102.7Q124.5 111.8 125.4 121' stroke='%237a6448' stroke-opacity='.14' stroke-width='.4' fill='none' stroke-linecap='round'/%3E%3Cpath d='M44.9 207.8Q54 215.7 55.1 227.6' stroke='%23fffdf6' stroke-opacity='.61' stroke-width='1.07' fill='none' stroke-linecap='round'/%3E%3Cpath d='M148.6 54.8Q150.8 49.9 154.2 45.6' stroke='%23fffdf6' stroke-opacity='.6' stroke-width='.89' fill='none' stroke-linecap='round'/%3E%3Cpath d='M129.6 18Q133.2 30.6 141.1 40.9' stroke='%23fffdf6' stroke-opacity='.6' stroke-width='.72' fill='none' stroke-linecap='round'/%3E%3Cpath d='M17.3 63.2Q29.3 60.6 36.1 50.4' stroke='%237a6448' stroke-opacity='.09' stroke-width='.36' fill='none' stroke-linecap='round'/%3E%3Cpath d='M93.6 181.7Q98.3 172.2 108 168' stroke='%237a6448' stroke-opacity='.1' stroke-width='.4' fill='none' stroke-linecap='round'/%3E%3Cpath d='M136.7 142.5Q138.5 156.3 148.6 165.8' stroke='%237a6448' stroke-opacity='.12' stroke-width='.45' fill='none' stroke-linecap='round'/%3E%3Cpath d='M233.6 183Q236 187.5 238 192.2' stroke='%237a6448' stroke-opacity='.14' stroke-width='.55' fill='none' stroke-linecap='round'/%3E%3Cpath d='M128.3 113.9Q127.7 121.5 129.8 128.7' stroke='%237a6448' stroke-opacity='.15' stroke-width='.37' fill='none' stroke-linecap='round'/%3E%3Cpath d='M222.5 93.8Q228.9 90.4 230.9 83.5' stroke='%237a6448' stroke-opacity='.1' stroke-width='.59' fill='none' stroke-linecap='round'/%3E%3Cellipse cx='27.21' cy='238.44' rx='.36' ry='.42' fill='%234a3a28' fill-opacity='.32'/%3E%3Cellipse cx='132.11' cy='137.53' rx='.52' ry='.58' fill='%234a3a28' fill-opacity='.27'/%3E%3Cellipse cx='218.92' cy='48.37' rx='.59' ry='.52' fill='%234a3a28' fill-opacity='.38'/%3E%3Cellipse cx='231.8' cy='42.74' rx='.62' ry='.57' fill='%234a3a28' fill-opacity='.39'/%3E%3Cellipse cx='126.65' cy='162.03' rx='.56' ry='.36' fill='%234a3a28' fill-opacity='.25'/%3E%3C/svg%3E");
-  --tex-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.05' numOctaves='2' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2.1 0 0 0 -.2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
-  --tex-grain-text: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.15' numOctaves='2' seed='12' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 3.4 0 0 0 -0.5'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
-  --tex-hatch: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' seed='9' stitchTiles='stitch' result='n'/%3E%3CfeColorMatrix in='n' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2.4 0 0 0 -.45' result='m'/%3E%3CfeComposite in='SourceGraphic' in2='m' operator='in'/%3E%3C/filter%3E%3Cg filter='url(%23g)' fill='none'%3E%3Crect width='36' height='36' fill='%23000' fill-opacity='0.26'/%3E%3Cpath d='M0 36Q17.66 17.66 36 0' stroke='%23000' stroke-opacity='.9' stroke-width='1.32'/%3E%3Cpath d='M-36 36Q-18.34 17.66 0 0' stroke='%23000' stroke-opacity='.9' stroke-width='1.32'/%3E%3Cpath d='M3 36Q21.11 18.11 39 0' stroke='%23000' stroke-opacity='.59' stroke-width='1.26'/%3E%3Cpath d='M-33 36Q-14.89 18.11 3 0' stroke='%23000' stroke-opacity='.59' stroke-width='1.26'/%3E%3Cpath d='M6 36Q24.49 18.49 42 0' stroke='%23000' stroke-opacity='.76' stroke-width='1.35'/%3E%3Cpath d='M-30 36Q-11.51 18.49 6 0' stroke='%23000' stroke-opacity='.76' stroke-width='1.35'/%3E%3Cpath d='M9 36Q27.29 18.29 45 0' stroke='%23000' stroke-opacity='.9' stroke-width='.91'/%3E%3Cpath d='M-27 36Q-8.71 18.29 9 0' stroke='%23000' stroke-opacity='.9' stroke-width='.91'/%3E%3Cpath d='M12 36Q29.96 17.96 48 0' stroke='%23000' stroke-opacity='.56' stroke-width='1.29'/%3E%3Cpath d='M-24 36Q-6.04 17.96 12 0' stroke='%23000' stroke-opacity='.56' stroke-width='1.29'/%3E%3Cpath d='M15 36Q32.75 17.75 51 0' stroke='%23000' stroke-opacity='.95' stroke-width='.97'/%3E%3Cpath d='M-21 36Q-3.25 17.75 15 0' stroke='%23000' stroke-opacity='.95' stroke-width='.97'/%3E%3Cpath d='M18 36Q35.7 17.7 54 0' stroke='%23000' stroke-opacity='.88' stroke-width='1.38'/%3E%3Cpath d='M-18 36Q-.3 17.7 18 0' stroke='%23000' stroke-opacity='.88' stroke-width='1.38'/%3E%3Cpath d='M21 36Q38.65 17.65 57 0' stroke='%23000' stroke-opacity='.91' stroke-width='.72'/%3E%3Cpath d='M-15 36Q2.65 17.65 21 0' stroke='%23000' stroke-opacity='.91' stroke-width='.72'/%3E%3Cpath d='M24 36Q41.96 17.96 60 0' stroke='%23000' stroke-opacity='.61' stroke-width='.95'/%3E%3Cpath d='M-12 36Q5.96 17.96 24 0' stroke='%23000' stroke-opacity='.61' stroke-width='.95'/%3E%3Cpath d='M27 36Q44.5 17.5 63 0' stroke='%23000' stroke-opacity='.66' stroke-width='1.59'/%3E%3Cpath d='M-9 36Q8.5 17.5 27 0' stroke='%23000' stroke-opacity='.66' stroke-width='1.59'/%3E%3Cpath d='M30 36Q47.89 17.89 66 0' stroke='%23000' stroke-opacity='.69' stroke-width='1.46'/%3E%3Cpath d='M-6 36Q11.89 17.89 30 0' stroke='%23000' stroke-opacity='.69' stroke-width='1.46'/%3E%3Cpath d='M33 36Q50.86 17.86 69 0' stroke='%23000' stroke-opacity='.67' stroke-width='1.59'/%3E%3Cpath d='M-3 36Q14.86 17.86 33 0' stroke='%23000' stroke-opacity='.67' stroke-width='1.59'/%3E%3C/g%3E%3C/svg%3E");
-  --tex-lines: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' seed='9' stitchTiles='stitch' result='n'/%3E%3CfeColorMatrix in='n' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2.4 0 0 0 -.45' result='m'/%3E%3CfeComposite in='SourceGraphic' in2='m' operator='in'/%3E%3C/filter%3E%3Cg filter='url(%23g)' fill='none'%3E%3Cpath d='M0 36Q18.57 18.57 36 0' stroke='%23000' stroke-opacity='.53' stroke-width='.61'/%3E%3Cpath d='M-36 36Q-17.43 18.57 0 0' stroke='%23000' stroke-opacity='.53' stroke-width='.61'/%3E%3Cpath d='M4 36Q21.89 17.89 40 0' stroke='%23000' stroke-opacity='.76' stroke-width='.95'/%3E%3Cpath d='M-32 36Q-14.11 17.89 4 0' stroke='%23000' stroke-opacity='.76' stroke-width='.95'/%3E%3Cpath d='M8 36Q26.06 18.06 44 0' stroke='%23000' stroke-opacity='.62' stroke-width='.83'/%3E%3Cpath d='M-28 36Q-9.94 18.06 8 0' stroke='%23000' stroke-opacity='.62' stroke-width='.83'/%3E%3Cpath d='M12 36Q29.59 17.59 48 0' stroke='%23000' stroke-opacity='.63' stroke-width='.96'/%3E%3Cpath d='M-24 36Q-6.41 17.59 12 0' stroke='%23000' stroke-opacity='.63' stroke-width='.96'/%3E%3Cpath d='M16 36Q33.64 17.64 52 0' stroke='%23000' stroke-opacity='.76' stroke-width='.98'/%3E%3Cpath d='M-20 36Q-2.36 17.64 16 0' stroke='%23000' stroke-opacity='.76' stroke-width='.98'/%3E%3Cpath d='M20 36Q38.04 18.04 56 0' stroke='%23000' stroke-opacity='.65' stroke-width='.78'/%3E%3Cpath d='M-16 36Q2.04 18.04 20 0' stroke='%23000' stroke-opacity='.65' stroke-width='.78'/%3E%3Cpath d='M24 36Q41.7 17.7 60 0' stroke='%23000' stroke-opacity='.99' stroke-width='.75'/%3E%3Cpath d='M-12 36Q5.7 17.7 24 0' stroke='%23000' stroke-opacity='.99' stroke-width='.75'/%3E%3Cpath d='M28 36Q45.57 17.57 64 0' stroke='%23000' stroke-opacity='.6' stroke-width='1.04'/%3E%3Cpath d='M-8 36Q9.57 17.57 28 0' stroke='%23000' stroke-opacity='.6' stroke-width='1.04'/%3E%3Cpath d='M32 36Q50.06 18.06 68 0' stroke='%23000' stroke-opacity='.65' stroke-width='.68'/%3E%3Cpath d='M-4 36Q14.06 18.06 32 0' stroke='%23000' stroke-opacity='.65' stroke-width='.68'/%3E%3C/g%3E%3C/svg%3E");
-  --tex-hatch-heavy: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' xmlns:x='http://www.w3.org/1999/xlink' width='96' height='166.28'%3E%3Cfilter id='t' filterUnits='userSpaceOnUse' x='0' y='0' width='96' height='166.28' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1' numOctaves='2' seed='3' stitchTiles='stitch' result='n'/%3E%3CfeColorMatrix in='n' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 4.4 0 0 0 -1.05' result='m'/%3E%3CfeComposite in='SourceGraphic' in2='m' operator='in'/%3E%3C/filter%3E%3Cg filter='url(%23t)'%3E%3Crect width='96' height='166.28' fill='%23000' fill-opacity='0.42'/%3E%3Cg stroke='%23000' fill='none' stroke-linecap='round'%3E%3Cg id='l'%3E%3Cpath d='M-5.76 176.26L101.76 -9.98' stroke-width='1.17' stroke-opacity='.75'/%3E%3Cpath d='M-3.76 176.26L103.76 -9.98' stroke-width='1.31' stroke-opacity='.8'/%3E%3Cpath d='M-1.67 176.26L105.85 -9.98' stroke-width='1.2' stroke-opacity='.71' stroke-dasharray='45.96 2.8'/%3E%3Cpath d='M.03 176.26L107.55 -9.98' stroke-width='1.49' stroke-opacity='.92' stroke-dasharray='58.58 3.43'/%3E%3Cpath d='M2.31 176.26L109.83 -9.98' stroke-width='1.56' stroke-opacity='.72' stroke-dasharray='56.93 3.35'/%3E%3Cpath d='M5.03 176.26L112.55 -9.98' stroke-width='1.6' stroke-opacity='.78' stroke-dasharray='42.9 2.65'/%3E%3Cpath d='M6.84 176.26L114.36 -9.98' stroke-width='1.23' stroke-opacity='.73'/%3E%3Cpath d='M9.28 176.26L116.8 -9.98' stroke-width='1.2' stroke-opacity='.8'/%3E%3Cpath d='M11.36 176.26L118.88 -9.98' stroke-width='1.5' stroke-opacity='.79' stroke-dasharray='55.25 3.26'/%3E%3Cpath d='M13.95 176.26L121.47 -9.98' stroke-width='1.5' stroke-opacity='.8' stroke-dasharray='53.19 3.16'/%3E%3Cpath d='M16.29 176.26L123.81 -9.98' stroke-width='1.65' stroke-opacity='.72'/%3E%3Cpath d='M18.92 176.26L126.44 -9.98' stroke-width='1.23' stroke-opacity='.71' stroke-dasharray='49.9 3'/%3E%3Cpath d='M21.14 176.26L128.66 -9.98' stroke-width='1.16' stroke-opacity='.75' stroke-dasharray='44.28 2.71'/%3E%3Cpath d='M23.11 176.26L130.63 -9.98' stroke-width='1.2' stroke-opacity='.89' stroke-dasharray='43.55 2.68'/%3E%3Cpath d='M24.95 176.26L132.47 -9.98' stroke-width='1.59' stroke-opacity='.87'/%3E%3Cpath d='M27.19 176.26L134.71 -9.98' stroke-width='1.16' stroke-opacity='.96'/%3E%3Cpath d='M29.98 176.26L137.5 -9.98' stroke-width='1.24' stroke-opacity='.96'/%3E%3Cpath d='M32.62 176.26L140.14 -9.98' stroke-width='1.69' stroke-opacity='.82'/%3E%3Cpath d='M34.86 176.26L142.38 -9.98' stroke-width='1.71' stroke-opacity='.78'/%3E%3Cpath d='M36.79 176.26L144.31 -9.98' stroke-width='1.29' stroke-opacity='.97' stroke-dasharray='57.49 3.37'/%3E%3Cpath d='M39.1 176.26L146.62 -9.98' stroke-width='1.31' stroke-opacity='.72'/%3E%3Cpath d='M41.31 176.26L148.83 -9.98' stroke-width='1.47' stroke-opacity='.83' stroke-dasharray='42.91 2.65'/%3E%3Cpath d='M43.28 176.26L150.8 -9.98' stroke-width='1.18' stroke-opacity='1' stroke-dasharray='44.84 2.74'/%3E%3Cpath d='M45.19 176.26L152.71 -9.98' stroke-width='1.53' stroke-opacity='.82'/%3E%3Cpath d='M47.7 176.26L155.22 -9.98' stroke-width='1.66' stroke-opacity='.88' stroke-dasharray='56.3 3.32'/%3E%3Cpath d='M49.97 176.26L157.49 -9.98' stroke-width='1.58' stroke-opacity='.96'/%3E%3Cpath d='M51.81 176.26L159.33 -9.98' stroke-width='1.45' stroke-opacity='.9'/%3E%3Cpath d='M54.52 176.26L162.04 -9.98' stroke-width='1.66' stroke-opacity='.97'/%3E%3Cpath d='M56.5 176.26L164.02 -9.98' stroke-width='1.43' stroke-opacity='.9'/%3E%3Cpath d='M58.84 176.26L166.36 -9.98' stroke-width='1.18' stroke-opacity='.8' stroke-dasharray='47.77 2.89'/%3E%3Cpath d='M60.76 176.26L168.28 -9.98' stroke-width='1.46' stroke-opacity='.79' stroke-dasharray='58.48 3.42'/%3E%3Cpath d='M63.37 176.26L170.89 -9.98' stroke-width='1.11' stroke-opacity='.87'/%3E%3Cpath d='M65.77 176.26L173.29 -9.98' stroke-width='1.47' stroke-opacity='.81' stroke-dasharray='54.28 3.21'/%3E%3Cpath d='M67.99 176.26L175.51 -9.98' stroke-width='1.01' stroke-opacity='.88'/%3E%3Cpath d='M70.03 176.26L177.55 -9.98' stroke-width='1.69' stroke-opacity='.79'/%3E%3Cpath d='M72.04 176.26L179.56 -9.98' stroke-width='1.53' stroke-opacity='.88'/%3E%3Cpath d='M73.86 176.26L181.38 -9.98' stroke-width='1.79' stroke-opacity='.87' stroke-dasharray='45.45 2.77'/%3E%3Cpath d='M76.25 176.26L183.77 -9.98' stroke-width='1.11' stroke-opacity='.93'/%3E%3Cpath d='M78.11 176.26L185.63 -9.98' stroke-width='1.5' stroke-opacity='.97' stroke-dasharray='44.3 2.72'/%3E%3Cpath d='M80.1 176.26L187.62 -9.98' stroke-width='1.76' stroke-opacity='.93'/%3E%3Cpath d='M82.43 176.26L189.95 -9.98' stroke-width='1.71' stroke-opacity='.92' stroke-dasharray='51.27 3.06'/%3E%3Cpath d='M84.48 176.26L192 -9.98' stroke-width='1.35' stroke-opacity='.97'/%3E%3Cpath d='M87.37 176.26L194.89 -9.98' stroke-width='1.3' stroke-opacity='.89' stroke-dasharray='58.77 3.44'/%3E%3C/g%3E%3Cuse x:href='%23l' x='-96'/%3E%3Cuse x:href='%23l' x='96'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-  --tex-hatch-dense: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' xmlns:x='http://www.w3.org/1999/xlink' width='96' height='166.28'%3E%3Cfilter id='t' filterUnits='userSpaceOnUse' x='0' y='0' width='96' height='166.28' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='3' stitchTiles='stitch' result='n'/%3E%3CfeColorMatrix in='n' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 3.6 0 0 0 -0.95' result='m'/%3E%3CfeComposite in='SourceGraphic' in2='m' operator='in'/%3E%3C/filter%3E%3Cg filter='url(%23t)'%3E%3Crect width='96' height='166.28' fill='%23000' fill-opacity='0.3'/%3E%3Cg stroke='%23000' fill='none' stroke-linecap='round'%3E%3Cg id='l'%3E%3Cpath d='M-5.76 176.26L101.76 -9.98' stroke-width='1.44' stroke-opacity='.68'/%3E%3Cpath d='M-3.73 176.26L103.79 -9.98' stroke-width='.97' stroke-opacity='.9'/%3E%3Cpath d='M-1.16 176.26L106.36 -9.98' stroke-width='1.11' stroke-opacity='.87' stroke-dasharray='51.86 3.09'/%3E%3Cpath d='M1.06 176.26L108.58 -9.98' stroke-width='1.09' stroke-opacity='.68' stroke-dasharray='45.22 2.76'/%3E%3Cpath d='M3.9 176.26L111.42 -9.98' stroke-width='1.13' stroke-opacity='.79' stroke-dasharray='47.65 2.88'/%3E%3Cpath d='M6.64 176.26L114.16 -9.98' stroke-width='1.34' stroke-opacity='.84' stroke-dasharray='42.61 2.63'/%3E%3Cpath d='M9 176.26L116.52 -9.98' stroke-width='.95' stroke-opacity='.63' stroke-dasharray='55.06 3.25'/%3E%3Cpath d='M11.25 176.26L118.77 -9.98' stroke-width='1.24' stroke-opacity='.85' stroke-dasharray='44.2 2.71'/%3E%3Cpath d='M13.12 176.26L120.64 -9.98' stroke-width='1.08' stroke-opacity='.92'/%3E%3Cpath d='M16.26 176.26L123.78 -9.98' stroke-width='1.16' stroke-opacity='.64' stroke-dasharray='48.73 2.94'/%3E%3Cpath d='M18.33 176.26L125.85 -9.98' stroke-width='1.21' stroke-opacity='.89'/%3E%3Cpath d='M21.2 176.26L128.72 -9.98' stroke-width='1.1' stroke-opacity='.92' stroke-dasharray='56.89 3.34'/%3E%3Cpath d='M23.5 176.26L131.02 -9.98' stroke-width='1.05' stroke-opacity='.69' stroke-dasharray='52.15 3.11'/%3E%3Cpath d='M26.09 176.26L133.61 -9.98' stroke-width='1.46' stroke-opacity='.65'/%3E%3Cpath d='M29.18 176.26L136.7 -9.98' stroke-width='1.37' stroke-opacity='.93'/%3E%3Cpath d='M32.06 176.26L139.58 -9.98' stroke-width='1.66' stroke-opacity='.71'/%3E%3Cpath d='M34.82 176.26L142.34 -9.98' stroke-width='1.01' stroke-opacity='.74' stroke-dasharray='50.3 3.02'/%3E%3Cpath d='M37.54 176.26L145.06 -9.98' stroke-width='1.34' stroke-opacity='.87' stroke-dasharray='52.6 3.13'/%3E%3Cpath d='M40.38 176.26L147.9 -9.98' stroke-width='1.25' stroke-opacity='.62' stroke-dasharray='46.4 2.82'/%3E%3Cpath d='M42.9 176.26L150.42 -9.98' stroke-width='1.4' stroke-opacity='.62' stroke-dasharray='57.82 3.39'/%3E%3Cpath d='M44.77 176.26L152.29 -9.98' stroke-width='1.34' stroke-opacity='.65'/%3E%3Cpath d='M47.24 176.26L154.76 -9.98' stroke-width='1.35' stroke-opacity='.66'/%3E%3Cpath d='M50.15 176.26L157.67 -9.98' stroke-width='.92' stroke-opacity='.91' stroke-dasharray='57.15 3.36'/%3E%3Cpath d='M52.52 176.26L160.04 -9.98' stroke-width='1.62' stroke-opacity='.72'/%3E%3Cpath d='M55.1 176.26L162.62 -9.98' stroke-width='1.15' stroke-opacity='.65' stroke-dasharray='44.1 2.71'/%3E%3Cpath d='M58.01 176.26L165.53 -9.98' stroke-width='1.2' stroke-opacity='.81' stroke-dasharray='42.73 2.64'/%3E%3Cpath d='M60.68 176.26L168.2 -9.98' stroke-width='1.1' stroke-opacity='.97'/%3E%3Cpath d='M63.78 176.26L171.3 -9.98' stroke-width='1.36' stroke-opacity='.82' stroke-dasharray='46.45 2.82'/%3E%3Cpath d='M65.99 176.26L173.51 -9.98' stroke-width='1.55' stroke-opacity='.76'/%3E%3Cpath d='M68.34 176.26L175.86 -9.98' stroke-width='.99' stroke-opacity='.65'/%3E%3Cpath d='M71.09 176.26L178.61 -9.98' stroke-width='.94' stroke-opacity='.84'/%3E%3Cpath d='M73.2 176.26L180.72 -9.98' stroke-width='1.02' stroke-opacity='.81' stroke-dasharray='42.98 2.65'/%3E%3Cpath d='M75.95 176.26L183.47 -9.98' stroke-width='1.03' stroke-opacity='.61' stroke-dasharray='46.75 2.84'/%3E%3Cpath d='M79.04 176.26L186.56 -9.98' stroke-width='.92' stroke-opacity='.94'/%3E%3Cpath d='M81.74 176.26L189.26 -9.98' stroke-width='.93' stroke-opacity='.97'/%3E%3Cpath d='M84.05 176.26L191.57 -9.98' stroke-width='1.36' stroke-opacity='.76'/%3E%3Cpath d='M86 176.26L193.52 -9.98' stroke-width='1.7' stroke-opacity='.97' stroke-dasharray='44.56 2.73'/%3E%3Cpath d='M88.31 176.26L195.83 -9.98' stroke-width='1.11' stroke-opacity='.76'/%3E%3C/g%3E%3Cuse x:href='%23l' x='-96'/%3E%3Cuse x:href='%23l' x='96'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-  --tex-blotch: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='b' filterUnits='userSpaceOnUse' x='0' y='0' width='240' height='240' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.018 .03' numOctaves='3' seed='14' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .97 0 0 0 0 .955 0 0 0 0 .925 2.6 0 0 0 -1.05'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23b)'/%3E%3C/svg%3E");
-  --deckle-surface: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='162' height='136'%3E%3Cfilter id='d' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' seed='21' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .4 0 0 0 0 .34 0 0 0 0 .25 0.85 0 0 0 -0.36'/%3E%3C/filter%3E%3Cfilter id='l' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.55' numOctaves='2' seed='26' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 .98 -1.5 0 0 0 0.74'/%3E%3C/filter%3E%3Cfilter id='c' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.018' numOctaves='2' seed='30' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .55 0 0 0 0 .47 0 0 0 0 .34 0.3 0 0 0 -0.12'/%3E%3C/filter%3E%3CclipPath id='k'%3E%3Cpath d='M6 2.2L7.5 1.8L9.3 1.9L11.3 2.1L12.6 2.4L14.1 2L16.4 1.8L18.8 2.4L19.9 1.9L22.1 2.6L24.2 3L26.1 2.6L28.7 2.8L29.8 3.4L31.5 3.4L32.7 3.3L34.9 3.4L36.1 3.2L37.2 3.2L39.2 3.7L41.2 3.2L42.4 3.4L43.6 3.7L44.8 3.7L47.3 4L49.7 3.8L51.4 3.9L53.5 3.3L54.6 3.5L56.8 3.6L58.7 3.1L60.7 3.2L62.7 3.1L64.7 2.8L66.8 3.1L68.3 3.3L69.4 2.8L71.3 2.9L73 3L75 3.3L76.7 2.7L78.1 3L80 2.9L82.2 3L83.4 3.2L85.5 3.6L87.2 3.4L89.5 3.6L91.9 4.1L94.4 4.3L96.4 3.9L97.8 3.5L99.9 4.2L101.8 3.4L103 3.7L104 3.5L105.3 3.3L106.7 3.2L107.7 3.3L109.7 3.1L111.9 3.2L114.4 3.1L116.4 3.1L118.8 2.6L121.2 2.9L122.9 2.7L124.4 2.5L125.8 2L128.3 2.1L129.8 2.2L131.6 1.9L133 2.1L134.5 2L135.9 2.6L138 2.8L139.7 2.6L142.2 2.3L143.7 2.3L145.4 2.6L147 2.8L148.5 2.7L149.8 2.2L151.8 2.6L153.5 1.9L155 1.9L156 2.2L159.4 2.8L160.1 6L159.8 7.5L159.7 9.9L159.9 11L159.4 13.2L159 15.5L158.7 17.9L158.6 20.3L158.7 21.9L158.1 23.2L158.2 25.1L158.7 26.3L158.9 28.1L158.6 30.3L158.7 32.6L158.9 34.8L159.8 35.9L159.2 38L159 40.3L159.4 41.4L159.4 43L159.4 44.7L158.9 46.9L158.9 48.3L159 50.8L159.4 51.9L158.7 53.2L159.2 54.5L159 55.7L158.5 57.3L158.8 59.3L158.8 60.7L158.8 62.1L158.3 64.6L157.9 66L157.4 67L158.1 68.3L158.1 70.9L157.7 72L157.8 74L157.4 75.4L158.1 77.4L158.4 78.5L158.7 80.7L158.4 82.5L158.3 83.8L158.3 85.7L158.8 87.9L158.2 90L158.7 91.7L158.7 93.5L158.8 94.8L158.6 96.9L158.6 98.5L158.7 99.8L159.2 102L159.4 104.3L159.2 105.4L159.3 107.5L159.6 109.4L159.7 111.5L159.7 113.6L160.3 116.1L159.8 118.1L159.9 120L160.4 122.5L159.7 124.4L160.6 126.4L159.8 127.5L160.3 129.1L160.1 130L159.9 133.3L156 134L153.4 134.1L152.4 133.9L151 134.1L148.5 134.1L147.1 133.5L144.6 132.9L142.6 133.2L141 132.8L138.6 133.3L136.3 132.7L134.6 133.3L133.4 132.9L132.1 133.4L129.7 132.9L127.8 133L126 133.4L124.4 133.1L122.9 133.5L120.6 133L118.4 132.8L115.9 132.6L114.1 132.3L111.8 132.4L109.7 132.2L107.1 132.1L105.9 132.6L103.3 132.7L100.8 132.1L99.6 132.3L97 131.9L94.7 132.4L93.5 132.4L92.4 131.9L91.4 132.3L89.1 131.9L88 131.4L86.4 131.4L84.6 131.8L83 131.7L81.9 131.2L79.3 131.5L77.3 131.9L75.5 131.9L73.1 132.3L71.1 132.5L69.7 132.8L67.3 132.7L65.8 133.5L64.7 133.3L63.1 133.5L62.1 133L60 133.5L58.9 133.5L56.5 133.6L54.5 133.7L52.9 133.3L51.4 133.4L49.6 133.6L47.1 133.8L45.8 133.7L43.9 133.7L41.7 133.7L39.7 134L38.2 134L36.3 133.7L34.6 133.3L32.5 133.7L31.2 133.2L28.8 133.2L26.7 133.1L25.4 132.9L24.3 133.4L22.4 133.6L21 133L19 133.3L17.4 133.7L15.5 133.8L14.1 133.4L11.8 133.4L9.9 133.6L7.4 133.8L6 134L2.4 133.3L2.7 130L3.1 128L2.6 126.2L3 123.9L3 121.4L2.9 119.3L2.9 118.1L3.2 116.9L2.8 114.7L3.1 113.4L2.7 111.5L3.3 110.3L2.9 109L2.4 107.7L3.2 106.6L2.6 104.3L2.5 102.1L3 100.6L3.2 98.7L2.9 97.1L3 95.3L3.7 92.9L2.9 90.3L2.6 88.1L2.8 86.2L2.8 83.7L2.6 81.8L2 80.7L2.2 79.1L1.7 77.4L2.1 75.5L2.3 73.2L2.7 71.4L2.7 70L2.7 68.7L2.7 66.5L2.4 64.5L2.9 62.6L2.6 61.5L3.4 59.9L3.5 57.4L3.2 55L3.5 53.8L3.7 51.6L3.9 49.7L3.9 47.5L4.4 45.1L4.4 43.6L4.3 42.4L4.1 39.8L3.8 38.6L4 36.6L2.8 34.1L3 32.6L3.2 30.7L2.5 29L3 28L2.4 27L2.8 25.9L2.3 24.2L2.3 22.7L2.9 20.4L3.2 19.3L2.8 18.1L3.1 16.3L3.2 15L2.4 13.5L2.6 12.4L3 9.8L2.8 8.3L2.7 6L2.6 2.3Z'/%3E%3C/clipPath%3E%3Cpath d='M6 1.4L7.5 1.1L9.3 1.4L11.3 1.5L12.6 2L14.1 1.3L16.4 1L18.8 1.6L19.9 1.3L22.1 .4L24.2 2.3L26.1 1.8L28.7 2.3L29.8 3L31.5 3L32.7 2.6L34.9 2.5L36.1 2.6L37.2 2.5L39.2 3.2L41.2 1.5L42.4 2.6L43.6 2.3L44.8 1.6L47.3 3.3L49.7 3.4L51.4 3.4L53.5 2.9L54.6 2.6L56.8 3.2L58.7 2.2L60.7 2.3L62.7 1.3L64.7 2.4L66.8 2.4L68.3 1.8L69.4 2.3L71.3 2.5L73 2.3L75 2.5L76.7 2.2L78.1 2.6L80 2.2L82.2 .7L83.4 2.9L85.5 2.8L87.2 2.7L89.5 2.7L91.9 3.4L94.4 3.7L96.4 3.4L97.8 1.4L99.9 2.3L101.8 .8L103 2.9L104 3L105.3 2.5L106.7 2.6L107.7 2.6L109.7 2.2L111.9 2.9L114.4 .6L116.4 2.6L118.8 1.8L121.2 .9L122.9 1.2L124.4 1.7L125.8 1.6L128.3 1.6L129.8 1.9L131.6 1.1L133 1.8L134.5 1.1L135.9 1.7L138 .5L139.7 1.1L142.2 .1L143.7 1.5L145.4 2.2L147 2.4L148.5 .8L149.8 1.7L151.8 1.8L153.5 1.1L155 1.4L156 1.7L159.8 2.8L161 6L160.5 7.5L160.1 9.9L160.4 11L160.1 13.2L159.7 15.5L159.5 17.9L158.9 20.3L159.5 21.9L159 23.2L158.6 25.1L160.8 26.3L159.7 28.1L159.3 30.3L160.7 32.6L159.2 34.8L160.6 35.9L160.1 38L159.6 40.3L160.2 41.4L159.7 43L161.5 44.7L159.3 46.9L159.3 48.3L159.8 50.8L159.7 51.9L159.1 53.2L159.7 54.5L159.8 55.7L159.2 57.3L159.3 59.3L159.6 60.7L159.4 62.1L160.4 64.6L158.4 66L158.3 67L158.5 68.3L158.9 70.9L158.1 72L158.6 74L159 75.4L159 77.4L158.8 78.5L159.2 80.7L159 82.5L160.3 83.8L159 85.7L159.2 87.9L159 90L159.1 91.7L159.5 93.5L159.3 94.8L159.4 96.9L159.1 98.5L159.2 99.8L161.2 102L159.9 104.3L159.6 105.4L160.1 107.5L161.6 109.4L160.6 111.5L161.1 113.6L160.6 116.1L160.6 118.1L160.5 120L161.1 122.5L160.1 124.4L161.4 126.4L160.6 127.5L161 129.1L160.6 130L159.8 133.6L156 134.5L153.4 135.7L152.4 134.4L151 134.4L148.5 134.7L147.1 134.3L144.6 133.8L142.6 134L141 133.3L138.6 133.8L136.3 133.2L134.6 135.5L133.4 133.2L132.1 133.8L129.7 133.6L127.8 133.6L126 135.7L124.4 133.6L122.9 134L120.6 133.7L118.4 133.7L115.9 133.3L114.1 132.7L111.8 134.8L109.7 132.6L107.1 132.5L105.9 133.1L103.3 133.2L100.8 134.4L99.6 132.6L97 132.8L94.7 134.9L93.5 133L92.4 132.4L91.4 132.8L89.1 133.9L88 133.1L86.4 131.7L84.6 132.2L83 133.2L81.9 132L79.3 132L77.3 133.5L75.5 132.5L73.1 132.7L71.1 133.2L69.7 135.2L67.3 133.3L65.8 134.1L64.7 135.3L63.1 134.3L62.1 133.5L60 135.7L58.9 134.1L56.5 135.2L54.5 134.2L52.9 133.7L51.4 134.8L49.6 135.9L47.1 134.3L45.8 134.3L43.9 134.1L41.7 134.5L39.7 136L38.2 134.7L36.3 134.6L34.6 133.6L32.5 135.3L31.2 133.8L28.8 134L26.7 133.6L25.4 133.5L24.3 133.7L22.4 134.4L21 135.3L19 133.7L17.4 134.4L15.5 134.5L14.1 133.7L11.8 133.8L9.9 134.5L7.4 134.4L6 134.5L2.3 133.7L2.3 130L2.7 128L2.1 126.2L1.3 123.9L2.6 121.4L2.5 119.3L2.5 118.1L2.6 116.9L2 114.7L1.1 113.4L2.4 111.5L1.6 110.3L2.5 109L1.5 107.7L2.5 106.6L2.3 104.3L1.7 102.1L2.3 100.6L2.4 98.7L2.3 97.1L2.4 95.3L3.1 92.9L2.4 90.3L1.9 88.1L2 86.2L1.9 83.7L2.2 81.8L.6 80.7L0 79.1L1.2 77.4L1.6 75.5L1.7 73.2L2.1 71.4L2.4 70L2.1 68.7L2.2 66.5L1.7 64.5L2.4 62.6L2 61.5L1.8 59.9L2.8 57.4L2.4 55L3.2 53.8L2.9 51.6L1.5 49.7L3.5 47.5L4.1 45.1L4.1 43.6L3.5 42.4L3.5 39.8L3 38.6L3.5 36.6L2.5 34.1L2.3 32.6L.8 30.7L2 29L2.3 28L2 27L.8 25.9L1.9 24.2L1.8 22.7L.9 20.4L2.3 19.3L2.3 18.1L2.4 16.3L2.4 15L.5 13.5L1.9 12.4L2.5 9.8L2 8.3L2.2 6L2.2 2.8Z' fill='%23faf7ef' fill-opacity='.32'/%3E%3Cg clip-path='url(%23k)'%3E%3Crect width='162' height='136' fill='%23faf7ef'/%3E%3Crect width='100%25' height='100%25' filter='url(%23c)'/%3E%3Crect width='100%25' height='100%25' filter='url(%23d)'/%3E%3Crect width='100%25' height='100%25' filter='url(%23l)'/%3E%3C/g%3E%3C/svg%3E");
-  --deckle-notebook: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='162' height='136'%3E%3Cfilter id='d' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' seed='21' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .4 0 0 0 0 .34 0 0 0 0 .25 0.85 0 0 0 -0.36'/%3E%3C/filter%3E%3Cfilter id='l' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.55' numOctaves='2' seed='26' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 .98 -1.5 0 0 0 0.74'/%3E%3C/filter%3E%3Cfilter id='c' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.018' numOctaves='2' seed='30' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .55 0 0 0 0 .47 0 0 0 0 .34 0.3 0 0 0 -0.12'/%3E%3C/filter%3E%3CclipPath id='k'%3E%3Cpath d='M6 2.2L7.5 1.8L9.3 1.9L11.3 2.1L12.6 2.4L14.1 2L16.4 1.8L18.8 2.4L19.9 1.9L22.1 2.6L24.2 3L26.1 2.6L28.7 2.8L29.8 3.4L31.5 3.4L32.7 3.3L34.9 3.4L36.1 3.2L37.2 3.2L39.2 3.7L41.2 3.2L42.4 3.4L43.6 3.7L44.8 3.7L47.3 4L49.7 3.8L51.4 3.9L53.5 3.3L54.6 3.5L56.8 3.6L58.7 3.1L60.7 3.2L62.7 3.1L64.7 2.8L66.8 3.1L68.3 3.3L69.4 2.8L71.3 2.9L73 3L75 3.3L76.7 2.7L78.1 3L80 2.9L82.2 3L83.4 3.2L85.5 3.6L87.2 3.4L89.5 3.6L91.9 4.1L94.4 4.3L96.4 3.9L97.8 3.5L99.9 4.2L101.8 3.4L103 3.7L104 3.5L105.3 3.3L106.7 3.2L107.7 3.3L109.7 3.1L111.9 3.2L114.4 3.1L116.4 3.1L118.8 2.6L121.2 2.9L122.9 2.7L124.4 2.5L125.8 2L128.3 2.1L129.8 2.2L131.6 1.9L133 2.1L134.5 2L135.9 2.6L138 2.8L139.7 2.6L142.2 2.3L143.7 2.3L145.4 2.6L147 2.8L148.5 2.7L149.8 2.2L151.8 2.6L153.5 1.9L155 1.9L156 2.2L159.4 2.8L160.1 6L159.8 7.5L159.7 9.9L159.9 11L159.4 13.2L159 15.5L158.7 17.9L158.6 20.3L158.7 21.9L158.1 23.2L158.2 25.1L158.7 26.3L158.9 28.1L158.6 30.3L158.7 32.6L158.9 34.8L159.8 35.9L159.2 38L159 40.3L159.4 41.4L159.4 43L159.4 44.7L158.9 46.9L158.9 48.3L159 50.8L159.4 51.9L158.7 53.2L159.2 54.5L159 55.7L158.5 57.3L158.8 59.3L158.8 60.7L158.8 62.1L158.3 64.6L157.9 66L157.4 67L158.1 68.3L158.1 70.9L157.7 72L157.8 74L157.4 75.4L158.1 77.4L158.4 78.5L158.7 80.7L158.4 82.5L158.3 83.8L158.3 85.7L158.8 87.9L158.2 90L158.7 91.7L158.7 93.5L158.8 94.8L158.6 96.9L158.6 98.5L158.7 99.8L159.2 102L159.4 104.3L159.2 105.4L159.3 107.5L159.6 109.4L159.7 111.5L159.7 113.6L160.3 116.1L159.8 118.1L159.9 120L160.4 122.5L159.7 124.4L160.6 126.4L159.8 127.5L160.3 129.1L160.1 130L159.9 133.3L156 134L153.4 134.1L152.4 133.9L151 134.1L148.5 134.1L147.1 133.5L144.6 132.9L142.6 133.2L141 132.8L138.6 133.3L136.3 132.7L134.6 133.3L133.4 132.9L132.1 133.4L129.7 132.9L127.8 133L126 133.4L124.4 133.1L122.9 133.5L120.6 133L118.4 132.8L115.9 132.6L114.1 132.3L111.8 132.4L109.7 132.2L107.1 132.1L105.9 132.6L103.3 132.7L100.8 132.1L99.6 132.3L97 131.9L94.7 132.4L93.5 132.4L92.4 131.9L91.4 132.3L89.1 131.9L88 131.4L86.4 131.4L84.6 131.8L83 131.7L81.9 131.2L79.3 131.5L77.3 131.9L75.5 131.9L73.1 132.3L71.1 132.5L69.7 132.8L67.3 132.7L65.8 133.5L64.7 133.3L63.1 133.5L62.1 133L60 133.5L58.9 133.5L56.5 133.6L54.5 133.7L52.9 133.3L51.4 133.4L49.6 133.6L47.1 133.8L45.8 133.7L43.9 133.7L41.7 133.7L39.7 134L38.2 134L36.3 133.7L34.6 133.3L32.5 133.7L31.2 133.2L28.8 133.2L26.7 133.1L25.4 132.9L24.3 133.4L22.4 133.6L21 133L19 133.3L17.4 133.7L15.5 133.8L14.1 133.4L11.8 133.4L9.9 133.6L7.4 133.8L6 134L2.4 133.3L2.7 130L3.1 128L2.6 126.2L3 123.9L3 121.4L2.9 119.3L2.9 118.1L3.2 116.9L2.8 114.7L3.1 113.4L2.7 111.5L3.3 110.3L2.9 109L2.4 107.7L3.2 106.6L2.6 104.3L2.5 102.1L3 100.6L3.2 98.7L2.9 97.1L3 95.3L3.7 92.9L2.9 90.3L2.6 88.1L2.8 86.2L2.8 83.7L2.6 81.8L2 80.7L2.2 79.1L1.7 77.4L2.1 75.5L2.3 73.2L2.7 71.4L2.7 70L2.7 68.7L2.7 66.5L2.4 64.5L2.9 62.6L2.6 61.5L3.4 59.9L3.5 57.4L3.2 55L3.5 53.8L3.7 51.6L3.9 49.7L3.9 47.5L4.4 45.1L4.4 43.6L4.3 42.4L4.1 39.8L3.8 38.6L4 36.6L2.8 34.1L3 32.6L3.2 30.7L2.5 29L3 28L2.4 27L2.8 25.9L2.3 24.2L2.3 22.7L2.9 20.4L3.2 19.3L2.8 18.1L3.1 16.3L3.2 15L2.4 13.5L2.6 12.4L3 9.8L2.8 8.3L2.7 6L2.6 2.3Z'/%3E%3C/clipPath%3E%3Cpath d='M6 1.4L7.5 1.1L9.3 1.4L11.3 1.5L12.6 2L14.1 1.3L16.4 1L18.8 1.6L19.9 1.3L22.1 .4L24.2 2.3L26.1 1.8L28.7 2.3L29.8 3L31.5 3L32.7 2.6L34.9 2.5L36.1 2.6L37.2 2.5L39.2 3.2L41.2 1.5L42.4 2.6L43.6 2.3L44.8 1.6L47.3 3.3L49.7 3.4L51.4 3.4L53.5 2.9L54.6 2.6L56.8 3.2L58.7 2.2L60.7 2.3L62.7 1.3L64.7 2.4L66.8 2.4L68.3 1.8L69.4 2.3L71.3 2.5L73 2.3L75 2.5L76.7 2.2L78.1 2.6L80 2.2L82.2 .7L83.4 2.9L85.5 2.8L87.2 2.7L89.5 2.7L91.9 3.4L94.4 3.7L96.4 3.4L97.8 1.4L99.9 2.3L101.8 .8L103 2.9L104 3L105.3 2.5L106.7 2.6L107.7 2.6L109.7 2.2L111.9 2.9L114.4 .6L116.4 2.6L118.8 1.8L121.2 .9L122.9 1.2L124.4 1.7L125.8 1.6L128.3 1.6L129.8 1.9L131.6 1.1L133 1.8L134.5 1.1L135.9 1.7L138 .5L139.7 1.1L142.2 .1L143.7 1.5L145.4 2.2L147 2.4L148.5 .8L149.8 1.7L151.8 1.8L153.5 1.1L155 1.4L156 1.7L159.8 2.8L161 6L160.5 7.5L160.1 9.9L160.4 11L160.1 13.2L159.7 15.5L159.5 17.9L158.9 20.3L159.5 21.9L159 23.2L158.6 25.1L160.8 26.3L159.7 28.1L159.3 30.3L160.7 32.6L159.2 34.8L160.6 35.9L160.1 38L159.6 40.3L160.2 41.4L159.7 43L161.5 44.7L159.3 46.9L159.3 48.3L159.8 50.8L159.7 51.9L159.1 53.2L159.7 54.5L159.8 55.7L159.2 57.3L159.3 59.3L159.6 60.7L159.4 62.1L160.4 64.6L158.4 66L158.3 67L158.5 68.3L158.9 70.9L158.1 72L158.6 74L159 75.4L159 77.4L158.8 78.5L159.2 80.7L159 82.5L160.3 83.8L159 85.7L159.2 87.9L159 90L159.1 91.7L159.5 93.5L159.3 94.8L159.4 96.9L159.1 98.5L159.2 99.8L161.2 102L159.9 104.3L159.6 105.4L160.1 107.5L161.6 109.4L160.6 111.5L161.1 113.6L160.6 116.1L160.6 118.1L160.5 120L161.1 122.5L160.1 124.4L161.4 126.4L160.6 127.5L161 129.1L160.6 130L159.8 133.6L156 134.5L153.4 135.7L152.4 134.4L151 134.4L148.5 134.7L147.1 134.3L144.6 133.8L142.6 134L141 133.3L138.6 133.8L136.3 133.2L134.6 135.5L133.4 133.2L132.1 133.8L129.7 133.6L127.8 133.6L126 135.7L124.4 133.6L122.9 134L120.6 133.7L118.4 133.7L115.9 133.3L114.1 132.7L111.8 134.8L109.7 132.6L107.1 132.5L105.9 133.1L103.3 133.2L100.8 134.4L99.6 132.6L97 132.8L94.7 134.9L93.5 133L92.4 132.4L91.4 132.8L89.1 133.9L88 133.1L86.4 131.7L84.6 132.2L83 133.2L81.9 132L79.3 132L77.3 133.5L75.5 132.5L73.1 132.7L71.1 133.2L69.7 135.2L67.3 133.3L65.8 134.1L64.7 135.3L63.1 134.3L62.1 133.5L60 135.7L58.9 134.1L56.5 135.2L54.5 134.2L52.9 133.7L51.4 134.8L49.6 135.9L47.1 134.3L45.8 134.3L43.9 134.1L41.7 134.5L39.7 136L38.2 134.7L36.3 134.6L34.6 133.6L32.5 135.3L31.2 133.8L28.8 134L26.7 133.6L25.4 133.5L24.3 133.7L22.4 134.4L21 135.3L19 133.7L17.4 134.4L15.5 134.5L14.1 133.7L11.8 133.8L9.9 134.5L7.4 134.4L6 134.5L2.3 133.7L2.3 130L2.7 128L2.1 126.2L1.3 123.9L2.6 121.4L2.5 119.3L2.5 118.1L2.6 116.9L2 114.7L1.1 113.4L2.4 111.5L1.6 110.3L2.5 109L1.5 107.7L2.5 106.6L2.3 104.3L1.7 102.1L2.3 100.6L2.4 98.7L2.3 97.1L2.4 95.3L3.1 92.9L2.4 90.3L1.9 88.1L2 86.2L1.9 83.7L2.2 81.8L.6 80.7L0 79.1L1.2 77.4L1.6 75.5L1.7 73.2L2.1 71.4L2.4 70L2.1 68.7L2.2 66.5L1.7 64.5L2.4 62.6L2 61.5L1.8 59.9L2.8 57.4L2.4 55L3.2 53.8L2.9 51.6L1.5 49.7L3.5 47.5L4.1 45.1L4.1 43.6L3.5 42.4L3.5 39.8L3 38.6L3.5 36.6L2.5 34.1L2.3 32.6L.8 30.7L2 29L2.3 28L2 27L.8 25.9L1.9 24.2L1.8 22.7L.9 20.4L2.3 19.3L2.3 18.1L2.4 16.3L2.4 15L.5 13.5L1.9 12.4L2.5 9.8L2 8.3L2.2 6L2.2 2.8Z' fill='%23f9f3e1' fill-opacity='.32'/%3E%3Cg clip-path='url(%23k)'%3E%3Crect width='162' height='136' fill='%23f9f3e1'/%3E%3Crect width='100%25' height='100%25' filter='url(%23c)'/%3E%3Crect width='100%25' height='100%25' filter='url(%23d)'/%3E%3Crect width='100%25' height='100%25' filter='url(%23l)'/%3E%3C/g%3E%3C/svg%3E");
-  --deckle-shadow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='162' height='136'%3E%3Cpath d='M6 2.2L7.5 1.8L9.3 1.9L11.3 2.1L12.6 2.4L14.1 2L16.4 1.8L18.8 2.4L19.9 1.9L22.1 2.6L24.2 3L26.1 2.6L28.7 2.8L29.8 3.4L31.5 3.4L32.7 3.3L34.9 3.4L36.1 3.2L37.2 3.2L39.2 3.7L41.2 3.2L42.4 3.4L43.6 3.7L44.8 3.7L47.3 4L49.7 3.8L51.4 3.9L53.5 3.3L54.6 3.5L56.8 3.6L58.7 3.1L60.7 3.2L62.7 3.1L64.7 2.8L66.8 3.1L68.3 3.3L69.4 2.8L71.3 2.9L73 3L75 3.3L76.7 2.7L78.1 3L80 2.9L82.2 3L83.4 3.2L85.5 3.6L87.2 3.4L89.5 3.6L91.9 4.1L94.4 4.3L96.4 3.9L97.8 3.5L99.9 4.2L101.8 3.4L103 3.7L104 3.5L105.3 3.3L106.7 3.2L107.7 3.3L109.7 3.1L111.9 3.2L114.4 3.1L116.4 3.1L118.8 2.6L121.2 2.9L122.9 2.7L124.4 2.5L125.8 2L128.3 2.1L129.8 2.2L131.6 1.9L133 2.1L134.5 2L135.9 2.6L138 2.8L139.7 2.6L142.2 2.3L143.7 2.3L145.4 2.6L147 2.8L148.5 2.7L149.8 2.2L151.8 2.6L153.5 1.9L155 1.9L156 2.2L159.4 2.8L160.1 6L159.8 7.5L159.7 9.9L159.9 11L159.4 13.2L159 15.5L158.7 17.9L158.6 20.3L158.7 21.9L158.1 23.2L158.2 25.1L158.7 26.3L158.9 28.1L158.6 30.3L158.7 32.6L158.9 34.8L159.8 35.9L159.2 38L159 40.3L159.4 41.4L159.4 43L159.4 44.7L158.9 46.9L158.9 48.3L159 50.8L159.4 51.9L158.7 53.2L159.2 54.5L159 55.7L158.5 57.3L158.8 59.3L158.8 60.7L158.8 62.1L158.3 64.6L157.9 66L157.4 67L158.1 68.3L158.1 70.9L157.7 72L157.8 74L157.4 75.4L158.1 77.4L158.4 78.5L158.7 80.7L158.4 82.5L158.3 83.8L158.3 85.7L158.8 87.9L158.2 90L158.7 91.7L158.7 93.5L158.8 94.8L158.6 96.9L158.6 98.5L158.7 99.8L159.2 102L159.4 104.3L159.2 105.4L159.3 107.5L159.6 109.4L159.7 111.5L159.7 113.6L160.3 116.1L159.8 118.1L159.9 120L160.4 122.5L159.7 124.4L160.6 126.4L159.8 127.5L160.3 129.1L160.1 130L159.9 133.3L156 134L153.4 134.1L152.4 133.9L151 134.1L148.5 134.1L147.1 133.5L144.6 132.9L142.6 133.2L141 132.8L138.6 133.3L136.3 132.7L134.6 133.3L133.4 132.9L132.1 133.4L129.7 132.9L127.8 133L126 133.4L124.4 133.1L122.9 133.5L120.6 133L118.4 132.8L115.9 132.6L114.1 132.3L111.8 132.4L109.7 132.2L107.1 132.1L105.9 132.6L103.3 132.7L100.8 132.1L99.6 132.3L97 131.9L94.7 132.4L93.5 132.4L92.4 131.9L91.4 132.3L89.1 131.9L88 131.4L86.4 131.4L84.6 131.8L83 131.7L81.9 131.2L79.3 131.5L77.3 131.9L75.5 131.9L73.1 132.3L71.1 132.5L69.7 132.8L67.3 132.7L65.8 133.5L64.7 133.3L63.1 133.5L62.1 133L60 133.5L58.9 133.5L56.5 133.6L54.5 133.7L52.9 133.3L51.4 133.4L49.6 133.6L47.1 133.8L45.8 133.7L43.9 133.7L41.7 133.7L39.7 134L38.2 134L36.3 133.7L34.6 133.3L32.5 133.7L31.2 133.2L28.8 133.2L26.7 133.1L25.4 132.9L24.3 133.4L22.4 133.6L21 133L19 133.3L17.4 133.7L15.5 133.8L14.1 133.4L11.8 133.4L9.9 133.6L7.4 133.8L6 134L2.4 133.3L2.7 130L3.1 128L2.6 126.2L3 123.9L3 121.4L2.9 119.3L2.9 118.1L3.2 116.9L2.8 114.7L3.1 113.4L2.7 111.5L3.3 110.3L2.9 109L2.4 107.7L3.2 106.6L2.6 104.3L2.5 102.1L3 100.6L3.2 98.7L2.9 97.1L3 95.3L3.7 92.9L2.9 90.3L2.6 88.1L2.8 86.2L2.8 83.7L2.6 81.8L2 80.7L2.2 79.1L1.7 77.4L2.1 75.5L2.3 73.2L2.7 71.4L2.7 70L2.7 68.7L2.7 66.5L2.4 64.5L2.9 62.6L2.6 61.5L3.4 59.9L3.5 57.4L3.2 55L3.5 53.8L3.7 51.6L3.9 49.7L3.9 47.5L4.4 45.1L4.4 43.6L4.3 42.4L4.1 39.8L3.8 38.6L4 36.6L2.8 34.1L3 32.6L3.2 30.7L2.5 29L3 28L2.4 27L2.8 25.9L2.3 24.2L2.3 22.7L2.9 20.4L3.2 19.3L2.8 18.1L3.1 16.3L3.2 15L2.4 13.5L2.6 12.4L3 9.8L2.8 8.3L2.7 6L2.6 2.3Z' fill='%234e3a1e' fill-opacity='.2'/%3E%3C/svg%3E");
-  --tear-notebook: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='131' height='12'%3E%3Cfilter id='d' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' seed='21' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .4 0 0 0 0 .34 0 0 0 0 .25 0.85 0 0 0 -0.36'/%3E%3C/filter%3E%3Cfilter id='l' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.55' numOctaves='2' seed='26' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 .98 -1.5 0 0 0 0.74'/%3E%3C/filter%3E%3Cfilter id='c' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.018' numOctaves='2' seed='30' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .55 0 0 0 0 .47 0 0 0 0 .34 0.3 0 0 0 -0.12'/%3E%3C/filter%3E%3CclipPath id='k'%3E%3Cpath d='M0 12L0 5L2.5 6.1L6.1 5.8L8.4 3.9L11.9 5.5L15.8 5.9L17.6 7.4L19.5 5L21.1 5.4L23.6 4.7L27.1 3.6L30.1 4.6L33.4 2.8L35.8 4.2L37.3 4.9L39.1 5.6L40.8 1.3L41.8 3.5L44.5 1.8L48.2 5.2L51.6 2.2L54.3 6.7L57.1 7.4L59.9 4.5L61.8 4.6L64.7 5L68.6 5.6L70 5.8L71.9 8L74.7 8.2L78.5 4.8L79.7 7.9L81.4 5.9L84.3 5.3L86.1 6.6L87.2 7L90.9 5.6L94 2.1L95.9 6L97.4 1.6L99.9 5.3L102.3 5.4L103.9 2L107.1 6.4L110.5 5.3L114.1 5.7L115.4 7.1L119.2 8.1L122.3 4.7L124.1 8.4L125.1 6L126.2 7L128.2 6.9L131 5L131 12Z'/%3E%3C/clipPath%3E%3Cpath d='M0 12L0 2.3L2.5 4L6.1 3L8.4 1.5L11.9 3.8L15.8 4.5L17.6 4.7L19.5 2.9L21.1 4.1L23.6 3.6L27.1 2.5L30.1 2.6L33.4 .4L35.8 2.9L37.3 2.8L39.1 3.2L40.8 0L41.8 2.1L44.5 0L48.2 3.4L51.6 .8L54.3 3.9L57.1 5.8L59.9 2.3L61.8 1.7L64.7 3.6L68.6 3.2L70 3.6L71.9 5.6L74.7 7.1L78.5 2.7L79.7 5.6L81.4 4.3L84.3 4L86.1 4.9L87.2 5L90.9 3.7L94 .7L95.9 3L97.4 0L99.9 3.8L102.3 3.7L103.9 .3L107.1 4.7L110.5 3L114.1 4.5L115.4 4.4L119.2 6.8L122.3 2.4L124.1 5.6L125.1 5L126.2 5.8L128.2 4.9L131 3.5L131 12Z' fill='%23f9f3e1' fill-opacity='.5'/%3E%3Cg clip-path='url(%23k)'%3E%3Crect width='131' height='12' fill='%23f9f3e1'/%3E%3Crect width='100%25' height='100%25' filter='url(%23c)'/%3E%3Crect width='100%25' height='100%25' filter='url(%23d)'/%3E%3Crect width='100%25' height='100%25' filter='url(%23l)'/%3E%3C/g%3E%3C/svg%3E");
-  --tear-shadow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='131' height='12'%3E%3Cpath d='M0 12L0 5L2.5 6.1L6.1 5.8L8.4 3.9L11.9 5.5L15.8 5.9L17.6 7.4L19.5 5L21.1 5.4L23.6 4.7L27.1 3.6L30.1 4.6L33.4 2.8L35.8 4.2L37.3 4.9L39.1 5.6L40.8 1.3L41.8 3.5L44.5 1.8L48.2 5.2L51.6 2.2L54.3 6.7L57.1 7.4L59.9 4.5L61.8 4.6L64.7 5L68.6 5.6L70 5.8L71.9 8L74.7 8.2L78.5 4.8L79.7 7.9L81.4 5.9L84.3 5.3L86.1 6.6L87.2 7L90.9 5.6L94 2.1L95.9 6L97.4 1.6L99.9 5.3L102.3 5.4L103.9 2L107.1 6.4L110.5 5.3L114.1 5.7L115.4 7.1L119.2 8.1L122.3 4.7L124.1 8.4L125.1 6L126.2 7L128.2 6.9L131 5L131 12Z' fill='%234e3a1e' fill-opacity='.22'/%3E%3C/svg%3E");
-  --line-graphite: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 12' preserveAspectRatio='none'%3E%3Cfilter id='r' x='-5%25' y='-40%25' width='110%25' height='180%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='3' result='t'/%3E%3CfeDisplacementMap in='SourceGraphic' in2='t' scale='1.2' xChannelSelector='R' yChannelSelector='G'/%3E%3C/filter%3E%3Cg filter='url(%23r)' fill='none' stroke='%233a3936' stroke-linecap='round'%3E%3Cpath d='M3 5.87Q32.3 6.29 61.6 5.41Q90.9 6.65 120.2 7.22Q149.5 5.2 178.8 6.53Q208.1 7.44 237.4 6.07Q266.7 7.93 296 6.83' stroke-width='2.1' stroke-opacity='.88' vector-effect='non-scaling-stroke'/%3E%3Cpath d='M12 7.69Q46.5 6.89 81 8.08Q115.5 8.31 150 6.22Q184.5 7.67 219 6.24Q253.5 7.13 288 6.61' stroke-width='1.2' stroke-opacity='.55' vector-effect='non-scaling-stroke'/%3E%3C/g%3E%3C/svg%3E");
-  --line-terra: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 12' preserveAspectRatio='none'%3E%3Cfilter id='r' x='-5%25' y='-40%25' width='110%25' height='180%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='3' result='t'/%3E%3CfeDisplacementMap in='SourceGraphic' in2='t' scale='1.2' xChannelSelector='R' yChannelSelector='G'/%3E%3C/filter%3E%3Cg filter='url(%23r)' fill='none' stroke='%23c25a37' stroke-linecap='round'%3E%3Cpath d='M3 5.87Q32.3 6.29 61.6 5.41Q90.9 6.65 120.2 7.22Q149.5 5.2 178.8 6.53Q208.1 7.44 237.4 6.07Q266.7 7.93 296 6.83' stroke-width='2.1' stroke-opacity='.88' vector-effect='non-scaling-stroke'/%3E%3Cpath d='M12 7.69Q46.5 6.89 81 8.08Q115.5 8.31 150 6.22Q184.5 7.67 219 6.24Q253.5 7.13 288 6.61' stroke-width='1.2' stroke-opacity='.55' vector-effect='non-scaling-stroke'/%3E%3C/g%3E%3C/svg%3E");
-  --swoosh-a: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 14' preserveAspectRatio='none'%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='0'%3E%3Cstop offset='0' stop-color='%233a3936' stop-opacity='0.3'/%3E%3Cstop offset='0.06' stop-color='%233a3936' stop-opacity='1'/%3E%3Cstop offset='0.5' stop-color='%233a3936' stop-opacity='0.85'/%3E%3Cstop offset='0.9' stop-color='%233a3936' stop-opacity='1'/%3E%3Cstop offset='1' stop-color='%233a3936' stop-opacity='0.35'/%3E%3C/linearGradient%3E%3Cpath d='M2 8.8C10 8.53 32 7.23 50 7.2C68 7.17 91.67 8.7 110 8.6C128.33 8.5 145.5 7.1 160 6.6C174.5 6.1 190.83 5.77 197 5.6' stroke='url(%23g)' stroke-width='3.4' stroke-opacity='0.1' fill='none' stroke-linecap='round' stroke-linejoin='round' vector-effect='non-scaling-stroke'/%3E%3Cpath d='M2 8.8C10 8.53 32 7.23 50 7.2C68 7.17 91.67 8.7 110 8.6C128.33 8.5 145.5 7.1 160 6.6C174.5 6.1 190.83 5.77 197 5.6' stroke='url(%23g)' stroke-width='1.9' stroke-opacity='0.92' fill='none' stroke-linecap='round' stroke-linejoin='round' vector-effect='non-scaling-stroke'/%3E%3Cpath d='M6 9.6C16.67 9.4 49.33 8.45 70 8.4C90.67 8.35 110.33 9.5 130 9.3C149.67 9.1 178.33 7.55 188 7.2' stroke='url(%23g)' stroke-width='1' stroke-opacity='0.45' fill='none' stroke-linecap='round' stroke-linejoin='round' vector-effect='non-scaling-stroke'/%3E%3Cpath d='M195 6.4C187.5 6.7 167.5 7.67 150 8.2C132.5 8.73 108.33 9.27 90 9.6C71.67 9.93 53 9.93 40 10.2C27 10.47 16.67 11.03 12 11.2' stroke='url(%23g)' stroke-width='1.05' stroke-opacity='0.5' fill='none' stroke-linecap='round' stroke-linejoin='round' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
-  --swoosh-b: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 14' preserveAspectRatio='none'%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='0'%3E%3Cstop offset='0' stop-color='%233a3936' stop-opacity='0.3'/%3E%3Cstop offset='0.05' stop-color='%233a3936' stop-opacity='1'/%3E%3Cstop offset='0.55' stop-color='%233a3936' stop-opacity='0.85'/%3E%3Cstop offset='0.92' stop-color='%233a3936' stop-opacity='1'/%3E%3Cstop offset='1' stop-color='%233a3936' stop-opacity='0.4'/%3E%3C/linearGradient%3E%3Cpath d='M3 6.4C12.5 6.7 40.5 8.1 60 8.2C79.5 8.3 100.83 6.93 120 7C139.17 7.07 162.17 8.53 175 8.6C187.83 8.67 193.33 7.6 197 7.4' stroke='url(%23g)' stroke-width='3.4' stroke-opacity='0.1' fill='none' stroke-linecap='round' stroke-linejoin='round' vector-effect='non-scaling-stroke'/%3E%3Cpath d='M3 6.4C12.5 6.7 40.5 8.1 60 8.2C79.5 8.3 100.83 6.93 120 7C139.17 7.07 162.17 8.53 175 8.6C187.83 8.67 193.33 7.6 197 7.4' stroke='url(%23g)' stroke-width='1.9' stroke-opacity='0.92' fill='none' stroke-linecap='round' stroke-linejoin='round' vector-effect='non-scaling-stroke'/%3E%3Cpath d='M10 8.4C21.67 8.57 56.67 9.43 80 9.4C103.33 9.37 132.33 8.17 150 8.2C167.67 8.23 180 9.37 186 9.6' stroke='url(%23g)' stroke-width='0.95' stroke-opacity='0.42' fill='none' stroke-linecap='round' stroke-linejoin='round' vector-effect='non-scaling-stroke'/%3E%3Cpath d='M197 7.6C194.17 7.97 187.83 9.2 180 9.8C172.17 10.4 158.67 10.93 150 11.2C141.33 11.47 131.67 11.37 128 11.4' stroke='url(%23g)' stroke-width='1.1' stroke-opacity='0.55' fill='none' stroke-linecap='round' stroke-linejoin='round' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
-  --rule-pencil: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='7'%3E%3Cfilter id='r' x='-5%25' y='-40%25' width='110%25' height='180%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='3' result='t'/%3E%3CfeDisplacementMap in='SourceGraphic' in2='t' scale='1.1' xChannelSelector='R' yChannelSelector='G'/%3E%3C/filter%3E%3Cpath filter='url(%23r)' d='M0 3.4Q13.33 2.67 26.67 3.3Q40 3.38 53.33 3.65Q66.67 3.92 80 2.9Q93.33 3.85 106.67 3.9Q120 2.89 133.33 2.82Q146.67 4.05 160 3.4' fill='none' stroke='%233a3936' stroke-opacity='0.62' stroke-width='1.35'/%3E%3C/svg%3E");
-  --rule-terra: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='7'%3E%3Cfilter id='r' x='-5%25' y='-40%25' width='110%25' height='180%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='3' result='t'/%3E%3CfeDisplacementMap in='SourceGraphic' in2='t' scale='1.1' xChannelSelector='R' yChannelSelector='G'/%3E%3C/filter%3E%3Cpath filter='url(%23r)' d='M0 3.4Q13.33 3.08 26.67 3.45Q40 3.59 53.33 3.26Q66.67 4.15 80 4.03Q93.33 3.37 106.67 3.11Q120 3.96 133.33 3.38Q146.67 3.16 160 3.4' fill='none' stroke='%23c25a37' stroke-opacity='0.9' stroke-width='2'/%3E%3C/svg%3E");
-  --rule-entry: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='7'%3E%3Cfilter id='r' x='-5%25' y='-40%25' width='110%25' height='180%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='3' result='t'/%3E%3CfeDisplacementMap in='SourceGraphic' in2='t' scale='1.1' xChannelSelector='R' yChannelSelector='G'/%3E%3C/filter%3E%3Cpath filter='url(%23r)' d='M0 3.4Q13.33 4.19 26.67 2.79Q40 3.23 53.33 3.72Q66.67 3 80 3.95Q93.33 2.91 106.67 2.81Q120 3.03 133.33 3.08Q146.67 2.98 160 3.4' fill='none' stroke='%233a3936' stroke-opacity='0.5' stroke-width='1.2'/%3E%3C/svg%3E");
-  --wave-pencil: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='9'%3E%3Cfilter id='r' x='-5%25' y='-40%25' width='110%25' height='180%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='3' result='t'/%3E%3CfeDisplacementMap in='SourceGraphic' in2='t' scale='1' xChannelSelector='R' yChannelSelector='G'/%3E%3C/filter%3E%3Cpath filter='url(%23r)' d='M0 4.5 Q 6.5 .8 13 4.5 T 26 4.5' stroke='%233a3936' stroke-opacity='.6' stroke-width='1.3' fill='none'/%3E%3C/svg%3E");
-  --sketch-box: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 52' preserveAspectRatio='none'%3E%3Cg fill='none' stroke='%23000' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8.89 3.31Q159.46 3.45 310.88 3.15Q317.09 2.96 316.81 8.8Q316.82 24.85 316.86 42.55Q316.49 49.21 310.97 48.43Q159 48.22 9.25 48.75Q3.43 49.05 2.79 42.76Q3.02 26 3.04 9.22Q2.86 3.52 12.04 3.01' stroke-width='1.9' vector-effect='non-scaling-stroke'/%3E%3Cpath d='M8.08 1.81Q159.07 2.23 309.38 1.57Q314.93 1.32 314.97 8.4Q315.31 24.25 314.66 41.33Q315.55 48 308.9 47.83Q156.86 47.48 7.64 47.01Q1.49 46.94 1.13 41.99Q2.17 23.49 1.03 8.35Q1.73 2.15 10.48 1.33' stroke-width='1' stroke-opacity='0.62' vector-effect='non-scaling-stroke'/%3E%3C/g%3E%3C/svg%3E");
-  --sketch-box-2: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 104 48' preserveAspectRatio='none'%3E%3Cg fill='none' stroke='%23000' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8.8 3.04Q51.87 3.52 95.24 3.04Q100.94 3.23 100.83 9.49Q100.31 23.97 100.87 38.71Q100.87 44.43 94.44 44.8Q52.58 45.22 9.17 44.53Q2.82 44.48 3.3 38.61Q2.78 25.03 2.99 9.62Q3.6 3.18 11.89 2.59' stroke-width='1.9' vector-effect='non-scaling-stroke'/%3E%3Cpath d='M8.1 2.24Q48.61 1.48 93.72 2.33Q99.19 1.67 98.84 7.55Q99.79 21.03 99.05 37.41Q99.23 43.92 93.2 43.07Q48.97 43.72 7.73 43.72Q2.07 42.8 1.39 37.36Q1 22.09 1.97 7.42Q1.68 1.23 10.04 1.15' stroke-width='1' stroke-opacity='0.62' vector-effect='non-scaling-stroke'/%3E%3C/g%3E%3C/svg%3E");
-  --sketch-box-3: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 46' preserveAspectRatio='none'%3E%3Cg fill='none' stroke='%23000' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7.83 2.81Q48.36 2.95 87.64 2.94Q92.81 3.61 93.09 7.76Q93.06 22.21 92.43 38.24Q93.11 42.78 88.02 42.4Q47.87 43 8.64 42.54Q3.51 42.56 2.92 38.05Q2.77 23.58 3.08 8.21Q3.6 3.44 11.56 3.17' stroke-width='1.9' vector-effect='non-scaling-stroke'/%3E%3Cpath d='M6.77 2.17Q47.15 1.32 85.97 1.82Q91.67 2.34 91.57 6.97Q90.89 23.07 90.84 36.27Q91.56 40.99 86.42 41.88Q47.39 40.57 6.7 41.44Q1.9 41.23 1.35 35.86Q.78 20.53 1.78 6.3Q1.69 2.32 9.83 1.02' stroke-width='1' stroke-opacity='0.62' vector-effect='non-scaling-stroke'/%3E%3C/g%3E%3C/svg%3E");
-  --sketch-box-2b: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 104 50' preserveAspectRatio='none'%3E%3Cg fill='none' stroke='%23000' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10.12 3.64Q51.92 4.06 94 4.14Q100.16 4.09 99.57 10.06Q99.52 23.86 99.87 39.75Q100.04 45.98 94.27 45.8Q52.56 46.18 10.27 45.64Q4.05 46.34 4.25 40.12Q4.23 23.7 4.27 10.45Q3.75 3.58 12.87 3.28' stroke-width='2.5' vector-effect='non-scaling-stroke'/%3E%3Cpath d='M7.01 1.28Q52.04 1.71 95.59 2.99Q102 3.02 101.33 8.72Q101.3 27.07 101.61 42.6Q101.54 48.09 96.24 47.64Q52.22 47.43 7.34 46.81Q2.07 47.22 1.52 41.07Q1.12 22.39 1.21 6.84Q1.82 1.48 10.18 1.69' stroke-width='1.4' stroke-opacity='0.8' vector-effect='non-scaling-stroke'/%3E%3C/g%3E%3C/svg%3E");
-  --sketch-box-3b: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 48' preserveAspectRatio='none'%3E%3Cg fill='none' stroke='%23000' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8.61 4.29Q46.82 4.59 86.62 4.03Q91.62 4.25 92.03 9.41Q92.19 25.2 92.21 39.3Q92.43 44.07 86.68 44.3Q46.89 44.03 9 44.4Q4.27 44.26 3.75 39.16Q3.92 23.02 3.61 9.12Q3.71 3.68 12.28 3.42' stroke-width='2.5' vector-effect='non-scaling-stroke'/%3E%3Cpath d='M7.16 2.12Q46.49 3.16 89.53 3.09Q93.53 2.86 93.71 8.67Q93.27 25.98 94.06 41.94Q94.34 46.02 89.55 46.91Q49.17 46.3 6.59 45.16Q2.17 45 1.8 39.34Q2.02 21.56 2.28 6.53Q2.26 1.23 9.45 1.3' stroke-width='1.4' stroke-opacity='0.8' vector-effect='non-scaling-stroke'/%3E%3C/g%3E%3C/svg%3E");
-  --sketch-box-double: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 332 60' preserveAspectRatio='none'%3E%3Cg fill='none' stroke='%23000' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12.04 6.19Q167.03 6.29 319.59 5.73Q326.07 5.93 325.9 12.02Q326.36 30.34 326.21 47.91Q326.22 53.93 320.32 53.98Q165.97 54.43 12.39 54.1Q6.42 53.73 5.56 47.68Q6.57 30.8 6.15 11.74Q6.2 6.33 14.73 5.29' stroke-width='2.2' vector-effect='non-scaling-stroke'/%3E%3Cpath d='M8.87 2.18Q166.09 3.11 322.8 3.22Q328.4 4.18 328.9 9.18Q329.38 29.53 328.88 51.74Q328.15 57.61 322.25 57.77Q167.14 57.46 8.22 55.39Q2.75 56.26 1.93 50.14Q2.87 28.38 2.13 8.52Q3.01 2.11 10.7 1.87' stroke-width='1.35' stroke-opacity='0.78' vector-effect='non-scaling-stroke'/%3E%3C/g%3E%3C/svg%3E");
-  --sketch-loop: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cg fill='none' stroke='%23000' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M41.73 7.27L52.46 6.04L63.04 8.22L73.33 11.77L81.84 18.51L88.69 26.83L92.96 36.64L95.18 47.07L94.98 57.8L91.47 67.96L85.83 77.12L78.64 85.32L69.08 90.82L58.62 94.52L47.46 95.41L36.58 92.99L26.2 89.01L17.61 82.04L10.27 73.79L5.68 63.78L3.18 53.04L4.04 42.04L7.8 31.72L12.67 21.74L21.02 14.26L30.28 7.82L41.2 4.54L52.56 4.11L63.84 5.66L74.01 10.65' stroke-width='2' stroke-opacity='1' vector-effect='non-scaling-stroke'/%3E%3Cpath d='M63.89 93.54L53.47 95.03L42.94 95.44L32.75 92.33L23.54 86.82L16.18 78.88L9.83 69.93L7.2 59.14L5.72 48.13L7.29 37.06L11.52 26.76L18.14 17.98L25.96 10.23L35.96 5.99L46.39 3.17L57.21 3.63L67.52 6.99L77.01 12.41L85.2 19.94L91.1 29.61L94.21 40.56L95.63 51.93L93.23 63.1L89.5 73.86L82.69 82.84L74.1 89.87L64.59 95.72' stroke-width='1.2' stroke-opacity='0.6' vector-effect='non-scaling-stroke'/%3E%3C/g%3E%3C/svg%3E");
-  --sketch-ring: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='none' stroke='%233a3936' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M38.72 96.13L27.69 92.7L17.78 86.51L10.69 77.25L5.39 67.02L1.72 55.96L1.68 44.23L4.48 32.84L9.66 22.27L17.98 14L26.98 6.36L38.25 2.74L49.9 .99L61.72 2.04L72.84 6.27L82.61 13.05L90.83 21.7L96.72 32.18L98.81 43.98L98.99 55.85L96.9 67.68L90.88 78.1L83.05 87.16L73.13 93.86L61.95 98.08L50.1 99.95L38.22 98.2L26.87 94.28L16.87 87.55L8.75 78.59' stroke-width='1.5' stroke-opacity='0.85' vector-effect='non-scaling-stroke'/%3E%3Cpath d='M7.17 30.8L13.12 21.11L20.95 12.93L30.51 6.86L41.25 3.29L52.56 2.3L63.88 3.88L74.57 8.26L84.07 15.07L91.23 24.4L96.32 35.06L98.08 46.75L97.44 58.5L94.6 69.99L88.5 80.16L80.49 88.91L70.48 95.33L59.09 98.53L47.32 100.08' stroke-width='0.9' stroke-opacity='0.5' vector-effect='non-scaling-stroke'/%3E%3Cpath d='M15.4 61.73L13.46 53.13L13.85 44.3L16.34 35.85L20.48 28.04L26.41 21.39L34.18 17.06L42.33 13.34L51.33 12.56L60.14 14.35L68.27 18L75.89 22.79L81.12 30.11L85.17 38.07L87.23 46.82L87.05 55.84L85.07 64.74L79.94 72.27L74.11 79.25L66.29 83.91L57.81 87.35L48.66 87.85L39.48 86.98L31.04 83.21L23.43 77.93L17.97 70.47L13.97 62.22L12.18 53.23L11.9 44' stroke-width='1.2' stroke-opacity='0.7' vector-effect='non-scaling-stroke'/%3E%3C/g%3E%3C/svg%3E");
-  --tick: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 12'%3E%3Cfilter id='r' x='-5%25' y='-40%25' width='110%25' height='180%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='3' result='t'/%3E%3CfeDisplacementMap in='SourceGraphic' in2='t' scale='0.9' xChannelSelector='R' yChannelSelector='G'/%3E%3C/filter%3E%3Cpath filter='url(%23r)' d='M1.6 6.6 Q3.4 7.6 5.2 10.2 Q7.8 4.6 12.6 1.6' fill='none' stroke='%233a3936' stroke-opacity='.8' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  --pencil-x: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' preserveAspectRatio='xMidYMid meet'%3E%3Cg fill='none' stroke='%23000' stroke-linecap='round'%3E%3Cpath d='M4.6 4.2C8 7.6 11.6 11.8 15.6 16.2' stroke-width='1.7'/%3E%3Cpath d='M5.6 4.9C8.6 8.6 12 12 14.6 15.4' stroke-width='.9' stroke-opacity='.5'/%3E%3Cpath d='M15.4 3.8C12 7.6 8.6 11.4 4.2 16.4' stroke-width='1.7'/%3E%3C/g%3E%3C/svg%3E");
-  --emboss-dark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Crect width='100' height='100' fill='none' stroke='%236b5a40' stroke-opacity='0.24' stroke-width='2' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
-  --emboss-light: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Crect width='100' height='100' fill='none' stroke='%23ffffff' stroke-opacity='0.85' stroke-width='2' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
-  --coffee-ring: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='w' x='-10%25' y='-10%25' width='120%25' height='120%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.035' numOctaves='3' seed='2'/%3E%3CfeDisplacementMap in='SourceGraphic' scale='9' xChannelSelector='R' yChannelSelector='G'/%3E%3CfeGaussianBlur stdDeviation='.6'/%3E%3C/filter%3E%3Cg filter='url(%23w)' fill='none' stroke='%238a5a2e'%3E%3Ccircle cx='110' cy='110' r='80' stroke-width='5' stroke-opacity='.13'/%3E%3Ccircle cx='110' cy='110' r='81.5' stroke-width='1.6' stroke-opacity='.16'/%3E%3Ccircle cx='111' cy='108' r='74' stroke-width='9' stroke-opacity='.035'/%3E%3Cpath d='M40 150 A 80 80 0 0 0 150 180' stroke-width='3' stroke-opacity='.08'/%3E%3C/g%3E%3C/svg%3E");
-}
-
 :root,
 :root:not([data-theme="light"]),
 :root[data-theme="dark"] {
   color-scheme: light;
-  --bg: #e5e0d6;
-  --surface: #faf7ef;
-  --surface-alt: #eee8da;
-  --notebook: #f9f3e1;
-  --text: #33322f;
-  --graphite: #33322f;
-  --text-muted: #514b43;
-  --border: #cdc4b2;
-  --primary: #c9623f;
-  --primary-dark: #a44a2b;
-  --primary-tint: #f4ddd2;
-  --accent-orange: #c9623f;
+  --bg: #e7e2d8;
+  --surface: #faf8f3;
+  --surface-alt: #efe9dc;
+  --notebook: #f8f1de;
+  --text: #2c2b28;
+  --graphite: #3a3936;
+  --text-muted: #5f594f;
+  --border: #d3cbbb;
+  --primary: #cc6445;
+  --primary-dark: #a8492c;
+  --primary-tint: #f3ddd3;
+  --accent-orange: #cc6445;
   --accent-blue: #3b5ba5;
   --accent-purple: #7a5a8c;
   --ink-blue: #3b5ba5;
@@ -1011,10 +969,10 @@ canvas { width: 100%; display: block; }
   --body-lower: #5b8a4a;
   --body-neutral: #8f877a;
   --body-ink: #fff;
-  --rule-blue: rgba(86, 122, 190, 0.34);
-  --rule-red: rgba(205, 92, 70, 0.55);
-  --shadow: 0 10px 20px -14px rgba(60, 45, 20, 0.45);
-  --radius: 3px 7px 4px 6px / 6px 3px 7px 4px;
+  --rule-blue: rgba(86, 122, 190, 0.3);
+  --rule-red: rgba(205, 92, 70, 0.5);
+  --shadow: 0 1px 1.5px rgba(60, 45, 20, 0.12), 0 7px 16px -9px rgba(60, 45, 20, 0.36);
+  --radius: 5px;
   --radius-lg: 0;
   --font-hand: "Kalam", "Klee One", "Yomogi", cursive;
   --font-body: "Kalam", "Klee One", "Hiragino Maru Gothic ProN", sans-serif;
@@ -1023,164 +981,111 @@ canvas { width: 100%; display: block; }
   --font-mono: var(--font-hand);
   /* 罫線ノートの行の高さ。一覧の各行はこの倍数で並べ、文字が罫線に乗るようにする */
   --line: 30px;
-  /* 鉛筆の粒: 線は紙の凹凸でかすれ、字はところどころ紙の白が抜ける(マスクとして使う) */
-  --grain: var(--tex-grain) 0 0 / 150px 150px repeat;
-  --grain-text: var(--tex-grain-text) 0 0 / 150px 150px repeat;
+  /* 鉛筆の二重線の枠(9分割の画像。角は12pxぶん) */
+  --frame: url("tex/frame-graphite.png") 36 / 12px / 0 round;
 }
 
-/* ---- 机: 明るいベージュの厚紙(粒は控えめ) + コーヒーの輪じみ ---- */
-html {
-  background: var(--tex-desk) 0 0 / 320px 320px, var(--bg);
-}
-body {
-  font-family: var(--font-body);
-  /* 輪じみは左上の角に半分だけ。題字・説明文・日付欄にはかからない */
-  background:
-    var(--tex-desk) 0 0 / 320px 320px,
-    var(--bg);
-}
+/* ---- 机 ---- */
+html { background: url("tex/desk.webp") 0 0 / 240px 240px, var(--bg); }
+body { font-family: var(--font-body); background: url("tex/desk.webp") 0 0 / 240px 240px, var(--bg); }
 
 h1, h2, h3, .tab-btn span, .macro-ring-card .mrc-label {
   font-family: var(--font-hand);
   font-weight: 600;
 }
 
-/* 鉛筆で書いた字: 黒鉛の濃い字に、紙の目で白い粒がところどころ抜ける(小さな要素だけにマスク) */
-.brand h1, .panel-head h2, .card h3, .chart-head h3, .settings-group > summary,
-.rg-value, .mrc-value, .list-item .name, .wcal-title, .target-summary .v,
-.weight-trend b {
-  -webkit-mask: var(--grain-text);
-  mask: var(--grain-text);
+/* 見出しの下線: 左は細く入り、右端で上に跳ねる鉛筆の払い(3分割の画像なので長さは自由) */
+.brand h1::after, .card h3::after, .chart-head h3::after {
+  content: "";
+  position: absolute;
+  left: -3px;
+  right: -7px;
+  bottom: -2px;
+  height: 12px;
+  border-style: solid;
+  border-color: transparent;
+  border-width: 0 24px;
+  border-image: url("tex/swoosh-a.png") 0 72 fill / 0 24px / 0 round;
+  pointer-events: none;
 }
-.tab-btn svg {
-  -webkit-mask: var(--grain);
-  mask: var(--grain);
+.card:nth-child(even) > h3::after, .card:nth-child(even) .chart-head h3::after, .card h3 ~ h3::after {
+  border-image-source: url("tex/swoosh-b.png");
 }
-/* Klee One の最も太い600に、鉛筆を強く押したぶんの太さを少し足す(見出し・名前・ボタンの字) */
-.brand h1, .card h3, .chart-head h3, .settings-group > summary, .wcal-title { -webkit-text-stroke: .35px currentColor; }
-.panel-head h2 { -webkit-text-stroke: .45px currentColor; }
-.list-item .title-row .name, .btn { -webkit-text-stroke: .25px currentColor; }
 
-/* ---- ヘッダー: 紙に手書きの題字 ---- */
+/* ---- ヘッダー ---- */
 .app-header { background: transparent; color: var(--text); padding: 22px 16px 6px; }
 .brand { align-items: flex-start; }
-.brand-mark { width: 50px; height: 50px; flex: none; margin-top: -2px; }
-.brand-mark svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.brand-mark { width: 50px; height: 50px; flex: none; margin-top: -4px; }
+.brand-mark img { display: block; width: 100%; height: 100%; }
 .brand h1 {
+  position: relative;
   font-size: 19px;
   font-weight: 600;
   letter-spacing: .01em;
-  color: var(--graphite);
-  padding: 2px 2px 8px;
-  background: var(--line-graphite) left bottom / 100% 10px no-repeat;
+  color: var(--text);
+  padding: 2px 2px 10px;
 }
-.tagline { color: var(--text-muted); opacity: 1; font-size: 12.5px; line-height: 1.7; margin-top: 6px; }
+.tagline { color: var(--text-muted); opacity: 1; font-size: 12.5px; line-height: 1.7; margin-top: 8px; }
 
 .panel-head { margin-bottom: 14px; }
-.panel-head h2 { font-size: 25px; font-weight: 600; white-space: nowrap; color: var(--graphite); padding: 2px 2px 0; transform: rotate(-1deg); }
+.panel-head h2 { font-size: 25px; font-weight: 600; white-space: nowrap; color: var(--text); padding: 2px 2px 0; }
 
-/* ---- 紙(ナプキン): 地は ::before、机に落ちる影は ::after ----
-   ちぎれた縁は border-image(紙の色の帯)で描く。大きな面にマスクをかけないので、
-   縦に長いカードでもiPhoneで重くならない */
-.card, .macro-ring-card {
+/* ---- カード: ナプキン紙(細かい織り目) + 内側に押し型の二重線 ---- */
+.card, .macro-ring-card, .card:has(canvas) {
   position: relative;
-  isolation: isolate;
-  background: none;
+  background: url("tex/napkin.webp") 0 0 / 160px 160px, var(--surface);
   border: none;
-  border-radius: 0;
+  border-radius: 1px;
   box-shadow: var(--shadow);
 }
-.card:has(canvas) { background: none; }
 .card { padding: 22px 20px; }
-.card::before, .macro-ring-card::before,
 .card::after, .macro-ring-card::after {
   content: "";
   position: absolute;
-  inset: 0;
+  inset: 8px;
   pointer-events: none;
-  border: 6px solid transparent;
-}
-.card::before, .macro-ring-card::before {
-  z-index: -1;
-  border-image: var(--deckle-surface) 6 / 6px / 0 round;
-  /* 押し型の二重の縁(溝 + 光る山) → 紙の目と繊維 → 紙の色 */
-  background:
-    var(--emboss-light) calc(50% + 1px) calc(50% + 1px) / calc(100% - 20px) calc(100% - 20px) no-repeat,
-    var(--emboss-dark) center / calc(100% - 20px) calc(100% - 20px) no-repeat,
-    var(--emboss-light) calc(50% + 1px) calc(50% + 1px) / calc(100% - 28px) calc(100% - 28px) no-repeat,
-    var(--emboss-dark) center / calc(100% - 28px) calc(100% - 28px) no-repeat,
-    var(--tex-paper) 0 0 / 240px 240px,
-    var(--surface);
-  background-origin: border-box;
-  background-clip: padding-box;
-}
-/* 紙が机から少し浮いた影: 紙と同じちぎれ形を少しずらして敷く */
-.card::after, .macro-ring-card::after {
-  z-index: -2;
-  border-image: var(--deckle-shadow) 6 fill / 6px / 0 round;
-  transform: translate(1.2px, 2.2px);
+  border: 1px solid rgba(96, 80, 52, 0.13);
+  box-shadow: 1px 1px 0 rgba(255, 255, 255, 0.9), inset 1px 1px 0 rgba(255, 255, 255, 0.9);
+  outline: 1px solid rgba(96, 80, 52, 0.07);
+  outline-offset: 3px;
 }
 .macro-ring-card { padding: 16px 10px 14px; gap: 6px; }
-.macro-ring-card::before {
-  background:
-    var(--emboss-light) calc(50% + 1px) calc(50% + 1px) / calc(100% - 18px) calc(100% - 18px) no-repeat,
-    var(--emboss-dark) center / calc(100% - 18px) calc(100% - 18px) no-repeat,
-    var(--tex-paper) 0 0 / 240px 240px,
-    var(--surface);
-  background-origin: border-box;
-  background-clip: padding-box;
-}
-.macro-ring-card:nth-child(1) { transform: rotate(-0.7deg); }
-.macro-ring-card:nth-child(2) { transform: rotate(0.5deg) translateY(1px); }
-.macro-ring-card:nth-child(3) { transform: rotate(0.4deg); }
-.macro-ring-card:nth-child(4) { transform: rotate(-0.5deg) translateY(-1px); }
+.macro-ring-card::after { inset: 6px; outline-offset: 2px; }
 .macro-ring-grid { gap: 12px; }
 
-/* 見出し: 鉛筆でさっと引いた下線。2種類の引き方を交互に使い、判で押したように揃えない */
 .card h3, .chart-head h3 {
+  position: relative;
   display: inline-block;
   font-size: 19px;
   font-weight: 600;
-  color: var(--graphite);
-  padding: 0 4px 10px 2px;
+  color: var(--text);
+  padding: 0 4px 9px 2px;
   margin-bottom: 14px;
   border: none;
-  background: var(--swoosh-a) left bottom / 100% 12px no-repeat;
-}
-.card:nth-child(even) > h3, .card:nth-child(even) .chart-head h3, .card h3 ~ h3 {
-  background-image: var(--swoosh-b);
+  background: none;
 }
 .chart-head h3 { margin-bottom: 0; }
-.card > h3, .chart-head h3 { transform: rotate(-0.6deg); transform-origin: left bottom; }
-.card:nth-child(even) > h3, .card:nth-child(even) .chart-head h3 { transform: rotate(0.4deg); }
 
 /* ---- 一覧カード: 罫線ノート(左に赤い余白線、行に文字が乗る) ---- */
 .card:has(> .list) {
   padding: 0 16px 14px 50px;
-  box-shadow: 0 10px 20px -14px rgba(60, 45, 20, 0.5);
-}
-.card:has(> .list)::before {
-  border-image-source: var(--deckle-notebook);
   background:
-    var(--tex-paper) 0 0 / 240px 240px,
-    linear-gradient(90deg, transparent 36px, var(--rule-red) 36px 37.3px, transparent 37.3px 40px, rgba(205, 92, 70, 0.3) 40px 40.8px, transparent 40.8px),
-    linear-gradient(var(--rule-red), var(--rule-red)) 0 55px / 100% 1.6px no-repeat,
-    linear-gradient(rgba(205, 92, 70, 0.28), rgba(205, 92, 70, 0.28)) 0 58.5px / 100% 1px no-repeat,
-    repeating-linear-gradient(to bottom, transparent 0 calc(var(--line) - 1.2px), var(--rule-blue) calc(var(--line) - 1.2px) var(--line))
+    linear-gradient(90deg, transparent 36px, var(--rule-red) 36px 37.2px, transparent 37.2px 40px, rgba(205, 92, 70, 0.28) 40px 40.8px, transparent 40.8px),
+    linear-gradient(var(--rule-red), var(--rule-red)) 0 55px / 100% 1.4px no-repeat,
+    repeating-linear-gradient(to bottom, transparent 0 calc(var(--line) - 1px), var(--rule-blue) calc(var(--line) - 1px) var(--line))
       0 58px / 100% calc(100% - 58px) no-repeat,
+    url("tex/notebook.webp") 0 0 / 160px 160px,
     var(--notebook);
-  background-origin: border-box;
-  background-clip: padding-box;
 }
+.card:has(> .list)::after { content: none; }
 .card:has(> .list) h3 {
   display: block;
-  transform: none;
   height: 55px;
   margin: 0;
   padding: 19px 0 0;
   line-height: 30px;
-  background: none;
 }
+.card:has(> .list) h3::after { content: none; }
 .card:has(> .list) .list { margin-top: 6px; }
 .list { gap: 0; }
 .list-item {
@@ -1193,56 +1098,46 @@ h1, h2, h3, .tab-btn span, .macro-ring-card .mrc-label {
   background: transparent;
   box-shadow: none;
 }
-/* 余白に鉛筆のチェック */
-.list-item::before {
-  content: "";
-  position: absolute;
-  left: -30px;
-  top: 8px;
-  width: 15px;
-  height: 13px;
-  background: var(--tick) center / contain no-repeat;
-  opacity: .8;
-}
-/* 記録と記録の境目: 罫線の上に鉛筆でもう1本引いて区切る(1件ずつ目で追いやすく) */
+/* 記録と記録の境目: 罫線の上に鉛筆でもう1本引いて区切る */
 .list-item + .list-item::after {
   content: "";
   position: absolute;
   left: -9px;
   right: -8px;
-  top: -7px;
-  height: 7px;
-  background: var(--rule-entry) left top / 160px 7px repeat-x;
+  top: -6px;
+  height: 6px;
+  background: url("tex/rule.png") left top / 120px 6px repeat-x;
+  opacity: .3;
   pointer-events: none;
 }
 .list-item img { margin-top: 4px; border-radius: 2px; box-shadow: 1px 2px 0 rgba(78, 58, 30, 0.2); }
 .list-item .info > * { margin: 0; line-height: var(--line); }
 .list-item .title-row { align-items: baseline; }
-.list-item .title-row .name { font-family: var(--font-hand); font-size: 17px; font-weight: 600; color: var(--graphite); }
+.list-item .title-row .name { font-family: var(--font-hand); font-size: 17px; font-weight: 600; color: var(--text); }
 .list-item .meta { font-size: 13px; color: var(--text-muted); }
 .list-item .macros { font-size: 13px; color: var(--text-muted); gap: 0 10px; }
+/* 区分タグ: 鉛筆でぐるっと丸で囲む(タグの色の鉛筆) */
 .list-item .title-row .tag {
   position: relative;
   align-self: center;
   line-height: 1.2;
-  padding: 3px 9px;
+  padding: 3px 12px;
   background: transparent !important;
   border: none;
   border-radius: 0;
   font-family: var(--font-hand);
   font-size: 12px;
 }
-/* 区分タグ: 鉛筆でぐるっと丸で囲む */
 .list-item .title-row .tag::before {
   content: "";
   position: absolute;
-  inset: -2px -3px;
+  inset: -3px -5px;
   background: currentColor;
-  -webkit-mask: var(--sketch-loop) center / 100% 100% no-repeat;
-  mask: var(--sketch-loop) center / 100% 100% no-repeat;
-  opacity: .85;
+  -webkit-mask: url("tex/loop-wide.png") center / 100% 100% no-repeat;
+  mask: url("tex/loop-wide.png") center / 100% 100% no-repeat;
+  pointer-events: none;
 }
-/* 削除: ✕ の字の代わりに赤鉛筆でなぐり書きしたバツ(押せる範囲はそのまま) */
+/* 削除: ✕ の字の代わりに赤鉛筆のバツ(押せる範囲はそのまま) */
 .list-item .del {
   position: relative;
   color: transparent;
@@ -1262,66 +1157,59 @@ h1, h2, h3, .tab-btn span, .macro-ring-card .mrc-label {
   height: 18px;
   margin: -9px 0 0 -9px;
   background: var(--ink-red);
+  -webkit-mask: url("tex/cross.png") center / contain no-repeat;
+  mask: url("tex/cross.png") center / contain no-repeat;
   pointer-events: none;
-  -webkit-mask: var(--pencil-x) center / contain no-repeat, var(--grain);
-  mask: var(--pencil-x) center / contain no-repeat, var(--grain);
-  -webkit-mask-composite: source-in;
-  mask-composite: intersect;
 }
 .empty-state { font-family: var(--font-hand); color: var(--text-muted); }
 .list .empty-state { padding: 0; line-height: var(--line); text-align: left; font-size: 14px; }
 
-/* ---- ボタン: 鉛筆でざっと2回なぞった枠 ---- */
+/* ---- ボタン: 鉛筆で2回なぞった二重線の枠 ---- */
 .btn {
   position: relative;
   isolation: isolate;
-  --sketch: var(--graphite);
+  min-height: 46px;
   font-family: var(--font-hand);
   font-weight: 600;
   font-size: 16px;
   color: var(--text);
   background: transparent;
-  border: 2px solid transparent;
+  border: none;
   border-radius: 0;
   box-shadow: none;
 }
-.btn::before {
+.btn::before,
+.body-part-btn::before, .serving-btn::before, .range-btn::before, .wcal-nav::before, .wcal-today::before, .file-btn::before {
   content: "";
   position: absolute;
-  inset: -4px -3px -3px -4px;
-  background: var(--sketch);
+  inset: 0;
+  border: 12px solid transparent;
+  border-image: var(--frame);
   pointer-events: none;
-  -webkit-mask: var(--sketch-box) center / 100% 100% no-repeat, var(--grain);
-  mask: var(--sketch-box) center / 100% 100% no-repeat, var(--grain);
-  -webkit-mask-composite: source-in;
-  mask-composite: intersect;
 }
 .btn:active { transform: translate(1px, 1px); }
-/* 主ボタン: テラコッタの二重線(しっかり1本 + 外に少しずらしたもう1本)と色鉛筆の塗り。
-   塗りは筆圧のむらで所々薄くなる */
-.btn.primary { color: var(--text); background: none; --sketch: var(--primary); }
-.btn.primary::before {
-  inset: -7px -6px -6px -7px;
-  -webkit-mask-image: var(--sketch-box-2b), var(--tex-grain);
-  mask-image: var(--sketch-box-2b), var(--tex-grain);
+/* 主ボタンと選んだ物: テラコッタの二重線 + 淡い色鉛筆の塗り */
+.btn.primary { color: var(--text); background: none; }
+.btn.primary::before,
+.body-part-btn.is-selected::before, .serving-btn.active::before, .range-btn.active::before {
+  border-image-source: url("tex/frame-terra.png");
+  opacity: 1;
 }
 .btn.primary::after,
 .body-part-btn.is-selected::after, .serving-btn.active::after, .range-btn.active::after {
   content: "";
   position: absolute;
-  inset: 1px;
+  inset: 3.5px;
   z-index: -1;
-  background: var(--primary);
-  opacity: .5;
+  border-radius: 4px;
+  background: url("tex/tint-terra.webp") 0 0 / 120px 120px, var(--primary-tint);
   pointer-events: none;
-  -webkit-mask: var(--tex-hatch) 0 0 / 36px 36px;
-  mask: var(--tex-hatch) 0 0 / 36px 36px;
 }
-.btn.ghost { border-color: transparent; background: transparent; }
+.btn.ghost { background: transparent; border: none; }
 .btn.ghost::before { opacity: .8; }
-.field-row > .btn:not(#mealFoodAddBtn)::before, .file-btn::before { -webkit-mask-image: var(--sketch-box-2), var(--tex-grain); mask-image: var(--sketch-box-2), var(--tex-grain); }
-.btn.danger { color: var(--ink-red); background: transparent; --sketch: var(--ink-red); }
-.btn:focus-visible { outline: 1.5px dashed var(--primary); outline-offset: 6px; }
+.btn.danger { color: var(--ink-red); background: transparent; }
+.btn.danger::before { border-image-source: url("tex/frame-red.png"); }
+.btn:focus-visible { outline: 1.5px dashed var(--primary); outline-offset: 4px; }
 
 /* ---- 入力欄: 鉛筆で引いた記入線 ---- */
 input[type="text"],
@@ -1331,178 +1219,126 @@ input[type="time"],
 select {
   font-family: var(--font-hand);
   font-size: 17px;
-  color: var(--graphite);
-  background: var(--rule-pencil) left bottom / 160px 7px repeat-x;
+  color: var(--text);
+  background: url("tex/rule.png") left bottom / 120px 6px repeat-x;
   border: none;
   border-radius: 0;
   padding: 6px 2px 8px;
 }
-input::placeholder { color: #857c6e; }
+input::placeholder { color: #8a8174; }
 input:focus, select:focus {
   outline: none;
   background:
-    var(--rule-terra) left bottom / 160px 7px repeat-x,
-    linear-gradient(to top, rgba(201, 98, 63, 0.10), rgba(201, 98, 63, 0) 70%);
+    url("tex/rule-terra.png") left bottom / 120px 6px repeat-x,
+    linear-gradient(to top, rgba(204, 100, 69, 0.09), rgba(204, 100, 69, 0) 70%);
 }
 input::-webkit-calendar-picker-indicator { opacity: .55; }
 form.form label, .serving-label { font-family: var(--font-body); color: var(--text-muted); }
 input[type="file"] { font-family: var(--font-body); color: var(--text-muted); }
 input[type="file"]::file-selector-button {
   font-family: var(--font-hand);
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text);
-  border: 1.6px solid var(--graphite);
-  border-radius: 4px 8px 3px 7px / 7px 3px 8px 4px;
   background: transparent;
-  padding: 5px 12px;
+  border: 6px solid transparent;
+  border-image: url("tex/frame-thin.png") 18 / 6px / 0 round;
+  border-radius: 0;
+  padding: 1px 8px;
   margin-right: 10px;
 }
 
-/* ---- 選択ボタン(部位・量・期間): 薄い鉛筆の四角。選ぶと赤鉛筆で太くなぞり、色鉛筆で塗る ---- */
+/* ---- 選択ボタン(部位・量・期間)とカレンダーの操作: 薄い鉛筆の二重線。
+   選ぶとテラコッタでなぞって淡く塗る ---- */
 .body-part-btn, .serving-btn, .range-btn, .wcal-nav, .wcal-today {
   position: relative;
   isolation: isolate;
-  --sketch: var(--graphite);
   font-family: var(--font-hand);
   font-size: 16px;
   background: transparent;
-  border: 1.5px solid transparent;
+  border: 1px solid transparent;
   border-radius: 0;
   color: var(--text);
   box-shadow: none;
 }
-.body-part-btn::before, .serving-btn::before, .range-btn::before, .wcal-nav::before, .wcal-today::before {
-  content: "";
-  position: absolute;
-  inset: -2px;
-  background: var(--sketch);
-  opacity: .5;
-  pointer-events: none;
-  -webkit-mask: var(--sketch-box-2) center / 100% 100% no-repeat, var(--grain);
-  mask: var(--sketch-box-2) center / 100% 100% no-repeat, var(--grain);
-  -webkit-mask-composite: source-in;
-  mask-composite: intersect;
-}
-.body-part-btn:nth-child(2n)::before, .range-btn:nth-child(2n)::before, .wcal-today::before {
-  -webkit-mask-image: var(--sketch-box-3), var(--tex-grain);
-  mask-image: var(--sketch-box-3), var(--tex-grain);
-}
+.body-part-btn::before, .serving-btn::before, .range-btn::before, .wcal-nav::before, .wcal-today::before { inset: -1px; opacity: .6; }
 .body-part-btn.is-selected, .serving-btn.active, .range-btn.active {
-  --sketch: var(--primary);
   background: transparent;
-  border: 1.5px solid transparent;
-  color: var(--graphite);
+  border: 1px solid transparent;
+  color: var(--text);
   font-weight: 600;
   box-shadow: none;
 }
-.body-part-btn.is-selected::before, .serving-btn.active::before, .range-btn.active::before {
-  inset: -4px;
-  opacity: 1;
-  -webkit-mask-image: var(--sketch-box-2b), var(--tex-grain);
-  mask-image: var(--sketch-box-2b), var(--tex-grain);
-}
-.body-part-btn.is-selected:nth-child(2n)::before, .range-btn.active:nth-child(2n)::before {
-  -webkit-mask-image: var(--sketch-box-3b), var(--tex-grain);
-  mask-image: var(--sketch-box-3b), var(--tex-grain);
-}
-.body-part-btn.is-selected::after, .serving-btn.active::after, .range-btn.active::after { inset: 2px; opacity: .6; }
+.body-part-btn.is-selected::after, .serving-btn.active::after, .range-btn.active::after { inset: 2.5px; }
 /* 指で押したあとに枠が残らないように。キーボード操作のときだけ点線を出す */
 .body-part-btn:focus, .range-btn:focus, .serving-btn:focus { outline: none; }
-.body-part-btn:focus-visible, .range-btn:focus-visible, .serving-btn:focus-visible { outline: 1.5px dashed var(--primary); outline-offset: 5px; }
+.body-part-btn:focus-visible, .range-btn:focus-visible, .serving-btn:focus-visible { outline: 1.5px dashed var(--primary); outline-offset: 4px; }
 .range-group { background: transparent; border: none; gap: 8px; padding: 4px; }
 .range-btn { color: var(--text-muted); padding: 5px 10px; }
-.range-btn.active { color: var(--graphite); }
-/* 鉛筆の枠は少し外にはみ出すので、並んだボタンの間をあける */
-.body-part-picker { gap: 12px; margin-bottom: 14px; }
+.range-btn.active { color: var(--text); }
+.body-part-picker { gap: 10px; margin-bottom: 14px; }
 .food-add-row #mealFoodAddBtn { margin: 6px 0 10px; }
-.field-row:has(> .btn) { gap: 14px; margin-bottom: 14px; }
-.field-row > .btn { padding-inline: 10px; }
+.field-row:has(> .btn) { gap: 12px; margin-bottom: 14px; }
+/* 2列に並ぶボタンは字を少し詰め、折り返すときも「JSONを/エクスポート」の区切りで折る */
+.field-row > .btn { padding-inline: 4px; font-size: 14px; line-height: 1.3; word-break: keep-all; }
+.file-btn { overflow: visible; }
+.food-chip { background: url("tex/tint-terra.webp") 0 0 / 120px 120px, var(--primary-tint); border: none; border-radius: 3px; font-family: var(--font-hand); }
 
-/* ---- リング: 鉛筆の二重丸 + 色鉛筆でぐりぐり塗った弧 ---- */
+/* ---- リング: 鉛筆の二重丸 + 色鉛筆の斜線で塗った弧 ---- */
 .ring-gauge-sm {
   --size: 78px;
   --thickness: 10px;
-  background: var(--sketch-ring) center / 100% 100% no-repeat;
+  background: url("tex/ring.png") center / 100% 100% no-repeat;
   border: none;
 }
-.ring-gauge-sm::before, .ring-gauge-sm::after {
-  content: "";
-  display: block;
-  position: absolute;
+.ring-gauge-sm::before {
   inset: 0;
   border-radius: 50%;
   pointer-events: none;
-}
-/* 古いiOS向けの形: マスクなしで、弧を塗って中を紙の色で抜く */
-.ring-gauge-sm::before {
+  /* マスクが使えない端末向け: 弧を塗って中を紙の色で抜く */
   background:
     radial-gradient(circle closest-side, var(--surface) calc(100% - var(--thickness) - .5px), transparent calc(100% - var(--thickness))),
     conic-gradient(var(--ring-color, var(--primary)) calc(var(--pct, 0) * 1%), transparent 0);
-  opacity: .8;
+  opacity: .75;
 }
-.ring-gauge-sm::after { content: none; }
-/* マスクが使える端末: 斜線の塗り(紙の粒が抜ける)を円弧の形に切り抜く。
-   塗りは描いた輪郭から少しはみ出し、終わりは1〜2%かけてふっと消える */
 @supports (-webkit-mask-image: conic-gradient(red, red)) or (mask-image: conic-gradient(red, red)) {
   .ring-gauge-sm::before {
-    inset: -1.5px;
     opacity: 1;
     background: var(--ring-color, var(--primary));
     -webkit-mask-image:
-      var(--tex-hatch-heavy),
-      conic-gradient(from -4deg, #000 calc(var(--pct, 0) * 1% - 1%), transparent calc(var(--pct, 0) * 1% + 1.5%)),
-      radial-gradient(circle closest-side, transparent calc(100% - var(--thickness) - 3.5px), #000 calc(100% - var(--thickness) - 2.5px), #000 calc(100% - 1.5px), transparent 100%);
+      url("tex/hatch-dense.png"),
+      conic-gradient(from -3deg, #000 calc(var(--pct, 0) * 1% - .8%), transparent calc(var(--pct, 0) * 1% + 1.2%)),
+      radial-gradient(circle closest-side, transparent calc(100% - 11.2px), #000 calc(100% - 10.4px), #000 calc(100% - 1.3px), transparent calc(100% - .5px));
     mask-image:
-      var(--tex-hatch-heavy),
-      conic-gradient(from -4deg, #000 calc(var(--pct, 0) * 1% - 1%), transparent calc(var(--pct, 0) * 1% + 1.5%)),
-      radial-gradient(circle closest-side, transparent calc(100% - var(--thickness) - 3.5px), #000 calc(100% - var(--thickness) - 2.5px), #000 calc(100% - 1.5px), transparent 100%);
-    -webkit-mask-size: 96px 166.28px, 100% 100%, 100% 100%;
-    mask-size: 96px 166.28px, 100% 100%, 100% 100%;
-    -webkit-mask-repeat: repeat, no-repeat, no-repeat;
-    mask-repeat: repeat, no-repeat, no-repeat;
-    -webkit-mask-composite: source-in;
-    mask-composite: intersect;
-  }
-  /* 残りの部分は鉛筆の細い斜線 */
-  .ring-gauge-sm::after {
-    content: "";
-    background: var(--graphite);
-    opacity: .3;
-    -webkit-mask-image:
-      var(--tex-lines),
-      conic-gradient(transparent calc(var(--pct, 0) * 1%), #000 0),
-      radial-gradient(closest-side, transparent calc(100% - var(--thickness) - 1px), #000 calc(100% - var(--thickness)), #000 calc(100% - 1.5px), transparent 100%);
-    mask-image:
-      var(--tex-lines),
-      conic-gradient(transparent calc(var(--pct, 0) * 1%), #000 0),
-      radial-gradient(closest-side, transparent calc(100% - var(--thickness) - 1px), #000 calc(100% - var(--thickness)), #000 calc(100% - 1.5px), transparent 100%);
-    -webkit-mask-size: 30px 30px, 100% 100%, 100% 100%;
-    mask-size: 30px 30px, 100% 100%, 100% 100%;
+      url("tex/hatch-dense.png"),
+      conic-gradient(from -3deg, #000 calc(var(--pct, 0) * 1% - .8%), transparent calc(var(--pct, 0) * 1% + 1.2%)),
+      radial-gradient(circle closest-side, transparent calc(100% - 11.2px), #000 calc(100% - 10.4px), #000 calc(100% - 1.3px), transparent calc(100% - .5px));
+    -webkit-mask-size: 48px 48px, 100% 100%, 100% 100%;
+    mask-size: 48px 48px, 100% 100%, 100% 100%;
     -webkit-mask-repeat: repeat, no-repeat, no-repeat;
     mask-repeat: repeat, no-repeat, no-repeat;
     -webkit-mask-composite: source-in;
     mask-composite: intersect;
   }
 }
-.ring-gauge-sm .rg-value { font-family: var(--font-hand); font-size: 19px; color: var(--graphite); padding: 0 2px; }
-.ring-gauge-sm .rg-value small { color: var(--text-muted); }
+.ring-gauge-sm .rg-value { font-family: var(--font-hand); font-size: 19px; font-weight: 700; color: var(--text); padding: 0 2px; }
+.ring-gauge-sm .rg-value small { color: var(--text-muted); font-weight: 400; }
 .macro-ring-card .mrc-label { font-family: var(--font-body); font-weight: 600; color: var(--text-muted); font-size: 12.5px; }
-.macro-ring-card .mrc-value { font-family: var(--font-hand); font-size: 14.5px; color: var(--graphite); padding: 0 2px; }
+.macro-ring-card .mrc-value { font-family: var(--font-hand); font-size: 14.5px; color: var(--text); padding: 0 2px; }
 .macro-ring-card .mrc-value.over { color: var(--ink-red); }
-.bar-track { background: transparent; border: 1.3px solid rgba(58, 57, 54, 0.5); border-radius: 2px; }
-.bar-fill { background: repeating-linear-gradient(-55deg, var(--primary) 0 2px, transparent 2px 4.5px) !important; }
+.bar-track { background: transparent; border: 1.2px solid rgba(58, 57, 54, 0.5); border-radius: 1px; }
+.bar-fill { background: var(--primary) !important; -webkit-mask: url("tex/hatch.png") 0 0 / 72px 72px; mask: url("tex/hatch.png") 0 0 / 72px 72px; }
 
 /* ---- 区切り線: 鉛筆の波線 ---- */
 .settings-section, .settings-details, .wcal-foot {
   border-top: none;
-  background: var(--wave-pencil) left top / 26px 9px repeat-x;
+  background: url("tex/wave.png") left top / 120px 10px repeat-x;
 }
 
 /* ---- 筋トレカレンダー ---- */
-.wcal-title { font-family: var(--font-hand); font-size: 21px; font-weight: 600; color: var(--graphite); }
+.wcal-title { font-family: var(--font-hand); font-size: 21px; font-weight: 600; color: var(--text); }
 .wcal-nav, .wcal-today { font-weight: 600; }
-.wcal-day { position: relative; isolation: isolate; font-family: var(--font-hand); background: transparent; border: none; }
-/* 記録のある日は鉛筆で薄く塗る */
+.wcal-day { position: relative; isolation: isolate; font-family: var(--font-hand); background: transparent; border: none; border-radius: 0; }
+/* 記録のある日は鉛筆で薄く斜線を入れる */
 .wcal-day.has-log { background: transparent; border: none; }
 .wcal-day.has-log::after {
   content: "";
@@ -1510,50 +1346,56 @@ input[type="file"]::file-selector-button {
   inset: 2px 1px;
   z-index: -1;
   background: var(--graphite);
-  opacity: .14;
+  opacity: .09;
+  -webkit-mask: url("tex/hatch.png") 0 0 / 72px 72px;
+  mask: url("tex/hatch.png") 0 0 / 72px 72px;
   pointer-events: none;
-  -webkit-mask: var(--tex-hatch) 0 0 / 30px 30px;
-  mask: var(--tex-hatch) 0 0 / 30px 30px;
 }
-/* 選んだ日は赤鉛筆でぐるっと囲む */
-.wcal-day.is-selected { border: none; box-shadow: none; outline: none; border-radius: 0; }
-.wcal-day.is-selected::before {
+/* 選んだ日は日付の数字を赤鉛筆でぐるっと囲む(部位の印にはかからない) */
+.wcal-day.is-selected { border: none; box-shadow: none; outline: none; }
+.wcal-day .wcal-dnum { position: relative; font-family: var(--font-hand); font-size: 13px; }
+.wcal-day.is-selected .wcal-dnum::before {
   content: "";
   position: absolute;
-  inset: 0;
+  inset: -4px -8px;
+  z-index: -1;
   background: var(--primary);
+  -webkit-mask: url("tex/loop.png") center / 100% 100% no-repeat;
+  mask: url("tex/loop.png") center / 100% 100% no-repeat;
   pointer-events: none;
-  -webkit-mask: var(--sketch-loop) center / 100% 100% no-repeat, var(--grain);
-  mask: var(--sketch-loop) center / 100% 100% no-repeat, var(--grain);
-  -webkit-mask-composite: source-in;
-  mask-composite: intersect;
 }
-.wcal-day.is-today .wcal-dnum { color: var(--ink-red); text-decoration: underline wavy; text-underline-offset: 3px; }
-.wcal-dnum { font-family: var(--font-hand); font-size: 13px; }
-/* 部位の印: 色鉛筆で塗った小さな札に、濃い色の字(上半身=青・下半身=緑・その他=灰の2色+灰) */
+/* 今日: 赤鉛筆の短い下線 */
+.wcal-day.is-today .wcal-dnum {
+  color: var(--ink-red);
+  text-decoration: none;
+  padding-bottom: 3px;
+  background: url("tex/swoosh-terra.png") center bottom / 100% 4px no-repeat;
+}
+/* 部位の印: 色鉛筆の斜線で塗った小さな札に濃い色の字(上半身=青・下半身=緑・その他=灰) */
 .wcal-chip {
   --chip: var(--body-neutral);
   position: relative;
   isolation: isolate;
   font-family: var(--font-body);
+  font-size: 11px;
   font-weight: 600;
   color: #36322c;
   background: transparent;
-  border-radius: 2px 4px 3px 4px / 4px 2px 4px 3px;
+  border-radius: 0;
 }
-.wcal-chip.body-upper { --chip: var(--body-upper); color: #1f3468; background: transparent; }
-.wcal-chip.body-lower { --chip: var(--body-lower); color: #26461a; background: transparent; }
+.wcal-chip.body-upper { --chip: var(--body-upper); color: #172a58; background: transparent; }
+.wcal-chip.body-lower { --chip: var(--body-lower); color: #1c3712; background: transparent; }
 .wcal-chip::before {
   content: "";
   position: absolute;
   inset: 0 -1px;
   z-index: -1;
-  border-radius: 3px 5px 2px 4px / 4px 2px 5px 3px;
+  border-radius: 3px;
   background: var(--chip);
-  opacity: .5;
+  opacity: .55;
+  -webkit-mask: url("tex/hatch-dense.png") 0 0 / 48px 48px;
+  mask: url("tex/hatch-dense.png") 0 0 / 48px 48px;
   pointer-events: none;
-  -webkit-mask: var(--tex-hatch-dense) 0 0 / 40px 69.28px;
-  mask: var(--tex-hatch-dense) 0 0 / 40px 69.28px;
 }
 .wcal-chip.is-more { color: var(--text-muted); }
 .wcal-chip.is-more::before { content: none; }
@@ -1561,29 +1403,31 @@ input[type="file"]::file-selector-button {
 
 /* ---- 目標まとめ・前回ヒント・通知 ---- */
 .target-summary .ts-item {
-  background: var(--rule-pencil) left bottom / 160px 7px repeat-x;
+  background: url("tex/rule.png") left bottom / 120px 6px repeat-x;
   border-radius: 0;
   padding: 6px 2px 9px;
 }
-.target-summary .ts-item .v { font-family: var(--font-hand); font-size: 19px; color: var(--graphite); }
+.target-summary .ts-item .v { font-family: var(--font-hand); font-size: 19px; font-weight: 700; color: var(--text); }
 /* 付箋 */
 .prev-workout-hint, .notice {
-  background: linear-gradient(rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0)), var(--tex-paper) 0 0 / 240px 240px, #f6e9bb;
+  background: linear-gradient(rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0)), url("tex/notebook.webp") 0 0 / 160px 160px, #f6e9bb;
   border: none;
   border-radius: 1px 1px 3px 14px / 1px 1px 3px 6px;
-  box-shadow: 1px 2px 0 rgba(78, 58, 30, 0.16), 0 8px 14px -10px rgba(60, 45, 20, 0.5);
+  box-shadow: 1px 2px 0 rgba(78, 58, 30, 0.14), 0 8px 14px -10px rgba(60, 45, 20, 0.5);
   font-family: var(--font-body);
   color: var(--text-muted);
 }
-.prev-workout-hint b, .notice b { color: var(--graphite); }
+.prev-workout-hint b, .notice b { color: var(--text); }
 .weight-trend { font-family: var(--font-body); }
-.weight-trend b { font-family: var(--font-hand); font-size: 17px; color: var(--graphite); padding: 0 1px; }
+.weight-trend b { font-family: var(--font-hand); font-size: 17px; font-weight: 700; color: var(--text); padding: 0 1px; }
 .hint { font-family: var(--font-body); }
 code, .mono { font-family: var(--font-type); }
-.settings-group > summary { font-family: var(--font-hand); font-size: 17px; font-weight: 600; color: var(--graphite); }
+.settings-group > summary { font-family: var(--font-hand); font-size: 17px; font-weight: 600; color: var(--text); }
 .settings-details > summary { font-family: var(--font-hand); }
+/* 脂質の割合は1行で読めるよう2列ぶん使う */
+.field-row > label:has(#fatRatio) { grid-column: 1 / -1; white-space: nowrap; }
 
-/* ---- 下のタブ: ちぎったノートの切れ端(縁は border-image) ---- */
+/* ---- 下のタブ: ちぎったノートの切れ端 ---- */
 .tabbar {
   background: none;
   border-top: none;
@@ -1594,83 +1438,42 @@ code, .mono { font-family: var(--font-type); }
   position: absolute;
   left: 0;
   right: 0;
-  top: -9px;
+  top: -12px;
   bottom: 0;
   pointer-events: none;
-  border-top: 12px solid transparent;
+  border-top: 14px solid transparent;
 }
 .tabbar::before {
   z-index: -1;
-  border-image: var(--tear-notebook) 12 0 0 0 / 12px 0 0 0 / 0 round;
-  background: var(--tex-paper) 0 0 / 240px 240px, var(--notebook);
+  border-image: url("tex/torn.png") 42 0 0 0 / 14px 0 0 0 / 0 round;
+  background: url("tex/notebook.webp") 0 0 / 160px 160px, var(--notebook);
   background-clip: padding-box;
 }
 .tabbar::after {
   z-index: -2;
-  border-image: var(--tear-shadow) 12 0 0 0 / 12px 0 0 0 / 0 round;
-  transform: translateY(-1.5px);
+  border-image: url("tex/torn-shadow.png") 42 0 0 0 / 14px 0 0 0 / 0 round;
+  transform: translateY(-1px);
 }
-.tab-btn { font-family: var(--font-hand); color: var(--text-muted); isolation: isolate; }
+.tab-btn { font-family: var(--font-hand); color: var(--text-muted); }
 .tab-btn span { font-size: 12.5px; }
 .tab-btn svg { stroke-width: 1.7; }
-.tab-btn.active { color: var(--graphite); }
+.tab-btn.active { color: var(--text); }
 .tab-btn.active::before {
-  top: auto; bottom: 4px;
-  width: 42px; height: 8px;
+  top: auto;
+  bottom: 4px;
+  width: 42px;
+  height: 8px;
   border-radius: 0;
-  background: var(--line-terra) center / 100% 100% no-repeat;
-}
-/* いま開いているタブ: アイコンの後ろを色鉛筆でぐるっと塗る */
-.tab-btn.active::after {
-  content: "";
-  position: absolute;
-  top: 4px;
-  left: 50%;
-  width: 40px;
-  height: 31px;
-  z-index: -1;
-  transform: translateX(-50%) rotate(-8deg);
-  border-radius: 46% 54% 42% 58% / 55% 44% 56% 45%;
-  background: var(--tex-blotch) 0 0 / 120px 120px, var(--primary);
-  opacity: .5;
-  pointer-events: none;
-  -webkit-mask: var(--tex-hatch) 0 0 / 28px 28px;
-  mask: var(--tex-hatch) 0 0 / 28px 28px;
+  background: url("tex/swoosh-terra.png") center / 100% 100% no-repeat;
 }
 
 .toast {
   font-family: var(--font-hand);
-  background: var(--tex-paper) 0 0 / 240px 240px, #fbf6e6;
-  color: var(--graphite);
-  border-radius: 2px;
-  box-shadow: 1px 2px 0 rgba(78, 58, 30, 0.2), 0 10px 18px -8px rgba(60, 45, 20, 0.5);
+  background: url("tex/napkin.webp") 0 0 / 160px 160px, var(--surface);
+  color: var(--text);
+  border-radius: 1px;
+  box-shadow: 1px 2px 0 rgba(78, 58, 30, 0.16), 0 10px 18px -8px rgba(60, 45, 20, 0.5);
 }
-.toast-undo { color: var(--primary-dark); border: 1.5px solid var(--primary); border-radius: var(--radius); }
+.toast-undo { position: relative; color: var(--primary-dark); background: transparent; border: none; border-radius: 0; }
+.toast-undo::before { content: ""; position: absolute; inset: -2px; border: 12px solid transparent; border-image: url("tex/frame-terra.png") 36 / 12px / 0 round; pointer-events: none; }
 .save-error { font-family: var(--font-body); }
-
-/* ---- r2 調整 ---- */
-/* 選んだ日の赤丸は日付の数字だけを囲み、部位の札にはかからない */
-.wcal-day.is-selected::before { content: none; }
-.wcal-day .wcal-dnum { position: relative; }
-.wcal-day.is-selected .wcal-dnum::before {
-  content: "";
-  position: absolute;
-  inset: -3px -7px;
-  z-index: -1;
-  background: var(--primary);
-  pointer-events: none;
-  -webkit-mask: var(--sketch-loop) center / 100% 100% no-repeat, var(--grain);
-  mask: var(--sketch-loop) center / 100% 100% no-repeat, var(--grain);
-  -webkit-mask-composite: source-in;
-  mask-composite: intersect;
-}
-.wcal-chip { font-size: 11px; }
-.wcal-chip.body-upper { color: #172a58; }
-.wcal-chip.body-lower { color: #1c3712; }
-/* 脂質の割合は1行で読めるよう2列ぶん使う */
-.field-row > label:has(#fatRatio) { grid-column: 1 / -1; white-space: nowrap; }
-/* 輪の中の%は筆圧を抜いた鉛筆の字に。残りの斜線は控えめに */
-.ring-gauge-sm .rg-value { font-weight: 400; color: rgba(51, 50, 47, .85); }
-@supports (-webkit-mask-image: conic-gradient(red, red)) or (mask-image: conic-gradient(red, red)) {
-  .ring-gauge-sm::after { opacity: .16; }
-}

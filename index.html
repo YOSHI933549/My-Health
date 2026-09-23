@@ -25,37 +25,7 @@
 <header class="app-header">
   <div class="brand">
     <!-- 💪 の代わりに、色鉛筆で塗った力こぶの落書き(飾りなので読み上げない) -->
-    <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 48 48" focusable="false">
-      <defs>
-        <filter id="brandGrain" x="-5" y="-5" width="58" height="58" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-          <feTurbulence type="fractalNoise" baseFrequency="1.6" numOctaves="2" seed="3" result="n"/>
-          <feColorMatrix in="n" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  3.2 0 0 0 -.7" result="m"/>
-          <feComposite in="SourceGraphic" in2="m" operator="in"/>
-        </filter>
-        <pattern id="brandHatch" width="2.1" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(30)">
-          <path d="M.6 0V6" stroke="#c9623f" stroke-width=".95"/>
-        </pattern>
-        <pattern id="brandCross" width="1.9" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-38)">
-          <path d="M.5 0V6" stroke="#8f3c22" stroke-width=".8"/>
-        </pattern>
-        <clipPath id="brandClip"><path d="M6 30.5C9 23 14 19.5 20 19.5c5.5 0 8.5 4 9.5 8.5 1-4 1.5-8 .7-11.2-2.6-1.2-3.2-5.4-1.6-8.4 2-3.6 8.9-4.8 12.6-2 3 2.4 2.8 7-.2 10.2 1.4 6.4 2.6 14.4 1.4 20.4-1 5-5.4 7.6-10.8 7.6-10 .8-19 .4-26-.4z"/></clipPath>
-      </defs>
-      <g filter="url(#brandGrain)">
-        <g clip-path="url(#brandClip)">
-          <rect width="48" height="48" fill="#c9623f" fill-opacity=".2"/>
-          <rect width="48" height="48" fill="url(#brandHatch)" opacity=".9"/>
-          <path d="M2 37.5c11 2.4 25 2.6 36.8-2.2L39 13h9v36H2z" fill="url(#brandCross)" opacity=".75"/>
-          <path d="M12 26.5c2.6-3.4 6.8-4.6 10.2-3.4" stroke="#f7f4ec" stroke-width="2.2" stroke-linecap="round" fill="none" opacity=".75"/>
-        </g>
-        <g fill="none" stroke="#3a3632" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M6 30.5C9 23 14 19.5 20 19.5c5.5 0 8.5 4 9.5 8.5 1-4 1.5-8 .7-11.2-2.6-1.2-3.2-5.4-1.6-8.4 2-3.6 8.9-4.8 12.6-2 3 2.4 2.8 7-.2 10.2 1.4 6.4 2.6 14.4 1.4 20.4-1 5-5.4 7.6-10.8 7.6-10 .8-19 .4-26-.4" stroke-width="1.5"/>
-          <path d="M6.8 29.6c3.4-7 8-9.6 13.6-9.4M30.8 8.2c2.6-3.4 8.4-3.8 11-1.2M42.6 17.4c1 6.4 1.8 13.6.4 19.2" stroke-width=".7" opacity=".55"/>
-          <path d="M31 10.6c2-.9 4.4-.9 6.2.3M30.8 13.8c2.1-.8 4.6-.6 6.5.5M29.3 12.2c1.6.3 3 1.1 3.7 2.4" stroke-width=".9"/>
-          <path d="M29.4 28.4c-.3 1.8 0 3.4.9 4.6" stroke-width=".9"/>
-          <path d="M12.6 15.6l-1.8-2.8M18.4 13.4l-.1-3.4M24.2 15l1.6-2.8" stroke-width="1.1"/>
-        </g>
-      </g>
-    </svg></span>
+    <span class="brand-mark" aria-hidden="true"><img src="css/tex/mascot.png" alt="" width="50" height="50"></span>
     <div>
       <h1>健康・筋トレ・増量トラッカー</h1>
       <p class="tagline">①健康 ②筋肉トレーニング ③体重を上げる ― 3つの目標を1つの記録で管理</p>
@@ -417,9 +387,9 @@
       <h3>データ・アプリ管理</h3>
       <p class="hint">機種変更の前には、記録をJSONで保存してください。</p>
       <div class="field-row">
-        <button type="button" class="btn ghost" id="exportBtn">JSONをエクスポート</button>
+        <button type="button" class="btn ghost" id="exportBtn">JSONを<wbr>エクスポート</button>
         <label class="btn ghost file-btn">
-          JSONをインポート
+          JSONを<wbr>インポート
           <input type="file" id="importInput" accept="application/json" class="hidden">
         </label>
       </div>

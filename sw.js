@@ -8,7 +8,7 @@
    the newest deploy, even if this file itself hasn't changed. Bumping
    CACHE_VERSION is still good practice (it prunes old cache entries) but is
    no longer required just to ship an update. */
-const CACHE_VERSION = "v28";
+const CACHE_VERSION = "v29";
 const CACHE_NAME = `yoshi-health-tracker-${CACHE_VERSION}`;
 
 const APP_SHELL = [
@@ -21,11 +21,37 @@ const APP_SHELL = [
   "./js/ocr.js",
   "./manifest.json",
 ];
+// css/tex/ holds the paper-theme pencil textures. They are served cache-first
+// like the icons, so bump CACHE_VERSION whenever they are regenerated.
 const STATIC_ASSETS = [
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/apple-touch-icon.png",
   "./icons/favicon-32.png",
+  "./css/tex/cross.png",
+  "./css/tex/desk.webp",
+  "./css/tex/frame-graphite.png",
+  "./css/tex/frame-red.png",
+  "./css/tex/frame-terra.png",
+  "./css/tex/frame-thin.png",
+  "./css/tex/grain.png",
+  "./css/tex/hatch-dense.png",
+  "./css/tex/hatch.png",
+  "./css/tex/loop-wide.png",
+  "./css/tex/loop.png",
+  "./css/tex/mascot.png",
+  "./css/tex/napkin.webp",
+  "./css/tex/notebook.webp",
+  "./css/tex/ring.png",
+  "./css/tex/rule-terra.png",
+  "./css/tex/rule.png",
+  "./css/tex/swoosh-a.png",
+  "./css/tex/swoosh-b.png",
+  "./css/tex/swoosh-terra.png",
+  "./css/tex/tint-terra.webp",
+  "./css/tex/torn-shadow.png",
+  "./css/tex/torn.png",
+  "./css/tex/wave.png",
 ];
 
 const SHELL_PATHS = new Set(APP_SHELL.map((p) => new URL(p, self.location).pathname));

@@ -1247,8 +1247,6 @@ function renderLineChart(canvasId, points, days, opts) {
     pencilLineTo(ctx, padL, ty, cssWidth - padR, ty, 7);
     ctx.stroke();
     ctx.restore();
-    ctx.fillStyle = orange;
-    ctx.fillText(opts.targetLabel(opts.targetValue), padL + 4, ty - 4);
   }
 
   // smoothed line path (quadratic curve through the midpoints of each
@@ -1278,8 +1276,12 @@ function renderLineChart(canvasId, points, days, opts) {
   const gradient = ctx.createLinearGradient(0, padT, 0, padT + plotH);
   gradient.addColorStop(0, color_mix_fallback(primary, 0.22));
   gradient.addColorStop(1, color_mix_fallback(primary, 0));
-  ctx.fillStyle = pencilHatch(ctx, primary, dpr) || gradient;
+  ctx.save();
+  const hatchFill = pencilHatch(ctx, primary, dpr);
+  if (hatchFill && pencilTex.hatch) ctx.globalAlpha = 0.5;
+  ctx.fillStyle = hatchFill || gradient;
   ctx.fill(fillPath);
+  ctx.restore();
 
   // the line itself: one firm pencil pass plus a lighter, slightly offset
   // second pass, like a line drawn twice by hand
@@ -1322,6 +1324,14 @@ function renderLineChart(canvasId, points, days, opts) {
     ctx.stroke();
     ctx.globalAlpha = 1;
   });
+
+  // 線と塗りだけを紙の目でかすれさせる(字はくっきり残すので、目標の字はこのあとに書く)
+  pencilGrain(ctx, padL - 6, padT - 6, plotW + 10, plotH + 10);
+  if (opts.targetValue) {
+    ctx.fillStyle = orange;
+    ctx.font = "10px 'Kalam', 'Klee One', sans-serif";
+    ctx.fillText(opts.targetLabel(opts.targetValue), padL + 4, y(Number(opts.targetValue)) - 4);
+  }
 }
 
 // 鉛筆の線(グラフの見た目だけ): 14pxごとに線に垂直な向きへ最大0.9pxずらして、
@@ -1340,8 +1350,61 @@ function pencilLineTo(ctx, x1, y1, x2, y2, seed) {
   }
 }
 
-// 色鉛筆の斜線で塗るためのパターン(グラフの見た目だけ)。6px角に斜線1本。
+// 紙のテーマのグラフ用の鉛筆の質感(css/tex/ の画像。3倍の解像度で作ってある)。
+// 読み込めないときは下の描き方にそのまま戻る。
+const PENCIL_TEX_SCALE = 3;
+const pencilTex = { hatch: null, grain: null };
+const pencilTexReady = Promise.all(
+  ["hatch", "grain"].map((name) => new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => { pencilTex[name] = img; resolve(); };
+    img.onerror = () => resolve();
+    img.src = `css/tex/${name}.png`;
+  }))
+);
+const pencilHatchTiles = new Map();
+
+function pencilTexPattern(ctx, image) {
+  const pattern = ctx.createPattern(image, "repeat");
+  if (pattern && pattern.setTransform && typeof DOMMatrix === "function") {
+    pattern.setTransform(new DOMMatrix([1 / PENCIL_TEX_SCALE, 0, 0, 1 / PENCIL_TEX_SCALE, 0, 0]));
+  }
+  return pattern;
+}
+
+// 紙の目のくぼみに当たるところだけ、描いた線と塗りを少し消して鉛筆のかすれにする
+function pencilGrain(ctx, x, y, w, h) {
+  if (!pencilTex.grain) return;
+  const pattern = pencilTexPattern(ctx, pencilTex.grain);
+  if (!pattern) return;
+  ctx.save();
+  ctx.globalCompositeOperation = "destination-out";
+  ctx.fillStyle = pattern;
+  ctx.fillRect(x, y, w, h);
+  ctx.restore();
+}
+
+// 色鉛筆の斜線で塗るためのパターン(グラフの見た目だけ)。画像があれば色鉛筆の斜線を
+// その色で塗り、なければ6px角に斜線1本の簡単なもの。
 function pencilHatch(ctx, hex, dpr) {
+  if (pencilTex.hatch) {
+    let tile = pencilHatchTiles.get(hex);
+    if (!tile) {
+      tile = document.createElement("canvas");
+      tile.width = pencilTex.hatch.naturalWidth;
+      tile.height = pencilTex.hatch.naturalHeight;
+      const t = tile.getContext("2d");
+      if (t) {
+        t.drawImage(pencilTex.hatch, 0, 0);
+        t.globalCompositeOperation = "source-in";
+        t.fillStyle = hex;
+        t.fillRect(0, 0, tile.width, tile.height);
+        pencilHatchTiles.set(hex, tile);
+      }
+    }
+    const pattern = pencilTexPattern(ctx, tile);
+    if (pattern) return pattern;
+  }
   const size = 6;
   const tile = document.createElement("canvas");
   tile.width = tile.height = Math.round(size * dpr);
@@ -1678,6 +1741,8 @@ function init() {
   if (document.fonts && document.fonts.ready) {
     document.fonts.ready.then(redrawCharts).catch(() => {});
   }
+  // 鉛筆の質感の画像が届いたら、その質感で描き直す(見た目だけ)
+  pencilTexReady.then(redrawCharts).catch(() => {});
 }
 
 function redrawCharts() {
