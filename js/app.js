@@ -1135,13 +1135,13 @@ function renderLineChart(canvasId, points, days, opts) {
 
   if (windowed.length === 0) {
     ctx.fillStyle = muted;
-    ctx.font = "12px 'Share Tech Mono', monospace";
+    ctx.font = "12px 'Gaegu', 'Yomogi', sans-serif";
     ctx.fillText(opts.noDataText, 8, cssHeight / 2);
     return;
   }
   if (windowed.length === 1) {
     ctx.fillStyle = muted;
-    ctx.font = "12px 'Share Tech Mono', monospace";
+    ctx.font = "12px 'Gaegu', 'Yomogi', sans-serif";
     ctx.fillText(opts.singlePointText(windowed[0].value, windowed[0].date), 8, cssHeight / 2);
     return;
   }
@@ -1155,10 +1155,10 @@ function renderLineChart(canvasId, points, days, opts) {
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
   ctx.fillStyle = text;
-  ctx.font = "bold 15px 'Share Tech Mono', monospace";
+  ctx.font = "bold 15px 'Gaegu', 'Yomogi', sans-serif";
   const headline = opts.headline(latest.value);
   ctx.fillText(headline, 8, 14);
-  ctx.font = "10px 'Share Tech Mono', monospace";
+  ctx.font = "10px 'Gaegu', 'Yomogi', sans-serif";
   ctx.fillStyle = muted;
   ctx.fillText(fmtDate(latest.date), 8 + ctx.measureText(headline).width + 22, 14);
 
@@ -1185,18 +1185,24 @@ function renderLineChart(canvasId, points, days, opts) {
   const y = (v) => padT + plotH - ((v - min) / (max - min)) * plotH;
 
   // horizontal gridlines + y-axis labels on the right
-  ctx.strokeStyle = border;
+  // (紙のテーマ: 目盛り線は鉛筆で薄く手引きしたように少し揺らす)
+  const graphite = styles.getPropertyValue("--graphite").trim() || border;
+  ctx.strokeStyle = graphite;
   ctx.fillStyle = muted;
-  ctx.font = "10px 'Share Tech Mono', monospace";
+  ctx.font = "10px 'Gaegu', 'Yomogi', sans-serif";
   ctx.lineWidth = 1;
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
   const gridLines = 3;
   for (let i = 0; i <= gridLines; i++) {
     const val = min + ((max - min) * i) / gridLines;
     const yy = y(val);
+    ctx.save();
+    ctx.globalAlpha = 0.22;
     ctx.beginPath();
-    ctx.moveTo(padL, yy);
-    ctx.lineTo(cssWidth - padR, yy);
+    pencilLineTo(ctx, padL, yy, cssWidth - padR, yy, i + 1);
     ctx.stroke();
+    ctx.restore();
     ctx.fillText(opts.axisLabel(val), cssWidth - padR + 6, yy + 3);
   }
 
@@ -1209,18 +1215,18 @@ function renderLineChart(canvasId, points, days, opts) {
   )];
   ctx.save();
   ctx.setLineDash([2, 3]);
-  ctx.strokeStyle = border;
+  ctx.strokeStyle = graphite;
+  ctx.globalAlpha = 0.18;
   labelIndices.forEach((i) => {
     const px = x(i);
     ctx.beginPath();
-    ctx.moveTo(px, padT);
-    ctx.lineTo(px, padT + plotH);
+    pencilLineTo(ctx, px, padT, px, padT + plotH, i + 11);
     ctx.stroke();
   });
   ctx.restore();
 
   ctx.fillStyle = muted;
-  ctx.font = "10px 'Share Tech Mono', monospace";
+  ctx.font = "10px 'Gaegu', 'Yomogi', sans-serif";
   labelIndices.forEach((i, idx) => {
     const label = fmtDate(windowed[i].date);
     const w = ctx.measureText(label).width;
@@ -1235,15 +1241,12 @@ function renderLineChart(canvasId, points, days, opts) {
     const ty = y(Number(opts.targetValue));
     ctx.save();
     ctx.strokeStyle = orange;
-    ctx.setLineDash([4, 4]);
-    ctx.lineWidth = 1.5;
+    ctx.setLineDash([5, 4]);
+    ctx.lineWidth = 1.4;
     ctx.beginPath();
-    ctx.moveTo(padL, ty);
-    ctx.lineTo(cssWidth - padR, ty);
+    pencilLineTo(ctx, padL, ty, cssWidth - padR, ty, 7);
     ctx.stroke();
     ctx.restore();
-    ctx.fillStyle = orange;
-    ctx.fillText(opts.targetLabel(opts.targetValue), padL + 4, ty - 4);
   }
 
   // smoothed line path (quadratic curve through the midpoints of each
@@ -1264,7 +1267,8 @@ function renderLineChart(canvasId, points, days, opts) {
     }
   });
 
-  // soft gradient fill under the line to give it some depth
+  // fill under the line: colored-pencil hatching (paper theme) instead of a
+  // smooth gradient, falling back to the gradient if patterns are unavailable
   const fillPath = new Path2D(linePath);
   fillPath.lineTo(x(windowed.length - 1), padT + plotH);
   fillPath.lineTo(x(0), padT + plotH);
@@ -1272,27 +1276,156 @@ function renderLineChart(canvasId, points, days, opts) {
   const gradient = ctx.createLinearGradient(0, padT, 0, padT + plotH);
   gradient.addColorStop(0, color_mix_fallback(primary, 0.22));
   gradient.addColorStop(1, color_mix_fallback(primary, 0));
-  ctx.fillStyle = gradient;
+  ctx.save();
+  const hatchFill = pencilHatch(ctx, primary, dpr);
+  if (hatchFill && pencilTex.hatch) ctx.globalAlpha = 0.5;
+  ctx.fillStyle = hatchFill || gradient;
   ctx.fill(fillPath);
+  ctx.restore();
 
+  // the line itself: one firm pencil pass plus a lighter, slightly offset
+  // second pass, like a line drawn twice by hand
   ctx.strokeStyle = primary;
-  ctx.lineWidth = 2.25;
+  ctx.lineWidth = 2.1;
   ctx.lineJoin = "round";
   ctx.lineCap = "round";
   ctx.stroke(linePath);
+  ctx.save();
+  ctx.translate(0.8, -0.7);
+  ctx.globalAlpha = 0.45;
+  ctx.lineWidth = 1.1;
+  ctx.stroke(linePath);
+  ctx.restore();
 
   // points — open circles (colored ring, light fill) rather than solid dots,
-  // with the latest point drawn larger and solid to draw the eye to "now"
+  // with the latest point drawn larger and solid to draw the eye to "now".
+  // 手で描いた丸: 少しゆがませて傾け、もう1回ずらして軽くなぞる。
+  // ゆがみは点の番号から決まる固定値なので、描き直しても形は変わらない。
+  const jit = (i, k) => {
+    const s = Math.sin(i * 12.9898 + k * 78.233) * 43758.5453;
+    return s - Math.floor(s) - 0.5;
+  };
   windowed.forEach((p, i) => {
     const isLast = i === windowed.length - 1;
+    const r = isLast ? 4.5 : 3.2;
+    const cx = x(i);
+    const cy = y(p.value);
     ctx.beginPath();
-    ctx.arc(x(i), y(p.value), isLast ? 4.5 : 3.2, 0, Math.PI * 2);
+    ctx.ellipse(cx, cy, r + jit(i, 7) * 0.8, r + jit(i, 8) * 0.8, jit(i, 9), 0, Math.PI * 2);
     ctx.fillStyle = isLast ? primary : surfaceAlt;
     ctx.fill();
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 1.7;
     ctx.strokeStyle = primary;
     ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(cx + 0.5, cy - 0.4, r + 0.6, -2.4 + jit(i, 10), 0.9 + jit(i, 11));
+    ctx.lineWidth = 0.8;
+    ctx.globalAlpha = 0.5;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
   });
+
+  // 線と塗りだけを紙の目でかすれさせる(字はくっきり残すので、目標の字はこのあとに書く)
+  pencilGrain(ctx, padL - 6, padT - 6, plotW + 10, plotH + 10);
+  if (opts.targetValue) {
+    ctx.fillStyle = orange;
+    ctx.font = "10px 'Gaegu', 'Yomogi', sans-serif";
+    ctx.fillText(opts.targetLabel(opts.targetValue), padL + 4, y(Number(opts.targetValue)) - 4);
+  }
+}
+
+// 鉛筆の線(グラフの見た目だけ): 14pxごとに線に垂直な向きへ最大0.9pxずらして、
+// 手で引いた線のようにわずかに揺らす。揺れは seed と区間番号から決まるので、
+// 再描画しても同じ形になる(ちらつかない)。
+function pencilLineTo(ctx, x1, y1, x2, y2, seed) {
+  const len = Math.hypot(x2 - x1, y2 - y1) || 1;
+  const steps = Math.max(2, Math.round(len / 14));
+  const nx = -(y2 - y1) / len;
+  const ny = (x2 - x1) / len;
+  ctx.moveTo(x1, y1);
+  for (let k = 1; k <= steps; k++) {
+    const t = k / steps;
+    const n = k === steps ? 0 : ((Math.sin(k * 12.9898 + seed * 78.233) * 43758.5453) % 1) * 0.9;
+    ctx.lineTo(x1 + (x2 - x1) * t + nx * n, y1 + (y2 - y1) * t + ny * n);
+  }
+}
+
+// 紙のテーマのグラフ用の鉛筆の質感(css/tex/ の画像。3倍の解像度で作ってある)。
+// 読み込めないときは下の描き方にそのまま戻る。
+const PENCIL_TEX_SCALE = 3;
+const pencilTex = { hatch: null, grain: null };
+const pencilTexReady = Promise.all(
+  ["hatch", "grain"].map((name) => new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => { pencilTex[name] = img; resolve(); };
+    img.onerror = () => resolve();
+    img.src = `css/tex/${name}.png`;
+  }))
+);
+const pencilHatchTiles = new Map();
+
+function pencilTexPattern(ctx, image) {
+  const pattern = ctx.createPattern(image, "repeat");
+  if (pattern && pattern.setTransform && typeof DOMMatrix === "function") {
+    pattern.setTransform(new DOMMatrix([1 / PENCIL_TEX_SCALE, 0, 0, 1 / PENCIL_TEX_SCALE, 0, 0]));
+  }
+  return pattern;
+}
+
+// 紙の目のくぼみに当たるところだけ、描いた線と塗りを少し消して鉛筆のかすれにする
+function pencilGrain(ctx, x, y, w, h) {
+  if (!pencilTex.grain) return;
+  const pattern = pencilTexPattern(ctx, pencilTex.grain);
+  if (!pattern) return;
+  ctx.save();
+  ctx.globalCompositeOperation = "destination-out";
+  ctx.fillStyle = pattern;
+  ctx.fillRect(x, y, w, h);
+  ctx.restore();
+}
+
+// 色鉛筆の斜線で塗るためのパターン(グラフの見た目だけ)。画像があれば色鉛筆の斜線を
+// その色で塗り、なければ6px角に斜線1本の簡単なもの。
+function pencilHatch(ctx, hex, dpr) {
+  if (pencilTex.hatch) {
+    let tile = pencilHatchTiles.get(hex);
+    if (!tile) {
+      tile = document.createElement("canvas");
+      tile.width = pencilTex.hatch.naturalWidth;
+      tile.height = pencilTex.hatch.naturalHeight;
+      const t = tile.getContext("2d");
+      if (t) {
+        t.drawImage(pencilTex.hatch, 0, 0);
+        t.globalCompositeOperation = "source-in";
+        t.fillStyle = hex;
+        t.fillRect(0, 0, tile.width, tile.height);
+        pencilHatchTiles.set(hex, tile);
+      }
+    }
+    const pattern = pencilTexPattern(ctx, tile);
+    if (pattern) return pattern;
+  }
+  const size = 6;
+  const tile = document.createElement("canvas");
+  tile.width = tile.height = Math.round(size * dpr);
+  const t = tile.getContext("2d");
+  if (!t) return null;
+  t.scale(dpr, dpr);
+  t.strokeStyle = color_mix_fallback(hex, 0.34);
+  t.lineWidth = 1;
+  t.beginPath();
+  t.moveTo(-1, size + 1);
+  t.lineTo(size + 1, -1);
+  t.moveTo(-1, 1);
+  t.lineTo(1, -1);
+  t.moveTo(size - 1, size + 1);
+  t.lineTo(size + 1, size - 1);
+  t.stroke();
+  const pattern = ctx.createPattern(tile, "repeat");
+  if (pattern && pattern.setTransform && typeof DOMMatrix === "function") {
+    pattern.setTransform(new DOMMatrix([1 / dpr, 0, 0, 1 / dpr, 0, 0]));
+  }
+  return pattern;
 }
 
 // createLinearGradient wants real rgba() stops, but our CSS vars are hex —
@@ -1602,15 +1735,24 @@ function init() {
   const mealImported = importMealFromLink();
   renderAll();
   if (mealImported) switchTab("meals");
-  window.addEventListener("resize", () => {
-    renderWeightChart("weightChart", state.weightLogs, 30);
-    const days = weightChartRange === "all" ? null : Number(weightChartRange);
-    renderWeightChart("weightChartFull", state.weightLogs, days, state.profile && state.profile.targetWeight);
-    const dailyTotals = mealDailyTotals();
-    renderCalorieChart("calorieChart", dailyTotals, 30, currentTargetCalories());
-    const calorieDays = calorieChartRange === "all" ? null : Number(calorieChartRange);
-    renderCalorieChart("calorieChartFull", dailyTotals, calorieDays, currentTargetCalories());
-  });
+  window.addEventListener("resize", redrawCharts);
+  // グラフの字は canvas に描くので、手書きフォントの読み込みが終わる前に描いた分は
+  // 代わりのフォントのまま残る。読み込みが終わったら1回だけ描き直す(見た目だけ)。
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(redrawCharts).catch(() => {});
+  }
+  // 鉛筆の質感の画像が届いたら、その質感で描き直す(見た目だけ)
+  pencilTexReady.then(redrawCharts).catch(() => {});
+}
+
+function redrawCharts() {
+  renderWeightChart("weightChart", state.weightLogs, 30);
+  const days = weightChartRange === "all" ? null : Number(weightChartRange);
+  renderWeightChart("weightChartFull", state.weightLogs, days, state.profile && state.profile.targetWeight);
+  const dailyTotals = mealDailyTotals();
+  renderCalorieChart("calorieChart", dailyTotals, 30, currentTargetCalories());
+  const calorieDays = calorieChartRange === "all" ? null : Number(calorieChartRange);
+  renderCalorieChart("calorieChartFull", dailyTotals, calorieDays, currentTargetCalories());
 }
 
 document.addEventListener("DOMContentLoaded", init);

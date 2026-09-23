@@ -6,9 +6,11 @@
 <title>YOSHI Health &amp; Bulk-up Tracker</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Share+Tech+Mono&display=swap">
+<!-- 手書きの字: 英数字は Gaegu(英数字と記号だけに絞って読み込む。全角のかっこ等はよもぎで出す)、日本語はよもぎ -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&text=%20%21%22%23%24%25%26%27%28%29%2A%2B%2C-.%2F0123456789%3A%3B%3C%3D%3E%3F%40ABCDEFGHIJKLMNOPQRSTUVWXYZ%5B%5C%5D%5E_%60abcdefghijklmnopqrstuvwxyz%7B%7C%7D~%C3%97%C2%B7%C2%B0%C2%B1&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Yomogi&family=Courier+Prime&display=swap">
 <link rel="stylesheet" href="css/style.css">
-<meta name="theme-color" content="#2f8f3e">
+<meta name="theme-color" content="#e4dfd5">
 
 <!-- PWA / ホーム画面追加用 -->
 <link rel="manifest" href="manifest.json">
@@ -24,7 +26,8 @@
 
 <header class="app-header">
   <div class="brand">
-    <span class="brand-mark">💪</span>
+    <!-- 💪 の代わりに、色鉛筆で塗った力こぶの落書き(飾りなので読み上げない) -->
+    <span class="brand-mark" aria-hidden="true"><img src="css/tex/mascot.png" alt="" width="50" height="50"></span>
     <div>
       <h1>健康・筋トレ・増量トラッカー</h1>
       <p class="tagline">①健康 ②筋肉トレーニング ③体重を上げる ― 3つの目標を1つの記録で管理</p>
@@ -386,9 +389,9 @@
       <h3>データ・アプリ管理</h3>
       <p class="hint">機種変更の前には、記録をJSONで保存してください。</p>
       <div class="field-row">
-        <button type="button" class="btn ghost" id="exportBtn">JSONをエクスポート</button>
+        <button type="button" class="btn ghost" id="exportBtn">JSONを<wbr>エクスポート</button>
         <label class="btn ghost file-btn">
-          JSONをインポート
+          JSONを<wbr>インポート
           <input type="file" id="importInput" accept="application/json" class="hidden">
         </label>
       </div>

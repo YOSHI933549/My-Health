@@ -931,3 +931,584 @@ canvas { width: 100%; display: block; }
 .weight-trend .up { color: var(--accent-orange); }
 .weight-trend .down { color: var(--accent-blue); }
 
+
+/* =========================================================================
+   「紙とペン」テーマ(参考: 手書きナプキン風UI)
+   - 机は明るいベージュ。カードはナプキン紙(細かい織り目と押し型の二重線)、
+     一覧は罫線ノート(赤い余白線・青い罫線)、下のタブはちぎったノートの切れ端
+   - 鉛筆の線と塗りは css/tex/ の画像。紙の凹凸の山にだけ芯が乗る描き方で作ってあり、
+     線の中に紙の白い粒が残る(作り方は css/tex/README.md)
+     ・ボタンは鉛筆で2回なぞった二重線の枠(border-image)。主ボタンと選んだ物はテラコッタ
+     ・リングやカレンダーの印は色鉛筆の斜線、見出しは払いと跳ねのある下線
+   - 字は鉛筆の手書き(英数字は Gaegu、日本語はよもぎ)。見出しや数字・一覧の字は、
+     紙のくぼみで芯がかすれた質感(tex/lead.png のマスク)にする
+   - 参考デザインに合わせて明るい紙の見た目で固定(ダークモードでも紙のまま)
+   ========================================================================= */
+:root,
+:root:not([data-theme="light"]),
+:root[data-theme="dark"] {
+  color-scheme: light;
+  --bg: #e7e2d8;
+  --surface: #faf8f3;
+  --surface-alt: #efe9dc;
+  --notebook: #f8f1de;
+  --text: #2c2b28;
+  --graphite: #3a3936;
+  --text-muted: #5f594f;
+  --border: #d3cbbb;
+  --primary: #cc6445;
+  --primary-dark: #a8492c;
+  --primary-tint: #f3ddd3;
+  --accent-orange: #cc6445;
+  --accent-blue: #3b5ba5;
+  --accent-purple: #7a5a8c;
+  --ink-blue: #3b5ba5;
+  --ink-red: #b8322a;
+  --danger: #b8322a;
+  --danger-tint: #f6ddd6;
+  --body-upper: #3b5ba5;
+  --body-lower: #5b8a4a;
+  --body-neutral: #8f877a;
+  --body-ink: #fff;
+  --rule-blue: rgba(86, 122, 190, 0.3);
+  --rule-red: rgba(205, 92, 70, 0.5);
+  --shadow: 0 1px 1.5px rgba(60, 45, 20, 0.12), 0 7px 16px -9px rgba(60, 45, 20, 0.36);
+  --radius: 5px;
+  --radius-lg: 0;
+  /* 字は鉛筆の手書き: 英数字は Gaegu、日本語はよもぎ(Gaegu に無い字はよもぎで出る) */
+  --font-hand: "Gaegu", "Yomogi", cursive;
+  --font-body: "Gaegu", "Yomogi", "Hiragino Maru Gothic ProN", sans-serif;
+  --font-type: "Courier Prime", "Courier New", monospace;
+  --font-display: var(--font-hand);
+  --font-mono: var(--font-hand);
+  /* 罫線ノートの行の高さ。一覧の各行はこの倍数で並べ、文字が罫線に乗るようにする */
+  --line: 30px;
+  /* 鉛筆の二重線の枠(9分割の画像。角は12pxぶん) */
+  --frame: url("tex/frame-graphite.png") 36 / 12px / 0 round;
+  /* 鉛筆で書いた字のかすれ(マスク。48px角で敷き詰める) */
+  --lead: url("tex/lead.png") 0 0 / 48px 48px;
+}
+
+/* ---- 机 ---- */
+html { background: url("tex/desk.webp") 0 0 / 240px 240px, var(--bg); }
+body { font-family: var(--font-body); background: url("tex/desk.webp") 0 0 / 240px 240px, var(--bg); }
+
+h1, h2, h3, .tab-btn span, .macro-ring-card .mrc-label {
+  font-family: var(--font-hand);
+  font-weight: 400;
+}
+
+/* 見出しの下線: 左は細く入り、右端で上に跳ねる鉛筆の払い(3分割の画像なので長さは自由) */
+.brand h1::after, .card h3::after, .chart-head h3::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 12px;
+  border-style: solid;
+  border-color: transparent;
+  border-width: 0 24px;
+  border-image: url("tex/swoosh-a.png") 0 72 fill / 0 24px / 0 round;
+  pointer-events: none;
+}
+.card:nth-child(even) > h3::after, .card:nth-child(even) .chart-head h3::after, .card h3 ~ h3::after {
+  border-image-source: url("tex/swoosh-b.png");
+}
+
+/* ---- ヘッダー ---- */
+.app-header { background: transparent; color: var(--text); padding: 22px 16px 6px; }
+.brand { align-items: flex-start; }
+.brand-mark { width: 50px; height: 50px; flex: none; margin-top: -4px; }
+.brand-mark img { display: block; width: 100%; height: 100%; }
+.brand h1 {
+  position: relative;
+  font-size: 19px;
+  font-weight: 400;
+  letter-spacing: .01em;
+  color: var(--text);
+  /* 下線(::after)が見出しの枠の内側に収まるよう、その分の余白を取って左へずらす */
+  padding: 2px 9px 12px 3px;
+  margin-left: -3px;
+}
+.tagline { color: var(--text-muted); opacity: 1; font-size: 12.5px; line-height: 1.7; margin-top: 8px; }
+
+.panel-head { margin-bottom: 14px; }
+.panel-head h2 { font-size: 25px; font-weight: 400; white-space: nowrap; color: var(--text); padding: 2px 2px 0; }
+
+/* ---- 字の太さ: 芯を強く押し付けた分だけ、うっすら縁取りして太らせる ----
+   よもぎには太字が無く、ブラウザの疑似太字はマーカーで塗ったように潰れて鉛筆らしくないので使わない */
+html { font-synthesis: none; }
+h1, h2, h3, .tab-btn span, .macro-ring-card .mrc-label, .list-item .title-row .name, .btn,
+.body-part-btn, .serving-btn, .range-btn, .wcal-title, .wcal-chip, .settings-group > summary, b, strong {
+  -webkit-text-stroke: .3px currentColor;
+}
+
+/* ---- 字: 鉛筆で書いた字 ----
+   紙のくぼみには芯が届かないので、字の中にところどころ紙の白い粒が残る(tex/lead.png)。
+   マスクは要素の枠の外を切ってしまうので、枠の外に飾りがはみ出さない要素にだけ付ける */
+.brand h1, .panel-head h2, .card h3, .chart-head h3, .tagline, .tab-btn span,
+.ring-gauge-sm .rg-value, .macro-ring-card .mrc-label, .macro-ring-card .mrc-value,
+.list-item .title-row .name, .list-item .meta, .list-item .macros, .empty-state,
+.wcal-title, .wcal-weekdays, .wcal-day, .wcal-foot > *,
+.target-summary .ts-item, .weight-trend, .hint, .settings-group > summary, .settings-details > summary,
+form.form label, .btn {
+  -webkit-mask: var(--lead);
+  mask: var(--lead);
+}
+
+/* ---- カード: ナプキン紙(細かい織り目) + 内側に押し型の二重線 ---- */
+.card, .macro-ring-card, .card:has(canvas) {
+  position: relative;
+  background: url("tex/napkin.webp") 0 0 / 160px 160px, var(--surface);
+  border: none;
+  border-radius: 1px;
+  box-shadow: var(--shadow);
+}
+.card { padding: 22px 20px; }
+.card::after, .macro-ring-card::after {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  pointer-events: none;
+  border: 1px solid rgba(96, 80, 52, 0.13);
+  box-shadow: 1px 1px 0 rgba(255, 255, 255, 0.9), inset 1px 1px 0 rgba(255, 255, 255, 0.9);
+  outline: 1px solid rgba(96, 80, 52, 0.07);
+  outline-offset: 3px;
+}
+.macro-ring-card { padding: 16px 10px 14px; gap: 6px; }
+.macro-ring-card::after { inset: 6px; outline-offset: 2px; }
+.macro-ring-grid { gap: 12px; }
+
+.card h3, .chart-head h3 {
+  position: relative;
+  display: inline-block;
+  font-size: 19px;
+  font-weight: 400;
+  color: var(--text);
+  padding: 0 11px 11px 5px;
+  margin-left: -3px;
+  margin-bottom: 14px;
+  border: none;
+  background: none;
+}
+.chart-head h3 { margin-bottom: 0; }
+
+/* ---- 一覧カード: 罫線ノート(左に赤い余白線、行に文字が乗る) ---- */
+.card:has(> .list) {
+  padding: 0 16px 14px 50px;
+  background:
+    linear-gradient(90deg, transparent 36px, var(--rule-red) 36px 37.2px, transparent 37.2px 40px, rgba(205, 92, 70, 0.28) 40px 40.8px, transparent 40.8px),
+    linear-gradient(var(--rule-red), var(--rule-red)) 0 55px / 100% 1.4px no-repeat,
+    repeating-linear-gradient(to bottom, transparent 0 calc(var(--line) - 1px), var(--rule-blue) calc(var(--line) - 1px) var(--line))
+      0 58px / 100% calc(100% - 58px) no-repeat,
+    url("tex/notebook.webp") 0 0 / 160px 160px,
+    var(--notebook);
+}
+.card:has(> .list)::after { content: none; }
+.card:has(> .list) h3 {
+  display: block;
+  height: 55px;
+  margin: 0;
+  padding: 19px 0 0;
+  line-height: 30px;
+}
+.card:has(> .list) h3::after { content: none; }
+.card:has(> .list) .list { margin-top: 6px; }
+.list { gap: 0; }
+.list-item {
+  position: relative;
+  gap: 8px;
+  padding: 0 0 0 2px;
+  min-height: var(--line);
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+/* 記録と記録の境目: 罫線の上に鉛筆でもう1本引いて区切る */
+.list-item + .list-item::after {
+  content: "";
+  position: absolute;
+  left: -9px;
+  right: -8px;
+  top: -6px;
+  height: 6px;
+  background: url("tex/rule.png") left top / 120px 6px repeat-x;
+  opacity: .3;
+  pointer-events: none;
+}
+.list-item img { margin-top: 4px; border-radius: 2px; box-shadow: 1px 2px 0 rgba(78, 58, 30, 0.2); }
+.list-item .info > * { margin: 0; line-height: var(--line); }
+.list-item .title-row { align-items: baseline; }
+.list-item .title-row .name { font-family: var(--font-hand); font-size: 17px; font-weight: 400; color: var(--text); }
+.list-item .meta { font-size: 13px; color: var(--text-muted); }
+.list-item .macros { font-size: 13px; color: var(--text-muted); gap: 0 10px; }
+/* 区分タグ: 鉛筆でぐるっと丸で囲む(タグの色の鉛筆) */
+.list-item .title-row .tag {
+  position: relative;
+  align-self: center;
+  line-height: 1.2;
+  padding: 3px 12px;
+  background: transparent !important;
+  border: none;
+  border-radius: 0;
+  font-family: var(--font-hand);
+  font-size: 12px;
+}
+.list-item .title-row .tag::before {
+  content: "";
+  position: absolute;
+  inset: -3px -5px;
+  background: currentColor;
+  -webkit-mask: url("tex/loop-wide.png") center / 100% 100% no-repeat;
+  mask: url("tex/loop-wide.png") center / 100% 100% no-repeat;
+  pointer-events: none;
+}
+/* 削除: ✕ の字の代わりに赤鉛筆のバツ(押せる範囲はそのまま) */
+.list-item .del {
+  position: relative;
+  color: transparent;
+  background: transparent;
+  font-family: var(--font-hand);
+  font-size: 17px;
+  line-height: var(--line);
+  padding: 0 8px;
+  min-width: 34px;
+}
+.list-item .del::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  margin: -9px 0 0 -9px;
+  background: var(--ink-red);
+  -webkit-mask: url("tex/cross.png") center / contain no-repeat;
+  mask: url("tex/cross.png") center / contain no-repeat;
+  pointer-events: none;
+}
+.empty-state { font-family: var(--font-hand); color: var(--text-muted); }
+.list .empty-state { padding: 0; line-height: var(--line); text-align: left; font-size: 14px; }
+
+/* ---- ボタン: 鉛筆で2回なぞった二重線の枠 ---- */
+.btn {
+  position: relative;
+  isolation: isolate;
+  min-height: 46px;
+  font-family: var(--font-hand);
+  font-weight: 400;
+  font-size: 16px;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+.btn::before,
+.body-part-btn::before, .serving-btn::before, .range-btn::before, .wcal-nav::before, .wcal-today::before, .file-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 12px solid transparent;
+  border-image: var(--frame);
+  pointer-events: none;
+}
+.btn:active { transform: translate(1px, 1px); }
+/* 主ボタンと選んだ物: テラコッタの二重線 + 淡い色鉛筆の塗り */
+.btn.primary { color: var(--text); background: none; }
+.btn.primary::before,
+.body-part-btn.is-selected::before, .serving-btn.active::before, .range-btn.active::before {
+  border-image-source: url("tex/frame-terra.png");
+  opacity: 1;
+}
+.btn.primary::after,
+.body-part-btn.is-selected::after, .serving-btn.active::after, .range-btn.active::after {
+  content: "";
+  position: absolute;
+  inset: 3.5px;
+  z-index: -1;
+  border-radius: 4px;
+  background: url("tex/tint-terra.webp") 0 0 / 120px 120px, var(--primary-tint);
+  pointer-events: none;
+}
+.btn.ghost { background: transparent; border: none; }
+.btn.ghost::before { opacity: .8; }
+.btn.danger { color: var(--ink-red); background: transparent; }
+.btn.danger::before { border-image-source: url("tex/frame-red.png"); }
+/* かすれのマスクが枠の外を切るので、キーボードで選んだときの印は枠の内側に描く */
+.btn:focus-visible, .wcal-day:focus-visible { outline: 1.5px dashed var(--primary); outline-offset: -4px; }
+.settings-group > summary:focus-visible, .settings-details > summary:focus-visible {
+  outline: none;
+  text-decoration: underline dashed var(--primary);
+  text-underline-offset: 3px;
+}
+
+/* ---- 入力欄: 鉛筆で引いた記入線 ---- */
+input[type="text"],
+input[type="number"],
+input[type="date"],
+input[type="time"],
+select {
+  font-family: var(--font-hand);
+  font-size: 17px;
+  color: var(--text);
+  background: url("tex/rule.png") left bottom / 120px 6px repeat-x;
+  border: none;
+  border-radius: 0;
+  padding: 6px 2px 8px;
+}
+input::placeholder { color: #8a8174; }
+input:focus, select:focus {
+  outline: none;
+  background:
+    url("tex/rule-terra.png") left bottom / 120px 6px repeat-x,
+    linear-gradient(to top, rgba(204, 100, 69, 0.09), rgba(204, 100, 69, 0) 70%);
+}
+input::-webkit-calendar-picker-indicator { opacity: .55; }
+form.form label, .serving-label { font-family: var(--font-body); color: var(--text-muted); }
+input[type="file"] { font-family: var(--font-body); color: var(--text-muted); }
+input[type="file"]::file-selector-button {
+  font-family: var(--font-hand);
+  font-weight: 400;
+  color: var(--text);
+  background: transparent;
+  border: 6px solid transparent;
+  border-image: url("tex/frame-thin.png") 18 / 6px / 0 round;
+  border-radius: 0;
+  padding: 1px 8px;
+  margin-right: 10px;
+}
+
+/* ---- 選択ボタン(部位・量・期間)とカレンダーの操作: 薄い鉛筆の二重線。
+   選ぶとテラコッタでなぞって淡く塗る ---- */
+.body-part-btn, .serving-btn, .range-btn, .wcal-nav, .wcal-today {
+  position: relative;
+  isolation: isolate;
+  font-family: var(--font-hand);
+  font-size: 16px;
+  font-weight: 400;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 0;
+  color: var(--text);
+  box-shadow: none;
+}
+.body-part-btn::before, .serving-btn::before, .range-btn::before, .wcal-nav::before, .wcal-today::before { inset: -1px; opacity: .6; }
+.body-part-btn.is-selected, .serving-btn.active, .range-btn.active {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text);
+  font-weight: 400;
+  box-shadow: none;
+}
+.body-part-btn.is-selected::after, .serving-btn.active::after, .range-btn.active::after { inset: 2.5px; }
+/* 指で押したあとに枠が残らないように。キーボード操作のときだけ点線を出す */
+.body-part-btn:focus, .range-btn:focus, .serving-btn:focus { outline: none; }
+.body-part-btn:focus-visible, .range-btn:focus-visible, .serving-btn:focus-visible { outline: 1.5px dashed var(--primary); outline-offset: 4px; }
+.range-group { background: transparent; border: none; gap: 8px; padding: 4px; }
+.range-btn { color: var(--text-muted); padding: 5px 10px; }
+.range-btn.active { color: var(--text); }
+.body-part-picker { gap: 10px; margin-bottom: 14px; }
+.food-add-row #mealFoodAddBtn { margin: 6px 0 10px; }
+.field-row:has(> .btn) { gap: 12px; margin-bottom: 14px; }
+/* 2列に並ぶボタンは字を少し詰め、折り返すときも「JSONを/エクスポート」の区切りで折る */
+.field-row > .btn { padding-inline: 4px; font-size: 14px; line-height: 1.3; word-break: keep-all; }
+.file-btn { overflow: visible; }
+.food-chip { background: url("tex/tint-terra.webp") 0 0 / 120px 120px, var(--primary-tint); border: none; border-radius: 3px; font-family: var(--font-hand); }
+
+/* ---- リング: 鉛筆の二重丸 + 色鉛筆の斜線で塗った弧 ---- */
+.ring-gauge-sm {
+  --size: 78px;
+  --thickness: 10px;
+  background: url("tex/ring.png") center / 100% 100% no-repeat;
+  border: none;
+}
+.ring-gauge-sm::before {
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  /* マスクが使えない端末向け: 弧を塗って中を紙の色で抜く */
+  background:
+    radial-gradient(circle closest-side, var(--surface) calc(100% - var(--thickness) - .5px), transparent calc(100% - var(--thickness))),
+    conic-gradient(var(--ring-color, var(--primary)) calc(var(--pct, 0) * 1%), transparent 0);
+  opacity: .75;
+}
+@supports (-webkit-mask-image: conic-gradient(red, red)) or (mask-image: conic-gradient(red, red)) {
+  .ring-gauge-sm::before {
+    opacity: 1;
+    background: var(--ring-color, var(--primary));
+    -webkit-mask-image:
+      url("tex/hatch-dense.png"),
+      conic-gradient(from -3deg, #000 calc(var(--pct, 0) * 1% - .8%), transparent calc(var(--pct, 0) * 1% + 1.2%)),
+      radial-gradient(circle closest-side, transparent calc(100% - 11.2px), #000 calc(100% - 10.4px), #000 calc(100% - 1.3px), transparent calc(100% - .5px));
+    mask-image:
+      url("tex/hatch-dense.png"),
+      conic-gradient(from -3deg, #000 calc(var(--pct, 0) * 1% - .8%), transparent calc(var(--pct, 0) * 1% + 1.2%)),
+      radial-gradient(circle closest-side, transparent calc(100% - 11.2px), #000 calc(100% - 10.4px), #000 calc(100% - 1.3px), transparent calc(100% - .5px));
+    -webkit-mask-size: 48px 48px, 100% 100%, 100% 100%;
+    mask-size: 48px 48px, 100% 100%, 100% 100%;
+    -webkit-mask-repeat: repeat, no-repeat, no-repeat;
+    mask-repeat: repeat, no-repeat, no-repeat;
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+  }
+}
+.ring-gauge-sm .rg-value { font-family: var(--font-hand); font-size: 19px; font-weight: 700; color: var(--text); padding: 0 2px; }
+.ring-gauge-sm .rg-value small { color: var(--text-muted); font-weight: 400; }
+.macro-ring-card .mrc-label { font-family: var(--font-body); font-weight: 400; color: var(--text-muted); font-size: 12.5px; }
+.macro-ring-card .mrc-value { font-family: var(--font-hand); font-size: 14.5px; color: var(--text); padding: 0 2px; }
+.macro-ring-card .mrc-value.over { color: var(--ink-red); }
+.bar-track { background: transparent; border: 1.2px solid rgba(58, 57, 54, 0.5); border-radius: 1px; }
+.bar-fill { background: var(--primary) !important; -webkit-mask: url("tex/hatch.png") 0 0 / 72px 72px; mask: url("tex/hatch.png") 0 0 / 72px 72px; }
+
+/* ---- 区切り線: 鉛筆の波線 ---- */
+.settings-section, .settings-details, .wcal-foot {
+  border-top: none;
+  background: url("tex/wave.png") left top / 120px 10px repeat-x;
+}
+
+/* ---- 筋トレカレンダー ---- */
+.wcal-title { font-family: var(--font-hand); font-size: 21px; font-weight: 400; color: var(--text); }
+.wcal-nav, .wcal-today { font-weight: 400; }
+.wcal-day { position: relative; isolation: isolate; font-family: var(--font-hand); background: transparent; border: none; border-radius: 0; }
+/* 記録のある日は鉛筆で薄く斜線を入れる */
+.wcal-day.has-log { background: transparent; border: none; }
+.wcal-day.has-log::after {
+  content: "";
+  position: absolute;
+  inset: 2px 1px;
+  z-index: -1;
+  background: var(--graphite);
+  opacity: .09;
+  -webkit-mask: url("tex/hatch.png") 0 0 / 72px 72px;
+  mask: url("tex/hatch.png") 0 0 / 72px 72px;
+  pointer-events: none;
+}
+/* 選んだ日は日付の数字を赤鉛筆でぐるっと囲む(部位の印にはかからない) */
+.wcal-day.is-selected { border: none; box-shadow: none; outline: none; }
+.wcal-day .wcal-dnum { position: relative; font-family: var(--font-hand); font-size: 14.5px; }
+.wcal-day.is-selected .wcal-dnum::before {
+  content: "";
+  position: absolute;
+  inset: -4px -8px;
+  z-index: -1;
+  background: var(--primary);
+  -webkit-mask: url("tex/loop.png") center / 100% 100% no-repeat;
+  mask: url("tex/loop.png") center / 100% 100% no-repeat;
+  pointer-events: none;
+}
+/* 今日: 赤鉛筆の短い下線 */
+.wcal-day.is-today .wcal-dnum {
+  color: var(--ink-red);
+  text-decoration: none;
+  padding-bottom: 3px;
+  background: url("tex/swoosh-terra.png") center bottom / 100% 4px no-repeat;
+}
+/* 部位の印: 色鉛筆の斜線で塗った小さな札に濃い色の字(上半身=青・下半身=緑・その他=灰) */
+.wcal-chip {
+  --chip: var(--body-neutral);
+  position: relative;
+  isolation: isolate;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  color: #36322c;
+  background: transparent;
+  border-radius: 0;
+}
+.wcal-chip.body-upper { --chip: var(--body-upper); color: #172a58; background: transparent; }
+.wcal-chip.body-lower { --chip: var(--body-lower); color: #1c3712; background: transparent; }
+.wcal-chip::before {
+  content: "";
+  position: absolute;
+  inset: 0 -1px;
+  z-index: -1;
+  border-radius: 3px;
+  background: var(--chip);
+  opacity: .55;
+  -webkit-mask: url("tex/hatch-dense.png") 0 0 / 48px 48px;
+  mask: url("tex/hatch-dense.png") 0 0 / 48px 48px;
+  pointer-events: none;
+}
+.wcal-chip.is-more { color: var(--text-muted); }
+.wcal-chip.is-more::before { content: none; }
+.wcal-weekdays { font-family: var(--font-body); }
+
+/* ---- 目標まとめ・前回ヒント・通知 ---- */
+.target-summary .ts-item {
+  background: url("tex/rule.png") left bottom / 120px 6px repeat-x;
+  border-radius: 0;
+  padding: 6px 2px 9px;
+}
+.target-summary .ts-item .v { font-family: var(--font-hand); font-size: 19px; font-weight: 700; color: var(--text); }
+/* 付箋 */
+.prev-workout-hint, .notice {
+  background: linear-gradient(rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0)), url("tex/notebook.webp") 0 0 / 160px 160px, #f6e9bb;
+  border: none;
+  border-radius: 1px 1px 3px 14px / 1px 1px 3px 6px;
+  box-shadow: 1px 2px 0 rgba(78, 58, 30, 0.14), 0 8px 14px -10px rgba(60, 45, 20, 0.5);
+  font-family: var(--font-body);
+  color: var(--text-muted);
+}
+.prev-workout-hint b, .notice b { color: var(--text); }
+.weight-trend { font-family: var(--font-body); }
+.weight-trend b { font-family: var(--font-hand); font-size: 17px; font-weight: 700; color: var(--text); padding: 0 1px; }
+.hint { font-family: var(--font-body); }
+code, .mono { font-family: var(--font-type); }
+.settings-group > summary { font-family: var(--font-hand); font-size: 17px; font-weight: 400; color: var(--text); }
+.settings-details > summary { font-family: var(--font-hand); }
+/* 脂質の割合は1行で読めるよう2列ぶん使う */
+.field-row > label:has(#fatRatio) { grid-column: 1 / -1; white-space: nowrap; }
+
+/* ---- 下のタブ: ちぎったノートの切れ端 ---- */
+.tabbar {
+  background: none;
+  border-top: none;
+  box-shadow: none;
+}
+.tabbar::before, .tabbar::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -12px;
+  bottom: 0;
+  pointer-events: none;
+  border-top: 14px solid transparent;
+}
+.tabbar::before {
+  z-index: -1;
+  border-image: url("tex/torn.png") 42 0 0 0 / 14px 0 0 0 / 0 round;
+  background: url("tex/notebook.webp") 0 0 / 160px 160px, var(--notebook);
+  background-clip: padding-box;
+}
+.tabbar::after {
+  z-index: -2;
+  border-image: url("tex/torn-shadow.png") 42 0 0 0 / 14px 0 0 0 / 0 round;
+  transform: translateY(-1px);
+}
+.tab-btn { font-family: var(--font-hand); color: var(--text-muted); }
+.tab-btn span { font-size: 12.5px; }
+.tab-btn svg { stroke-width: 1.7; }
+.tab-btn.active { color: var(--text); }
+.tab-btn.active::before {
+  top: auto;
+  bottom: 4px;
+  width: 42px;
+  height: 8px;
+  border-radius: 0;
+  background: url("tex/swoosh-terra.png") center / 100% 100% no-repeat;
+}
+
+.toast {
+  font-family: var(--font-hand);
+  background: url("tex/napkin.webp") 0 0 / 160px 160px, var(--surface);
+  color: var(--text);
+  border-radius: 1px;
+  box-shadow: 1px 2px 0 rgba(78, 58, 30, 0.16), 0 10px 18px -8px rgba(60, 45, 20, 0.5);
+}
+.toast-undo { position: relative; color: var(--primary-dark); background: transparent; border: none; border-radius: 0; }
+.toast-undo::before { content: ""; position: absolute; inset: -2px; border: 12px solid transparent; border-image: url("tex/frame-terra.png") 36 / 12px / 0 round; pointer-events: none; }
+.save-error { font-family: var(--font-body); }
