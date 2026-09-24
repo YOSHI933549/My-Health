@@ -330,6 +330,101 @@ function initDashboard() {
   const dateInput = document.getElementById("dashboardDate");
   dateInput.value = todayStr();
   dateInput.addEventListener("change", renderDashboard);
+  document.getElementById("copyDayForClaudeBtn").addEventListener("click", copyDayForClaude);
+}
+
+function sumMeals(meals) {
+  return meals.reduce(
+    (acc, m) => {
+      acc.calories += Number(m.calories) || 0;
+      acc.protein += Number(m.protein) || 0;
+      acc.fat += Number(m.fat) || 0;
+      acc.carbs += Number(m.carbs) || 0;
+      return acc;
+    },
+    { calories: 0, protein: 0, fat: 0, carbs: 0 }
+  );
+}
+
+function shiftDateStr(dateStr, deltaDays) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return ymd(new Date(y, m - 1, d + deltaDays));
+}
+
+// Claudeに毎日の食事分析を頼むための要約テキスト。記録はスマホの中にしか無いので、
+// その日の分と直近7日の傾向を1つの文章にまとめ、コピーして貼ってもらう。写真は含めない。
+function dayReportForClaude(dateStr) {
+  const r = (v) => Math.round(v);
+  const lines = [`【食事分析の依頼】${dateStr}`];
+  const p = state.profile;
+  const weightEntry = getWeightAsOf(dateStr);
+  const targets = p && weightEntry ? computeTargets(p, weightEntry.weight) : null;
+
+  if (p) {
+    lines.push(
+      `プロフィール: ${p.gender === "female" ? "女性" : "男性"} ${p.age}歳 ${p.height}cm 活動係数${p.activity} 増量上乗せ+${p.surplus || 0}kcal${p.targetWeight ? ` 目標体重${p.targetWeight}kg` : ""}`
+    );
+  }
+  if (weightEntry) {
+    const weekAgo = getWeightAsOf(shiftDateStr(dateStr, -7));
+    const diff = weekAgo && weekAgo !== weightEntry ? ` (7日前比 ${weightEntry.weight - weekAgo.weight >= 0 ? "+" : ""}${(weightEntry.weight - weekAgo.weight).toFixed(1)}kg)` : "";
+    lines.push(`体重: ${weightEntry.weight}kg (${weightEntry.date}時点)${diff}`);
+  }
+  if (targets) {
+    lines.push(`1日の目標: ${targets.calories}kcal / P${targets.protein}g / F${targets.fat}g / C${targets.carb}g`);
+  }
+
+  const dayMeals = state.meals
+    .filter((m) => m.date === dateStr)
+    .sort((a, b) => String(a.time || "").localeCompare(String(b.time || "")));
+  lines.push("", "食事:");
+  if (dayMeals.length) {
+    dayMeals.forEach((m) => {
+      lines.push(
+        `- ${m.time || "--:--"} ${m.type} ${m.name}: ${r(Number(m.calories) || 0)}kcal P${r(Number(m.protein) || 0)} F${r(Number(m.fat) || 0)} C${r(Number(m.carbs) || 0)}${m.memo ? ` (${m.memo})` : ""}`
+      );
+    });
+  } else {
+    lines.push("- 記録なし");
+  }
+  const t = sumMeals(dayMeals);
+  let totalLine = `合計: ${r(t.calories)}kcal / P${r(t.protein)}g / F${r(t.fat)}g / C${r(t.carbs)}g`;
+  if (targets) {
+    const sign = (v) => (v >= 0 ? "+" : "") + r(v);
+    totalLine += ` (目標との差 ${sign(t.calories - targets.calories)}kcal / P${sign(t.protein - targets.protein)} / F${sign(t.fat - targets.fat)} / C${sign(t.carbs - targets.carb)})`;
+  }
+  lines.push(totalLine);
+
+  const dayWorkouts = state.workouts.filter((w) => w.date === dateStr);
+  lines.push(
+    "",
+    `筋トレ: ${dayWorkouts.length ? dayWorkouts.map((w) => w.name + (w.memo ? `(${w.memo})` : "")).join("、") : "なし"}`
+  );
+
+  const recentDays = [];
+  for (let i = 7; i >= 1; i--) recentDays.push(shiftDateStr(dateStr, -i));
+  const loggedDays = recentDays.filter((d) => state.meals.some((m) => m.date === d));
+  if (loggedDays.length) {
+    const recent = sumMeals(state.meals.filter((m) => loggedDays.includes(m.date)));
+    const n = loggedDays.length;
+    lines.push(
+      `直近7日(記録のある${n}日)の平均: ${r(recent.calories / n)}kcal / P${r(recent.protein / n)}g / F${r(recent.fat / n)}g / C${r(recent.carbs / n)}g`
+    );
+  }
+  const workoutDays = new Set(state.workouts.filter((w) => recentDays.includes(w.date)).map((w) => w.date));
+  lines.push(`直近7日の筋トレ: ${workoutDays.size}日`);
+  return lines.join("\n");
+}
+
+async function copyDayForClaude() {
+  const dateStr = document.getElementById("dashboardDate").value || todayStr();
+  const text = dayReportForClaude(dateStr);
+  try {
+    await navigator.clipboard.writeText(text);
+    toast("コピーしました。Claudeのプロジェクトに貼ってください");
+  } catch (error) {
+    prompt("この文章をコピーしてClaudeに貼ってください", text);
+  }
 }
 
 function renderDashboard() {
@@ -349,16 +444,7 @@ function renderDashboard() {
   content.classList.remove("hidden");
 
   const dayMeals = state.meals.filter((m) => m.date === dateStr);
-  const totals = dayMeals.reduce(
-    (acc, m) => {
-      acc.calories += Number(m.calories) || 0;
-      acc.protein += Number(m.protein) || 0;
-      acc.fat += Number(m.fat) || 0;
-      acc.carbs += Number(m.carbs) || 0;
-      return acc;
-    },
-    { calories: 0, protein: 0, fat: 0, carbs: 0 }
-  );
+  const totals = sumMeals(dayMeals);
 
   renderMacroCards(totals, targets);
   renderWeightChart("weightChart", state.weightLogs, 30);
