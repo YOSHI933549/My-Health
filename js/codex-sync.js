@@ -9,7 +9,7 @@
 const CODEX_DEVICE_ID_KEY = "yoshi-codex-device-id-v1";
 const CODEX_PUBLIC_KEY_KEY = "yoshi-codex-public-key-v1";
 const CODEX_PRIVATE_KEY_KEY = "yoshi-codex-private-key-v1";
-const CODEX_INBOX_BASE_URL = "https://raw.githubusercontent.com/YOSHI933549/YOSHI/main/codex-inbox";
+const CODEX_INBOX_BASE_URL = "https://raw.githubusercontent.com/YOSHI933549/My-Health/main/codex-inbox";
 const CODEX_POLL_INTERVAL_MS = 20000;
 
 let codexPollInFlight = false;
