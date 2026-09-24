@@ -284,13 +284,34 @@ Safari版とChrome版など、開くブラウザ・端末が変わるとデー�
 
 ```
 index.html      画面構成(ダッシュボード/食事/筋トレ/体重/設定の5タブ)
-css/style.css   スタイル(ライト/ダークモード自動対応)
-js/app.js       ロジック(データ保存・目標計算・グラフ描画など、外部依存なし)
-js/n8n-sync.js  n8n経由の体重・食事の自動取り込み(任意機能、要セットアップ)
+css/style.css   スタイル(紙とペン風テーマ、ライト/ダークモード自動対応)
+css/tex/        テーマで使う鉛筆の線・紙の画像(説明は css/tex/README.md)
+js/app.js       ロジック(データ保存・目標計算・グラフ描画など)
+js/codex-sync.js  Codex / Claude Code からの暗号化受け取り箱の取り込み
+js/n8n-sync.js  n8n経由の体重・食事の自動取り込み(古い端末用の互換経路、要セットアップ)
+js/ocr.js       栄養成分表示の写真から自動入力(任意機能)
 manifest.json   PWAマニフェスト(アプリ名・アイコン・スタンドアロン表示設定)
 sw.js           Service Worker(アプリ本体をオフラインキャッシュ)
 icons/          ホーム画面アイコン(192/512/Apple touch icon/favicon)
+
+codex-devices/  暗号化受け取り箱の公開鍵(端末ごと)。Codex と Claude Code で共通
+codex-inbox/    暗号化された食事データの受け取り箱(端末ごと)。Codex と Claude Code で共通
+
+scripts/encrypt-meal.mjs          食事JSONを受け取り箱用に暗号化する
+scripts/test-encrypted-inbox.mjs  暗号化受け取り箱のテスト(npm run test:encrypted-inbox)
+scripts/build-web.mjs             iPhoneアプリ用に www/ へWeb版をコピーする(npm run build:web)
+scripts/pencil-textures/          css/tex/ の画像を作るスクリプト
+
+ios/            iPhoneアプリ版(Capacitor / Xcodeプロジェクト)
+package.json    iPhoneアプリ版のビルド用設定(Web版だけなら不要)
+
+README.md       この説明書(人向け)
+CLAUDE.md       Claude Code 向けの作業ルール
+AGENTS.md       Codex 向けの作業ルール
+.claude/skills/record-meal/  食事を調べて記録する Claude Code のスキル
 .github/workflows/deploy-pages.yml  GitHub Pagesへの自動デプロイ
 ```
 
-外部ライブラリやビルドツールには依存していないため、オフラインでもそのまま動作します。
+Web版は外部ライブラリやビルドツールに依存していないため、`index.html` を開くだけで動き、
+オフラインでも動作します(写真からの自動入力だけは初回にライブラリを読み込みます)。
+`npm install` が必要なのはiPhoneアプリ版をビルドするときだけです。
