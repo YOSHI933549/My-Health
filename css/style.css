@@ -1418,6 +1418,8 @@ input[type="file"]::file-selector-button {
   background: transparent;
   text-shadow: 0 0 3px rgba(250, 248, 243, 0.9);
   border-radius: 0;
+  /* よもぎ(日本語)には太字が無いので、font-weight でなく縁取りを太らせて濃さを出す */
+  -webkit-text-stroke: .6px currentColor;
 }
 .wcal-chip.body-upper { --chip: var(--body-upper); color: #0e1c3d; background: transparent; }
 .wcal-chip.body-lower { --chip: var(--body-lower); color: #12280c; background: transparent; }
