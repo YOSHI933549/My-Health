@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "deviceId": "0Ikq3obamPCDDDwr-1hq6w",
+  "publicKey": {
+    "alg": "RSA-OAEP-256",
+    "e": "AQAB",
+    "ext": true,
+    "key_ops": [
+      "encrypt"
+    ],
+    "kty": "RSA",
+    "n": "5a3iIxA4l3iXIVB0SoKNpQHVIR9ScuUVzA5FWGm0BLqB39CgXgF9TT16WuIjSysvYnWyGKUGNGHwEU_0jCiuoQKFjvgSjQcr_MzgKvkCN34liM_tFP05aKv_2A8CKeuLaG64K5TNkW_ZGsJ9k0T8VAbjfuFR0AEbT3CrHsr8G7IrjCysG9PtU2aklS_tbF0bz2Asn0pwpU_P_ZmsAtdnq6_Xrk2x66M_1P42TDmMvcxDKHKKtusv2bEvHyic24VN6lsdcr-lthLprWd016QwnzrXOofTsoZQXusSbFFXonM4b8hTm1iqV6GCJs2DtXY7W2J1D123lp5kl8kquN0pIQ"
+  }
+}
