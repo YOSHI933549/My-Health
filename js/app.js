@@ -17,6 +17,13 @@ const SYMPTOMS = [
   { key: "nausea", label: "吐き気" },
 ];
 
+const FATIGUE_SLOTS = [
+  { key: "morning", label: "朝", range: "6–10" },
+  { key: "noon", label: "昼", range: "10–15" },
+  { key: "evening", label: "夕", range: "15–19" },
+  { key: "night", label: "夜", range: "19–24" },
+];
+
 let state = loadState();
 let weightChartRange = "all";
 let calorieChartRange = "all";
@@ -232,6 +239,19 @@ function symptomScore(value) {
   return value;
 }
 
+function sanitizeFatigueSlots(raw) {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const slots = {};
+  let any = false;
+  for (const slot of FATIGUE_SLOTS) {
+    const score = symptomScore(raw[slot.key]);
+    if (score == null) continue;
+    slots[slot.key] = score;
+    any = true;
+  }
+  return any ? slots : null;
+}
+
 function sanitizeSymptomLogs(logs) {
   if (!Array.isArray(logs)) return [];
   const byDate = new Map();
@@ -239,17 +259,29 @@ function sanitizeSymptomLogs(logs) {
     if (!raw || typeof raw !== "object") continue;
     const date = String(raw.date || "");
     if (!isIsoDate(date)) continue;
-    const entry = { id: typeof raw.id === "string" && raw.id ? raw.id : uid(), date };
-    let hasScore = false;
-    for (const symptom of SYMPTOMS) {
-      const score = symptomScore(raw[symptom.key]);
-      entry[symptom.key] = score;
-      if (score != null) hasScore = true;
-    }
-    if (!hasScore) continue;
+    const entry = {
+      id: typeof raw.id === "string" && raw.id ? raw.id : uid(),
+      date,
+      fatigue: symptomScore(raw.fatigue),
+      nausea: symptomScore(raw.nausea),
+    };
+    const slots = sanitizeFatigueSlots(raw.fatigueSlots);
+    if (slots) entry.fatigueSlots = slots;
+    if (entry.fatigue == null && entry.nausea == null && !slots) continue;
     byDate.set(date, entry);
   }
   return [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
+}
+
+function symptomLogIsEmpty(log) {
+  if (!log) return true;
+  if (log.fatigue != null || log.nausea != null) return false;
+  return !log.fatigueSlots || !FATIGUE_SLOTS.some((slot) => log.fatigueSlots[slot.key] != null);
+}
+
+function fatigueSlotScore(log, key) {
+  if (!log || !log.fatigueSlots) return null;
+  return symptomScore(log.fatigueSlots[key]);
 }
 
 function getSymptomLog(date) {
@@ -269,24 +301,58 @@ function setSymptom(date, key, score) {
     state.symptomLogs.push(log);
   }
   log[key] = value;
-  if (SYMPTOMS.every((symptom) => log[symptom.key] == null)) {
+  if (symptomLogIsEmpty(log)) {
     state.symptomLogs = state.symptomLogs.filter((item) => item.date !== date);
   }
   saveState();
   renderSymptoms(date);
 }
 
+function setFatigueSlot(date, slot, score) {
+  if (!isIsoDate(date) || !FATIGUE_SLOTS.some((item) => item.key === slot)) return;
+  const value = score == null ? null : symptomScore(score);
+  if (score != null && value == null) return;
+
+  if (!Array.isArray(state.symptomLogs)) state.symptomLogs = [];
+  let log = state.symptomLogs.find((item) => item.date === date);
+  if (!log) {
+    if (value == null) return;
+    log = { id: uid(), date, fatigue: null, nausea: null };
+    state.symptomLogs.push(log);
+  }
+  if (!log.fatigueSlots || typeof log.fatigueSlots !== "object" || Array.isArray(log.fatigueSlots)) {
+    log.fatigueSlots = {};
+  }
+  if (value == null) delete log.fatigueSlots[slot];
+  else log.fatigueSlots[slot] = value;
+  if (Object.keys(log.fatigueSlots).length === 0) delete log.fatigueSlots;
+  if (symptomLogIsEmpty(log)) {
+    state.symptomLogs = state.symptomLogs.filter((item) => item.date !== date);
+  }
+  saveState();
+  renderSymptoms(date);
+}
+
+function fatigueRecordText(log, emptyLabel) {
+  const parts = [];
+  if (log && log.fatigue != null) parts.push(`時間なし${log.fatigue}`);
+  for (const slot of FATIGUE_SLOTS) {
+    const score = fatigueSlotScore(log, slot.key);
+    if (score != null) parts.push(`${slot.label}${score}`);
+  }
+  return parts.length ? parts.join(" ") : emptyLabel;
+}
+
+function symptomLine(log, emptyLabel) {
+  const nausea = !log || log.nausea == null ? emptyLabel : String(log.nausea);
+  return `吐き気 ${nausea} ・ 疲労 ${fatigueRecordText(log, emptyLabel)}`;
+}
+
 function symptomSummaryText() {
   const logs = sanitizeSymptomLogs(state.symptomLogs);
   if (!logs.length) return "";
   const lines = ["疲労と吐き気（1が軽い、5が強い）"];
-  for (const log of logs) {
-    const parts = SYMPTOMS.map((symptom) => {
-      const score = log[symptom.key];
-      return `${symptom.label} ${score == null ? "未記録" : score}`;
-    });
-    lines.push(`${log.date} ${parts.join(" ")}`);
-  }
+  for (const log of logs) lines.push(`${log.date} ${symptomLine(log, "未記録")}`);
   return lines.join("\n");
 }
 
@@ -370,7 +436,7 @@ function initDashboard() {
   dateInput.value = todayStr();
   dateInput.addEventListener("change", renderDashboard);
   document.getElementById("copyDayForClaudeBtn").addEventListener("click", copyDayForClaude);
-  document.getElementById("symptomScales").addEventListener("click", onSymptomScaleClick);
+  document.getElementById("conditionCard").addEventListener("click", onSymptomScaleClick);
   document.getElementById("symptomHistory").addEventListener("click", onSymptomHistoryClick);
   document.getElementById("copySymptomsBtn").addEventListener("click", copySymptomLog);
 }
@@ -380,9 +446,17 @@ function onSymptomScaleClick(event) {
   if (!button) return;
   const key = button.dataset.symptom;
   const score = symptomScore(button.dataset.score);
-  if (!score || !SYMPTOMS.some((symptom) => symptom.key === key)) return;
+  if (!score) return;
   const dateStr = document.getElementById("dashboardDate").value || todayStr();
   const current = getSymptomLog(dateStr);
+  if (key === "fatigue") {
+    const slot = button.dataset.slot;
+    if (!FATIGUE_SLOTS.some((item) => item.key === slot)) return;
+    const existing = fatigueSlotScore(current, slot);
+    setFatigueSlot(dateStr, slot, existing === score ? null : score);
+    return;
+  }
+  if (key !== "nausea") return;
   setSymptom(dateStr, key, current && current[key] === score ? null : score);
 }
 
@@ -392,7 +466,7 @@ function onSymptomHistoryClick(event) {
   const dateInput = document.getElementById("dashboardDate");
   dateInput.value = row.dataset.date;
   renderDashboard();
-  document.getElementById("symptomCard").scrollIntoView({ block: "nearest" });
+  document.getElementById("conditionCard").scrollIntoView({ block: "nearest" });
 }
 
 async function copySymptomLog() {
@@ -419,23 +493,47 @@ function renderSymptoms(dateStr) {
   hint.textContent = `${fmtDate(day)}(${weekdayChar(day)})の記録です。1が軽い、5が強い。同じ数字をもう一度押すと消せます。`;
 
   const log = getSymptomLog(day);
-  document.querySelectorAll("#symptomScales .symptom-score").forEach((button) => {
-    const selected = !!log && log[button.dataset.symptom] === Number(button.dataset.score);
+  document.querySelectorAll("#conditionCard .symptom-score").forEach((button) => {
+    const score = Number(button.dataset.score);
+    const selected =
+      button.dataset.symptom === "nausea"
+        ? !!log && log.nausea === score
+        : fatigueSlotScore(log, button.dataset.slot) === score;
     button.classList.toggle("is-selected", selected);
     button.setAttribute("aria-pressed", selected ? "true" : "false");
   });
+
+  const axis = document.getElementById("fatigueAxis");
+  if (axis) {
+    axis.innerHTML = FATIGUE_SLOTS.map((slot) => {
+      const score = fatigueSlotScore(log, slot.key);
+      const level = score == null ? 0 : score;
+      return `<div class="fatigue-axis-col">
+        <div class="fatigue-axis-bar${level ? "" : " is-empty"}" style="--level:${level}"></div>
+        <span class="fatigue-axis-score">${level ? level : "—"}</span>
+        <span class="fatigue-axis-label">${slot.label}</span>
+        <span class="fatigue-axis-range">${slot.range}</span>
+      </div>`;
+    }).join("");
+  }
+
+  const legacy = document.getElementById("legacyFatigueNote");
+  if (legacy) {
+    const showLegacy = !!(log && log.fatigue != null);
+    legacy.classList.toggle("hidden", !showLegacy);
+    legacy.textContent = showLegacy ? `時間の指定がない記録: ${log.fatigue}` : "";
+  }
 
   const logs = [...(state.symptomLogs || [])].sort((a, b) => b.date.localeCompare(a.date));
   summary.textContent = logs.length ? `これまでの記録（${logs.length}日）` : "これまでの記録";
   history.innerHTML = logs.length
     ? logs
         .map((item) => {
-          const scores = SYMPTOMS.map((symptom) => `${symptom.label} ${item[symptom.key] == null ? "—" : item[symptom.key]}`).join(" ・ ");
           const current = item.date === day ? " is-current" : "";
           const currentAttr = item.date === day ? ' aria-current="date"' : "";
           return `<button type="button" class="symptom-day${current}" data-date="${item.date}"${currentAttr}>
             <span class="symptom-day-date">${fmtDate(item.date)}(${weekdayChar(item.date)})</span>
-            <span class="symptom-day-scores">${scores}</span>
+            <span class="symptom-day-scores">${symptomLine(item, "—")}</span>
           </button>`;
         })
         .join("")

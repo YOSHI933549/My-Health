@@ -1556,3 +1556,52 @@ code, .mono { font-family: var(--font-type); }
   width: 100%;
   margin-top: 12px;
 }
+
+.fatigue-slot + .fatigue-slot { margin-top: 10px; }
+
+.fatigue-axis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: end;
+  gap: 8px;
+  margin: 0 0 8px;
+  padding-top: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.fatigue-axis-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+  min-height: 118px;
+}
+
+.fatigue-axis-bar {
+  width: 28px;
+  height: calc(var(--level) * 16px);
+  background: var(--primary-tint);
+  border: 1px solid var(--primary);
+  border-bottom: none;
+}
+
+.fatigue-axis-bar.is-empty {
+  height: 2px;
+  background: var(--border);
+  border-color: var(--border);
+}
+
+.fatigue-axis-score,
+.fatigue-axis-label,
+.fatigue-axis-range {
+  font-family: var(--font-hand);
+  line-height: 1.1;
+  -webkit-text-stroke: 0.3px currentColor;
+  -webkit-mask: var(--lead);
+  mask: var(--lead);
+}
+
+.fatigue-axis-score { font-size: 16px; color: var(--text); }
+.fatigue-axis-label { font-size: 16px; color: var(--text); }
+.fatigue-axis-range { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }

@@ -158,8 +158,55 @@ const legacy = {
   assert.deepEqual(loaded.meals, meals);
   assert.equal(
     context.symptomSummaryText(),
-    ["疲労と吐き気（1が軽い、5が強い）", "2026-01-01 疲労 2 吐き気 未記録", "2026-01-03 疲労 未記録 吐き気 2"].join("\n")
+    [
+      "疲労と吐き気（1が軽い、5が強い）",
+      "2026-01-01 吐き気 未記録 ・ 疲労 時間なし2",
+      "2026-01-03 吐き気 2 ・ 疲労 未記録",
+    ].join("\n")
   );
+}
+
+{
+  const { context, saved, raw, before } = loadApp({
+    ...legacy,
+    symptomLogs: [{ id: "s9", date: "2026-01-02", fatigue: 4, nausea: 1 }],
+  });
+  assert.equal(raw(), before);
+  const loaded = plain(context.loadState());
+  assert.equal(loaded.symptomLogs.length, 1);
+  assert.equal(loaded.symptomLogs[0].id, "s9");
+  assert.equal(loaded.symptomLogs[0].fatigue, 4);
+  assert.equal(loaded.symptomLogs[0].nausea, 1);
+  assert.equal(loaded.symptomLogs[0].fatigueSlots, undefined);
+  assert.deepEqual(loaded.meals, meals);
+  assert.deepEqual(loaded.weightLogs, weightLogs);
+
+  context.setFatigueSlot("2026-01-02", "morning", 2);
+  context.setFatigueSlot("2026-01-02", "night", 5);
+  context.setFatigueSlot("2026-01-02", "dawn", 3);
+  context.setFatigueSlot("2026-01-02", "evening", 9);
+  const stored = saved();
+  assert.equal(stored.symptomLogs[0].id, "s9");
+  assert.equal(stored.symptomLogs[0].fatigue, 4);
+  assert.equal(stored.symptomLogs[0].nausea, 1);
+  assert.deepEqual(stored.symptomLogs[0].fatigueSlots, { morning: 2, night: 5 });
+  assert.deepEqual(stored.meals, meals);
+  assert.deepEqual(stored.weightLogs, weightLogs);
+  assert.deepEqual(stored.workouts, workouts);
+  assert.equal(
+    context.symptomSummaryText(),
+    "疲労と吐き気（1が軽い、5が強い）\n2026-01-02 吐き気 1 ・ 疲労 時間なし4 朝2 夜5"
+  );
+
+  context.setFatigueSlot("2026-01-02", "morning", null);
+  assert.equal(saved().symptomLogs[0].fatigue, 4);
+  assert.deepEqual(saved().symptomLogs[0].fatigueSlots, { night: 5 });
+
+  context.setSymptom("2026-01-02", "nausea", null);
+  assert.equal(saved().symptomLogs[0].fatigue, 4);
+  assert.equal(saved().symptomLogs[0].nausea, null);
+  assert.deepEqual(saved().symptomLogs[0].fatigueSlots, { night: 5 });
+  assert.deepEqual(saved().meals, meals);
 }
 
 console.log("symptom log tests passed");
