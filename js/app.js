@@ -425,31 +425,108 @@ function minutesOfTime(time) {
   return hour * 60 + minute;
 }
 
-function fatigueChartHTML(entries) {
-  if (!entries.length) {
-    return `<p class="hint fatigue-time-empty">この日の時刻の記録はまだありません。</p>`;
+const FATIGUE_CHART_X_INSET = 13;
+const FATIGUE_CHART_Y_INSET = 12;
+
+function fatigueChartX(minutes, nudge = 0) {
+  const span = 100 - FATIGUE_CHART_X_INSET * 2;
+  const x = FATIGUE_CHART_X_INSET + (minutes / 1440) * span + nudge;
+  return Math.max(FATIGUE_CHART_X_INSET, Math.min(100 - FATIGUE_CHART_X_INSET, x));
+}
+
+function fatigueChartY(score) {
+  const span = 100 - FATIGUE_CHART_Y_INSET * 2;
+  return FATIGUE_CHART_Y_INSET + ((5 - score) / 4) * span;
+}
+
+function fatigueChartMarks(entries) {
+  const groups = new Map();
+  for (const entry of entries) {
+    const key = `${entry.time}:${entry.score}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(entry);
   }
-  const placed = entries.map((entry) => {
-    const duplicates = entries.filter((item) => item.time === entry.time);
-    const offset = duplicates.findIndex((item) => item.id === entry.id);
-    const x = Math.min(96, (minutesOfTime(entry.time) / 1440) * 100 + offset * 1.4);
-    const y = ((entry.score - 1) / 4) * 76 + 10;
-    return { ...entry, x, y };
+  const marks = entries.map((entry) => {
+    const group = groups.get(`${entry.time}:${entry.score}`);
+    const index = group.findIndex((item) => item.id === entry.id);
+    const nudge = (index - (group.length - 1) / 2) * 5;
+    return {
+      ...entry,
+      x: fatigueChartX(minutesOfTime(entry.time), nudge),
+      y: fatigueChartY(entry.score),
+      place: "n",
+    };
   });
-  const poly = placed.map((point) => `${(point.x / 100) * 1440},${100 - point.y}`).join(" ");
-  const dots = placed
-    .map(
-      (point) =>
-        `<span class="fatigue-time-dot" style="left:${point.x}%;bottom:${point.y}%">${point.score}<small>${point.time}</small></span>`
-    )
+  marks.sort((a, b) => a.x - b.x || a.y - b.y || String(a.id).localeCompare(String(b.id)));
+  for (const mark of marks) {
+    if (mark.y < 22) mark.place = "s";
+  }
+  if (marks.length === 1) {
+    marks[0].place = marks[0].x > 70 ? "w" : "e";
+    marks[0].showTime = true;
+    return marks;
+  }
+  for (let i = 0; i < marks.length; i++) {
+    for (let j = 0; j < i; j++) {
+      const dx = Math.abs(marks[i].x - marks[j].x);
+      const dy = Math.abs(marks[i].y - marks[j].y);
+      if (dx > 16 || dy > 30) continue;
+      marks[i].place = marks[i].x > 76 ? "w" : "e";
+      if (marks[j].place === "n" || marks[j].place === "s") {
+        marks[j].place = marks[j].x < 24 ? "e" : "w";
+      }
+    }
+  }
+  return marks;
+}
+
+function fatigueChartHTML(entries) {
+  const sorted = [...entries].sort(
+    (a, b) => a.time.localeCompare(b.time) || String(a.id).localeCompare(String(b.id))
+  );
+  const marks = fatigueChartMarks(sorted);
+  const yLabels = [5, 4, 3, 2, 1]
+    .map((score) => `<span style="top:${fatigueChartY(score)}%">${score}</span>`)
     .join("");
-  const label = entries.map((entry) => `${entry.time} ${entry.score}`).join("、");
-  return `<div class="fatigue-time-chart" role="img" aria-label="${label}">
-    <div class="fatigue-time-plot">
-      <svg viewBox="0 0 1440 100" preserveAspectRatio="none" aria-hidden="true"><polyline points="${poly}" /></svg>
-      ${dots}
+  const xLabels = [0, 6, 12, 18, 24]
+    .map((hour) => {
+      const label = hour === 0 || hour === 24 ? `${hour}時` : String(hour);
+      return `<span style="left:${fatigueChartX(hour * 60)}%">${label}</span>`;
+    })
+    .join("");
+  const rules = [5, 4, 3, 2, 1]
+    .map((score) => {
+      const y = fatigueChartY(score);
+      return `<line class="fatigue-chart-rule" x1="0" y1="${y}" x2="100" y2="${y}" />`;
+    })
+    .join("");
+  const guides = [6, 12, 18]
+    .map((hour) => {
+      const x = fatigueChartX(hour * 60);
+      return `<line class="fatigue-chart-guide" x1="${x}" y1="0" x2="${x}" y2="100" />`;
+    })
+    .join("");
+  const poly =
+    marks.length >= 2 ? `<polyline points="${marks.map((mark) => `${mark.x},${mark.y}`).join(" ")}" />` : "";
+  const dots = marks
+    .map((mark) => {
+      const time = mark.showTime ? `<small>${mark.time}</small>` : "";
+      return `<span class="fatigue-mark place-${mark.place}" style="left:${mark.x}%;top:${mark.y}%"><span class="fatigue-mark-dot"></span><span class="fatigue-mark-label"><b>${mark.score}</b>${time}</span></span>`;
+    })
+    .join("");
+  const empty = sorted.length
+    ? ""
+    : `<p class="fatigue-chart-empty">この日の時刻の記録はまだありません。</p>`;
+  const label = sorted.length
+    ? `疲労の推移。${sorted.map((entry) => `${entry.time} は ${entry.score}`).join("、")}`
+    : "この日の時刻の記録はまだありません";
+  return `<div class="fatigue-chart${sorted.length === 0 ? " is-empty" : ""}" role="img" aria-label="${label}">
+    <div class="fatigue-chart-y" aria-hidden="true">${yLabels}</div>
+    <div class="fatigue-chart-plot">
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${rules}${guides}${poly}</svg>
+      ${dots}${empty}
     </div>
-    <div class="fatigue-time-ticks" aria-hidden="true"><span>0時</span><span>6</span><span>12</span><span>18</span><span>24時</span></div>
+    <div class="fatigue-chart-x" aria-hidden="true">${xLabels}</div>
   </div>`;
 }
 

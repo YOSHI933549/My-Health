@@ -1557,60 +1557,138 @@ code, .mono { font-family: var(--font-type); }
   margin-top: 12px;
 }
 
-.fatigue-time-empty { margin: 8px 0 0; }
-
-.fatigue-time-plot {
-  position: relative;
-  height: 132px;
-  margin-top: 12px;
-  border-bottom: 1px solid var(--border);
+.fatigue-chart {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  margin-top: 8px;
+  font-family: var(--font-hand);
 }
 
-.fatigue-time-plot svg {
+.fatigue-chart-y {
+  position: relative;
+  height: 188px;
+}
+
+.fatigue-chart-y span {
   position: absolute;
-  inset: 8px 0 16px;
+  right: 6px;
+  transform: translateY(-50%);
+  font-size: 18px;
+  line-height: 1;
+  color: var(--graphite);
+  -webkit-text-stroke: 0.35px currentColor;
+}
+
+.fatigue-chart-plot {
+  position: relative;
+  height: 188px;
+  border-left: 2px solid var(--graphite);
+  background: rgba(255, 252, 245, 0.35);
+}
+
+.fatigue-chart-plot svg {
+  position: absolute;
+  inset: 0;
   width: 100%;
-  height: calc(100% - 24px);
+  height: 100%;
   overflow: visible;
 }
 
-.fatigue-time-plot polyline {
-  fill: none;
-  stroke: var(--primary);
-  stroke-width: 2;
+.fatigue-chart-rule {
+  stroke: var(--rule-blue);
+  stroke-width: 1.5;
   vector-effect: non-scaling-stroke;
 }
 
-.fatigue-time-dot {
+.fatigue-chart-guide {
+  stroke: var(--rule-blue);
+  stroke-width: 1;
+  stroke-dasharray: 2 4;
+  vector-effect: non-scaling-stroke;
+}
+
+.fatigue-chart-plot polyline {
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.fatigue-mark {
   position: absolute;
-  width: 36px;
-  min-height: 36px;
-  margin-left: -18px;
-  transform: translateY(50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--primary);
-  background: var(--primary-tint);
-  color: var(--text);
-  font-family: var(--font-hand);
-  font-size: 16px;
-  line-height: 1;
+  width: 0;
+  height: 0;
+  z-index: 1;
   pointer-events: none;
 }
 
-.fatigue-time-dot small {
-  font-size: 9px;
+.fatigue-mark-dot {
+  position: absolute;
+  left: -9px;
+  top: -9px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 0 0 3px var(--surface);
+}
+
+.fatigue-mark-label {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--graphite);
+}
+
+.fatigue-mark-label b {
+  font-size: 26px;
+  font-weight: 700;
+  -webkit-text-stroke: 0.4px currentColor;
+}
+
+.fatigue-mark-label small {
+  margin-top: 1px;
+  font-size: 14px;
   color: var(--text-muted);
 }
 
-.fatigue-time-ticks {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 2px;
-  font-family: var(--font-hand);
-  font-size: 12px;
+.fatigue-mark.place-n .fatigue-mark-label { left: 0; bottom: 14px; transform: translateX(-50%); align-items: center; }
+.fatigue-mark.place-s .fatigue-mark-label { left: 0; top: 14px; transform: translateX(-50%); align-items: center; }
+.fatigue-mark.place-e .fatigue-mark-label { left: 16px; top: 0; transform: translateY(-50%); align-items: flex-start; }
+.fatigue-mark.place-w .fatigue-mark-label { right: 16px; top: 0; transform: translateY(-50%); align-items: flex-end; }
+
+.fatigue-chart-x {
+  position: relative;
+  grid-column: 2;
+  height: 24px;
+  margin-top: 3px;
+}
+
+.fatigue-chart-x span {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 15px;
+  line-height: 1;
+  color: var(--graphite);
+  white-space: nowrap;
+  -webkit-text-stroke: 0.3px currentColor;
+}
+
+.fatigue-chart-empty {
+  position: absolute;
+  left: 12%;
+  right: 8%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin: 0;
+  text-align: center;
+  font-size: 17px;
+  line-height: 1.35;
   color: var(--text-muted);
 }
 

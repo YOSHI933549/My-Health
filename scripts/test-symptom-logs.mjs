@@ -273,4 +273,48 @@ const legacy = {
   assert.doesNotMatch(context.symptomSummaryText(), /12:45/);
 }
 
+{
+  const { context } = loadApp();
+  const chart = context.fatigueChartHTML([
+    { id: "b", time: "21:10", score: 5 },
+    { id: "a", time: "08:05", score: 2 },
+  ]);
+  assert.match(chart, /aria-label="疲労の推移。08:05 は 2、21:10 は 5"/);
+  assert.match(chart, /fatigue-chart-y/);
+  for (const score of [1, 2, 3, 4, 5]) assert.match(chart, new RegExp(`>${score}<`));
+  assert.match(chart, />0時</);
+  assert.match(chart, />6</);
+  assert.match(chart, />12</);
+  assert.match(chart, />18</);
+  assert.match(chart, />24時</);
+  assert.match(chart, /<polyline /);
+  assert.match(chart, /fatigue-mark-label"><b>2<\/b>/);
+  assert.match(chart, /fatigue-mark-label"><b>5<\/b>/);
+  function markPos(html, score) {
+    const chunk = html.match(
+      new RegExp(
+        `style="left:([0-9.]+)%;top:([0-9.]+)%"><span class="fatigue-mark-dot"></span><span class="fatigue-mark-label"><b>${score}</b>`
+      )
+    );
+    assert.ok(chunk, `mark ${score}`);
+    return { x: Number(chunk[1]), y: Number(chunk[2]) };
+  }
+  const at2 = markPos(chart, 2);
+  const at5 = markPos(chart, 5);
+  assert.ok(at5.y < at2.y);
+  assert.ok(at2.x < at5.x);
+
+  const one = context.fatigueChartHTML([{ id: "a", time: "16:20", score: 4 }]);
+  assert.match(one, /16:20/);
+  assert.match(one, /<b>4<\/b>/);
+  assert.doesNotMatch(one, /<polyline /);
+
+  const empty = context.fatigueChartHTML([]);
+  assert.match(empty, /この日の時刻の記録はまだありません/);
+  assert.match(empty, />5</);
+  assert.match(empty, />0時</);
+  assert.match(empty, />24時</);
+  assert.doesNotMatch(empty, /fatigue-mark/);
+}
+
 console.log("symptom log tests passed");
