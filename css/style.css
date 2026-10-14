@@ -1453,3 +1453,106 @@ code, .mono { font-family: var(--font-type); }
 .toast-undo { position: relative; color: var(--primary-dark); background: transparent; border: none; border-radius: 0; }
 .toast-undo::before { content: ""; position: absolute; inset: -2px; border: 12px solid transparent; border-image: url("tex/frame-terra.png") 36 / 12px / 0 round; pointer-events: none; }
 .save-error { font-family: var(--font-body); }
+
+.symptom-block + .symptom-block { margin-top: 14px; }
+
+.symptom-label {
+  display: block;
+  margin: 0 0 8px;
+  font-family: var(--font-hand);
+  font-size: 18px;
+  line-height: 1.2;
+  color: var(--text);
+  -webkit-text-stroke: 0.3px currentColor;
+  -webkit-mask: var(--lead);
+  mask: var(--lead);
+}
+
+.symptom-scale {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.symptom-score {
+  min-height: 48px;
+  padding: 8px 0;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.symptom-history {
+  margin-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.symptom-history > summary {
+  cursor: pointer;
+  font-family: var(--font-hand);
+  font-size: 17px;
+  font-weight: 400;
+  color: var(--text);
+  padding: 12px 0;
+  min-height: 44px;
+  -webkit-text-stroke: 0.3px currentColor;
+  -webkit-mask: var(--lead);
+  mask: var(--lead);
+}
+
+.symptom-history[open] > summary { margin-bottom: 4px; }
+
+.symptom-log {
+  display: flex;
+  flex-direction: column;
+}
+
+.symptom-day {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  margin: 0;
+  padding: 8px 2px;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.symptom-day-date,
+.symptom-day-scores {
+  font-family: var(--font-hand);
+  -webkit-text-stroke: 0.3px currentColor;
+  -webkit-mask: var(--lead);
+  mask: var(--lead);
+}
+
+.symptom-day-date {
+  flex: none;
+  font-size: 17px;
+  color: var(--text);
+}
+
+.symptom-day-scores {
+  font-size: 15px;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+.symptom-day.is-current .symptom-day-date { color: var(--primary-dark); }
+
+#copySymptomsBtn {
+  width: 100%;
+  margin-top: 12px;
+}

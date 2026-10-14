@@ -9,7 +9,13 @@ const DEFAULT_STATE = {
   meals: [],
   workouts: [],
   importedMealIds: [],
+  symptomLogs: [],
 };
+
+const SYMPTOMS = [
+  { key: "fatigue", label: "疲労" },
+  { key: "nausea", label: "吐き気" },
+];
 
 let state = loadState();
 let weightChartRange = "all";
@@ -20,7 +26,9 @@ function loadState() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return structuredClone(DEFAULT_STATE);
     const parsed = JSON.parse(raw);
-    return { ...structuredClone(DEFAULT_STATE), ...parsed };
+    const next = { ...structuredClone(DEFAULT_STATE), ...parsed };
+    next.symptomLogs = sanitizeSymptomLogs(next.symptomLogs);
+    return next;
   } catch (e) {
     console.error("state load failed", e);
     return structuredClone(DEFAULT_STATE);
@@ -202,6 +210,86 @@ function fmtDate(dateStr) {
   return `${Number(m)}/${Number(d)}`;
 }
 
+function isIsoDate(value) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const [y, m, d] = value.split("-").map(Number);
+  const date = new Date(y, m - 1, d);
+  return date.getFullYear() === y && date.getMonth() === m - 1 && date.getDate() === d;
+}
+
+function weekdayChar(dateStr) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return ["日", "月", "火", "水", "木", "金", "土"][new Date(y, m - 1, d).getDay()];
+}
+
+function symptomScore(value) {
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!/^[1-5]$/.test(trimmed)) return null;
+    return Number(trimmed);
+  }
+  if (typeof value !== "number" || !Number.isInteger(value) || value < 1 || value > 5) return null;
+  return value;
+}
+
+function sanitizeSymptomLogs(logs) {
+  if (!Array.isArray(logs)) return [];
+  const byDate = new Map();
+  for (const raw of logs) {
+    if (!raw || typeof raw !== "object") continue;
+    const date = String(raw.date || "");
+    if (!isIsoDate(date)) continue;
+    const entry = { id: typeof raw.id === "string" && raw.id ? raw.id : uid(), date };
+    let hasScore = false;
+    for (const symptom of SYMPTOMS) {
+      const score = symptomScore(raw[symptom.key]);
+      entry[symptom.key] = score;
+      if (score != null) hasScore = true;
+    }
+    if (!hasScore) continue;
+    byDate.set(date, entry);
+  }
+  return [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
+}
+
+function getSymptomLog(date) {
+  return (state.symptomLogs || []).find((log) => log.date === date) || null;
+}
+
+function setSymptom(date, key, score) {
+  if (!isIsoDate(date) || !SYMPTOMS.some((symptom) => symptom.key === key)) return;
+  const value = score == null ? null : symptomScore(score);
+  if (score != null && value == null) return;
+
+  if (!Array.isArray(state.symptomLogs)) state.symptomLogs = [];
+  let log = state.symptomLogs.find((item) => item.date === date);
+  if (!log) {
+    if (value == null) return;
+    log = { id: uid(), date, fatigue: null, nausea: null };
+    state.symptomLogs.push(log);
+  }
+  log[key] = value;
+  if (SYMPTOMS.every((symptom) => log[symptom.key] == null)) {
+    state.symptomLogs = state.symptomLogs.filter((item) => item.date !== date);
+  }
+  saveState();
+  renderSymptoms(date);
+}
+
+function symptomSummaryText() {
+  const logs = sanitizeSymptomLogs(state.symptomLogs);
+  if (!logs.length) return "";
+  const lines = ["疲労と吐き気（1が軽い、5が強い）"];
+  for (const log of logs) {
+    const parts = SYMPTOMS.map((symptom) => {
+      const score = log[symptom.key];
+      return `${symptom.label} ${score == null ? "未記録" : score}`;
+    });
+    lines.push(`${log.date} ${parts.join(" ")}`);
+  }
+  return lines.join("\n");
+}
+
 function ymd(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
@@ -282,6 +370,76 @@ function initDashboard() {
   dateInput.value = todayStr();
   dateInput.addEventListener("change", renderDashboard);
   document.getElementById("copyDayForClaudeBtn").addEventListener("click", copyDayForClaude);
+  document.getElementById("symptomScales").addEventListener("click", onSymptomScaleClick);
+  document.getElementById("symptomHistory").addEventListener("click", onSymptomHistoryClick);
+  document.getElementById("copySymptomsBtn").addEventListener("click", copySymptomLog);
+}
+
+function onSymptomScaleClick(event) {
+  const button = event.target.closest("[data-symptom]");
+  if (!button) return;
+  const key = button.dataset.symptom;
+  const score = symptomScore(button.dataset.score);
+  if (!score || !SYMPTOMS.some((symptom) => symptom.key === key)) return;
+  const dateStr = document.getElementById("dashboardDate").value || todayStr();
+  const current = getSymptomLog(dateStr);
+  setSymptom(dateStr, key, current && current[key] === score ? null : score);
+}
+
+function onSymptomHistoryClick(event) {
+  const row = event.target.closest("[data-date]");
+  if (!row || !isIsoDate(row.dataset.date)) return;
+  const dateInput = document.getElementById("dashboardDate");
+  dateInput.value = row.dataset.date;
+  renderDashboard();
+  document.getElementById("symptomCard").scrollIntoView({ block: "nearest" });
+}
+
+async function copySymptomLog() {
+  const text = symptomSummaryText();
+  if (!text) {
+    toast("コピーする記録がありません");
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(text);
+    toast("コピーしました");
+  } catch (error) {
+    prompt("この記録をコピーしてください", text);
+  }
+}
+
+function renderSymptoms(dateStr) {
+  const hint = document.getElementById("symptomDateHint");
+  const summary = document.getElementById("symptomHistorySummary");
+  const history = document.getElementById("symptomHistory");
+  if (!hint || !summary || !history) return;
+
+  const day = isIsoDate(dateStr) ? dateStr : todayStr();
+  hint.textContent = `${fmtDate(day)}(${weekdayChar(day)})の記録です。1が軽い、5が強い。同じ数字をもう一度押すと消せます。`;
+
+  const log = getSymptomLog(day);
+  document.querySelectorAll("#symptomScales .symptom-score").forEach((button) => {
+    const selected = !!log && log[button.dataset.symptom] === Number(button.dataset.score);
+    button.classList.toggle("is-selected", selected);
+    button.setAttribute("aria-pressed", selected ? "true" : "false");
+  });
+
+  const logs = [...(state.symptomLogs || [])].sort((a, b) => b.date.localeCompare(a.date));
+  summary.textContent = logs.length ? `これまでの記録（${logs.length}日）` : "これまでの記録";
+  history.innerHTML = logs.length
+    ? logs
+        .map((item) => {
+          const scores = SYMPTOMS.map((symptom) => `${symptom.label} ${item[symptom.key] == null ? "—" : item[symptom.key]}`).join(" ・ ");
+          const current = item.date === day ? " is-current" : "";
+          const currentAttr = item.date === day ? ' aria-current="date"' : "";
+          return `<button type="button" class="symptom-day${current}" data-date="${item.date}"${currentAttr}>
+            <span class="symptom-day-date">${fmtDate(item.date)}(${weekdayChar(item.date)})</span>
+            <span class="symptom-day-scores">${scores}</span>
+          </button>`;
+        })
+        .join("")
+    : `<div class="empty-state">まだ記録がありません。</div>`;
 }
 
 function sumMeals(meals) {
@@ -378,6 +536,7 @@ async function copyDayForClaude() {
 
 function renderDashboard() {
   const dateStr = document.getElementById("dashboardDate").value || todayStr();
+  renderSymptoms(dateStr);
   const notice = document.getElementById("noProfileNotice");
   const content = document.getElementById("dashboardContent");
 
@@ -1560,6 +1719,7 @@ function importData(e) {
       const data = JSON.parse(reader.result);
       if (!confirm("現在のデータを上書きしてインポートします。よろしいですか?")) return;
       state = { ...structuredClone(DEFAULT_STATE), ...data };
+      state.symptomLogs = sanitizeSymptomLogs(state.symptomLogs);
       saveState();
       renderAll();
       toast("インポートしました");
@@ -1573,7 +1733,7 @@ function importData(e) {
 }
 
 function resetAllData() {
-  if (!confirm("すべての記録(食事・トレーニング・体重・プロフィール)を削除します。元に戻せません。よろしいですか?")) return;
+  if (!confirm("すべての記録(食事・トレーニング・体重・疲労・吐き気・プロフィール)を削除します。元に戻せません。よろしいですか?")) return;
   if (!confirm("本当によろしいですか? この操作は取り消せません。")) return;
   state = structuredClone(DEFAULT_STATE);
   saveState();

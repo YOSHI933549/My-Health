@@ -69,6 +69,39 @@
       <input type="date" id="dashboardDate">
     </div>
 
+    <div class="card" id="symptomCard">
+      <h3>疲労と吐き気</h3>
+      <p class="hint" id="symptomDateHint">1が軽い、5が強い。同じ数字をもう一度押すと消せます。</p>
+      <div id="symptomScales">
+        <div class="symptom-block">
+          <div class="symptom-label" id="symptomLabelFatigue">疲労</div>
+          <div class="symptom-scale" role="group" aria-labelledby="symptomLabelFatigue">
+            <button type="button" class="body-part-btn symptom-score" data-symptom="fatigue" data-score="1" aria-pressed="false">1</button>
+            <button type="button" class="body-part-btn symptom-score" data-symptom="fatigue" data-score="2" aria-pressed="false">2</button>
+            <button type="button" class="body-part-btn symptom-score" data-symptom="fatigue" data-score="3" aria-pressed="false">3</button>
+            <button type="button" class="body-part-btn symptom-score" data-symptom="fatigue" data-score="4" aria-pressed="false">4</button>
+            <button type="button" class="body-part-btn symptom-score" data-symptom="fatigue" data-score="5" aria-pressed="false">5</button>
+          </div>
+        </div>
+        <div class="symptom-block">
+          <div class="symptom-label" id="symptomLabelNausea">吐き気</div>
+          <div class="symptom-scale" role="group" aria-labelledby="symptomLabelNausea">
+            <button type="button" class="body-part-btn symptom-score" data-symptom="nausea" data-score="1" aria-pressed="false">1</button>
+            <button type="button" class="body-part-btn symptom-score" data-symptom="nausea" data-score="2" aria-pressed="false">2</button>
+            <button type="button" class="body-part-btn symptom-score" data-symptom="nausea" data-score="3" aria-pressed="false">3</button>
+            <button type="button" class="body-part-btn symptom-score" data-symptom="nausea" data-score="4" aria-pressed="false">4</button>
+            <button type="button" class="body-part-btn symptom-score" data-symptom="nausea" data-score="5" aria-pressed="false">5</button>
+          </div>
+        </div>
+      </div>
+      <details class="symptom-history" id="symptomHistoryCard">
+        <summary id="symptomHistorySummary">これまでの記録</summary>
+        <p class="hint">日付を押すと、その日を表示します。</p>
+        <div id="symptomHistory" class="symptom-log"></div>
+        <button type="button" class="btn ghost" id="copySymptomsBtn">記録をコピー</button>
+      </details>
+    </div>
+
     <div id="noProfileNotice" class="notice hidden">
       <p>まずは <b>設定</b> タブで身長・年齢・性別・現在の体重を入力してください。目標カロリー・たんぱく質などを自動計算します。</p>
       <button class="btn" data-goto="settings">設定へ移動</button>
