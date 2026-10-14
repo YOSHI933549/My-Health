@@ -1,6 +1,4 @@
-/* Offline cache for the health tracker PWA.
-
-   IMPORTANT: the browser only re-installs this service worker when this
+/* IMPORTANT: the browser only re-installs this service worker when this
    file's bytes change. If only index.html/css/js change, the worker never
    updates on its own — so the app-shell strategy below is network-first
    (always fetch the latest HTML/CSS/JS when online, cache it, and fall back
@@ -21,8 +19,6 @@ const APP_SHELL = [
   "./js/ocr.js",
   "./manifest.json",
 ];
-// css/tex/ holds the paper-theme pencil textures. They are served cache-first
-// like the icons, so bump CACHE_VERSION whenever they are regenerated.
 const STATIC_ASSETS = [
   "./icons/icon-192.png",
   "./icons/icon-512.png",
@@ -112,7 +108,6 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Cache-first for static assets (icons etc.) that rarely change.
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) return cached;

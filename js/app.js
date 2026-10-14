@@ -1,30 +1,20 @@
-/* ==========================================================================
-   健康・筋トレ・増量トラッカー
-   すべてのデータはブラウザの localStorage にのみ保存されます(サーバーなし)。
-   ========================================================================== */
 
 const STORAGE_KEY = "yoshi-health-tracker-v1";
 const MEAL_LINK_HASH_PREFIX = "#meal=";
 
-/** @typedef {{height:number age:number gender:string activity:string targetWeight:number surplus:number fatRatio:number}} Profile */
 
 const DEFAULT_STATE = {
-  profile: null, // Profile | null
-  weightLogs: [], // {id, date, time, weight}  ※timeは後から足したので、古い記録には無い
-  meals: [], // {id, date, time, type, name, calories, protein, fat, carbs, memo, photo}
-  workouts: [], // {id, date, name, memo}
-  // n8n から取り込み済みの食事の行ID。取り込んだ記録をアプリ側で削除しても
-  // 次の取得で復活しないように、「もう取り込んだ」ことだけを覚えておく。
+  profile: null,
+  weightLogs: [],
+  meals: [],
+  workouts: [],
   importedMealIds: [],
 };
 
 let state = loadState();
-let weightChartRange = "all"; // "30" | "90" | "180" | "all"
-let calorieChartRange = "all"; // "30" | "90" | "180" | "all"
+let weightChartRange = "all";
+let calorieChartRange = "all";
 
-// -------------------------------------------------------------------------
-// Storage
-// -------------------------------------------------------------------------
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -37,14 +27,6 @@ function loadState() {
   }
 }
 
-// localStorage は1オリジンあたり5MB程度しか無く、食事写真を貯めると先に埋まる。
-// 溢れたときに黙って落ちると、画面上は登録済みに見えるのにアプリを開き直すと
-// 消えている、という一番たちの悪い壊れ方をするので、
-//   1. まず普通に書く
-//   2. 失敗したら古い写真から捨てて、入るところまで詰めて書き直す
-//      (栄養の数値やメモは消さない。写真より記録本体のほうが大事なので)
-//   3. それでも書けなければ、消えるかもしれないことを画面に出したままにする
-// という順で粘る。
 function saveState() {
   if (writeState()) {
     setSaveErrorBanner(false);
@@ -72,15 +54,11 @@ function writeState() {
   }
 }
 
-// 古い写真から1枚ずつ捨てて、書けるようになった時点で止める。捨てた枚数を返す
-// (1枚も捨てられなかった=写真が無いのに溢れている場合は0)。
 function dropOldestPhotosUntilItFits() {
   const withPhoto = state.meals
     .filter((m) => m.photo)
     .sort((a, b) => `${a.date} ${a.time || ""}`.localeCompare(`${b.date} ${b.time || ""}`));
 
-  // 全部捨てても書けなかった場合に備えて控えを取る。書けていない以上
-  // localStorage 側には写真が残っているので、メモリ側も戻して辻褄を合わせる。
   const backup = withPhoto.map((m) => m.photo);
 
   let dropped = 0;
@@ -91,11 +69,9 @@ function dropOldestPhotosUntilItFits() {
   }
 
   withPhoto.forEach((m, i) => (m.photo = backup[i]));
-  return 0; // 写真以外が原因で溢れている。呼び出し側で警告する
+  return 0;
 }
 
-// 保存できていないことを消えない帯で出す。トーストだと見逃した時点で
-// 「保存されたつもり」に戻ってしまうため。
 function setSaveErrorBanner(show) {
   const el = document.getElementById("saveErrorBanner");
   if (el) el.classList.toggle("hidden", !show);
@@ -105,12 +81,6 @@ function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
 
-// -------------------------------------------------------------------------
-// One-tap meal links
-// -------------------------------------------------------------------------
-// Codex can put one meal in the URL fragment as base64url-encoded JSON. URL
-// fragments are not sent to GitHub Pages, so the meal stays between the chat
-// and this browser. Tapping the link is the user's explicit import action.
 function decodeBase64UrlJson(value) {
   const base64 = value.replace(/-/g, "+").replace(/_/g, "/");
   const padded = base64 + "=".repeat((4 - (base64.length % 4)) % 4);
@@ -123,11 +93,11 @@ function finiteNonNegative(value) {
   return Number.isFinite(number) && number >= 0 ? number : null;
 }
 
+// URL fragments are not sent to GitHub Pages, so the meal stays between the chat
+// and this browser.
 function importMealFromLink() {
   if (!location.hash.startsWith(MEAL_LINK_HASH_PREFIX)) return false;
 
-  // Remove the payload immediately so it is not left in browser history or
-  // accidentally imported again by a reload.
   const encoded = location.hash.slice(MEAL_LINK_HASH_PREFIX.length);
   history.replaceState(null, "", location.pathname + location.search);
 
@@ -216,9 +186,6 @@ async function importMealFromClipboard() {
   }
 }
 
-// -------------------------------------------------------------------------
-// Date helpers
-// -------------------------------------------------------------------------
 function todayStr() {
   const d = new Date();
   const tz = d.getTimezoneOffset() * 60000;
@@ -235,15 +202,10 @@ function fmtDate(dateStr) {
   return `${Number(m)}/${Number(d)}`;
 }
 
-// Format a Date object as a local YYYY-MM-DD string (no UTC conversion —
-// unlike todayStr(), this is meant for dates already constructed in local time).
 function ymd(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-// -------------------------------------------------------------------------
-// Tabs
-// -------------------------------------------------------------------------
 function initTabs() {
   document.querySelectorAll(".tab-btn").forEach((btn) => {
     btn.addEventListener("click", () => switchTab(btn.dataset.tab));
@@ -263,11 +225,6 @@ function switchTab(tab) {
   if (tab === "settings") renderSettings();
 }
 
-// -------------------------------------------------------------------------
-// Nutrition target calculation
-// -------------------------------------------------------------------------
-// 体重は1日に何度でも記録できるので、日付だけでなく時刻まで見て並べる。
-// 時刻を持たない古い記録は、その日の先頭として扱う。
 function weightSortKey(log) {
   return `${log.date} ${log.time || "00:00"}`;
 }
@@ -281,7 +238,7 @@ function getWeightAsOf(dateStr) {
   if (logs.length === 0) return null;
   const upTo = logs.filter((l) => l.date <= dateStr);
   if (upTo.length > 0) return upTo[upTo.length - 1];
-  return logs[0]; // fallback: earliest known if date is before any log
+  return logs[0];
 }
 
 function getLatestWeight() {
@@ -289,9 +246,6 @@ function getLatestWeight() {
   return logs.length ? logs[logs.length - 1] : null;
 }
 
-// カロリー推移グラフの目標線用。体重と違って目標カロリーは体重が変わるたびに
-// 動くので、過去の日付ごとに遡って計算するのではなく「直近の体重での現在の
-// 目標」を一本の目安線として表示する(体重の目標線と同じ考え方)。
 function currentTargetCalories() {
   const latest = getLatestWeight();
   const targets = state.profile && latest ? computeTargets(state.profile, latest.weight) : null;
@@ -323,9 +277,6 @@ function computeTargets(profile, weightKg) {
   };
 }
 
-// -------------------------------------------------------------------------
-// Dashboard
-// -------------------------------------------------------------------------
 function initDashboard() {
   const dateInput = document.getElementById("dashboardDate");
   dateInput.value = todayStr();
@@ -351,8 +302,6 @@ function shiftDateStr(dateStr, deltaDays) {
   return ymd(new Date(y, m - 1, d + deltaDays));
 }
 
-// Claudeに毎日の食事分析を頼むための要約テキスト。記録はスマホの中にしか無いので、
-// その日の分と直近7日の傾向を1つの文章にまとめ、コピーして貼ってもらう。写真は含めない。
 function dayReportForClaude(dateStr) {
   const r = (v) => Math.round(v);
   const lines = [`【食事分析の依頼】${dateStr}`];
@@ -450,13 +399,11 @@ function renderDashboard() {
   renderWeightChart("weightChart", state.weightLogs, 30);
   renderCalorieChart("calorieChart", mealDailyTotals(), 30, targets.calories);
 
-  // Today's meals
   const mealsListEl = document.getElementById("todayMealsList");
   mealsListEl.innerHTML = dayMeals.length
     ? dayMeals.map((m) => mealItemHTML(m, false)).join("")
     : `<div class="empty-state">この日の食事記録はまだありません。「食事」タブから追加してください。</div>`;
 
-  // Today's workouts
   const dayWorkouts = state.workouts.filter((w) => w.date === dateStr);
   const workoutListEl = document.getElementById("todayWorkoutList");
   workoutListEl.innerHTML = dayWorkouts.length
@@ -464,8 +411,6 @@ function renderDashboard() {
     : `<div class="empty-state">この日のトレーニング記録はまだありません。「筋トレ」タブから追加してください。</div>`;
 }
 
-// 4つの栄養素(カロリー/たんぱく質/脂質/炭水化物)を、同じ大きさのリング
-// ゲージで並べる。色の役割(cal=橙, protein=緑, fat=紫, carb=青)は据え置き。
 const MACRO_RING_COLOR_VAR = {
   cal: "--accent-orange",
   protein: "--primary",
@@ -495,9 +440,6 @@ function renderMacroCards(totals, targets) {
     macroRingCardHTML("carb", "炭水化物", totals.carbs, targets.carb, "g");
 }
 
-// -------------------------------------------------------------------------
-// Meals
-// -------------------------------------------------------------------------
 function initMeals() {
   const dateInput = document.getElementById("mealsDate");
   dateInput.value = todayStr();
@@ -516,7 +458,6 @@ function initMeals() {
   document.getElementById("mealTime").value = nowTimeStr();
   document.getElementById("importMealClipboardBtn").addEventListener("click", importMealFromClipboard);
 
-  // 材料を複数選んで「＋ 材料に追加」で積み上げ、合計をカロリー・PFC欄に自動反映する
   const foodPreset = document.getElementById("mealFoodPreset");
   const foodGrams = document.getElementById("mealFoodGrams");
   const foodGramsField = document.getElementById("mealFoodGramsField");
@@ -532,14 +473,9 @@ function initMeals() {
   const fatInput = document.getElementById("mealFat");
   const carbsInput = document.getElementById("mealCarbs");
 
-  let ingredients = []; // [{name, qty, unitLabel, kcal, protein, fat, carbs}]
-  let lastAutoName = ""; // メニュー名を自動入力した内容を覚えておき、ユーザーが手動で書き換えていなければ更新し続ける
+  let ingredients = [];
+  let lastAutoName = "";
 
-  // プロテインなど「毎回決まった量(例: 15g/30g)しか使わない」食品は、
-  // data-servings で指定された量だけをボタンで選ばせ、自由なg数入力をさせない。
-  // 食パンなど「g数ではなく枚数・個数で数える」食品は data-unit="count" +
-  // data-unit-label(例: 枚)を持たせ、入力欄のラベル・単位を切り替える
-  // (g数の代わりに枚数を入力し、100gあたりではなく1枚あたりの値で計算する)
   function updateFoodInputMode() {
     const opt = foodPreset.selectedOptions[0];
     const servings = opt && opt.dataset.servings ? opt.dataset.servings.split(",").map(Number) : null;
@@ -620,8 +556,6 @@ function initMeals() {
       toast(opt.dataset.unit === "count" ? `${opt.dataset.unitLabel || ""}数を入力してください` : "g数を入力してください");
       return;
     }
-    // g数で数える食品は100gあたり、個数・枚数などで数える食品は1個(1枚)あたりの
-    // データを保持しているので、それぞれ ÷100 / ÷1 で倍率を出す
     const unitLabel = opt.dataset.unit === "count" ? opt.dataset.unitLabel || "個" : "g";
     const ratio = opt.dataset.unit === "count" ? qty : qty / 100;
     ingredients.push({
@@ -706,7 +640,6 @@ function initMeals() {
   });
 }
 
-// 区分(朝食/昼食/夕食/間食)ごとにタグの色分けクラスを振る
 const MEAL_TYPE_TAG_CLASS = {
   朝食: "meal-breakfast",
   昼食: "meal-lunch",
@@ -746,8 +679,6 @@ function renderMeals() {
     ? items.map((m) => mealItemHTML(m, true)).join("")
     : `<div class="empty-state">この日の記録はまだありません。</div>`;
 
-  // カロリー推移グラフは選択中の日付に関わらず記録全体の推移を見せるもの
-  // (体重タブのグラフ・履歴が日付選択と無関係なのと同じ考え方)
   const dailyTotals = mealDailyTotals();
   renderCalorieTrend(dailyTotals);
   const days = calorieChartRange === "all" ? null : Number(calorieChartRange);
@@ -789,9 +720,6 @@ function escapeHTML(str) {
   return div.innerHTML;
 }
 
-// -------------------------------------------------------------------------
-// Workouts
-// -------------------------------------------------------------------------
 function initWorkouts() {
   const dateInput = document.getElementById("workoutsDate");
   dateInput.value = todayStr();
@@ -802,7 +730,7 @@ function initWorkouts() {
 
   document.getElementById("workoutForm").addEventListener("submit", (e) => {
     e.preventDefault();
-    if (selectedBodyParts.size === 0) return; // 部位を選ばずに送信された(ボタン以外からの送信など)
+    if (selectedBodyParts.size === 0) return;
 
     const date = dateInput.value || todayStr();
     const memo = document.getElementById("workoutMemo").value.trim();
@@ -823,9 +751,6 @@ function initWorkouts() {
   });
 }
 
-// どの種目をやったかではなく、どの部位を鍛えたかだけを選ぶ。細かい種目や
-// 重量・回数はメモ欄に自由に書いてもらう想定(種目リストを維持するコストを無くすため)。
-// 1回のトレーニングで複数部位を鍛えることが多いので複数選択可(部位ごとに1件ずつ記録する)。
 let selectedBodyParts = new Set();
 
 function initBodyPartPicker() {
@@ -878,8 +803,6 @@ function renderWorkouts() {
     : `<div class="empty-state">この日の記録はまだありません。</div>`;
 }
 
-// 選択中の日付より前で、直近にトレーニングを記録した日の種目を小さく表示する。
-// 「今日は何をやったか忘れた/前回と同じ部位を続けて避けたい」を一目で確認できるように。
 function renderPrevWorkoutHint(dateStr) {
   const el = document.getElementById("prevWorkoutHint");
   if (!el) return;
@@ -895,16 +818,7 @@ function renderPrevWorkoutHint(dateStr) {
   el.innerHTML = `<span>前回(${fmtDate(lastDate)})</span><b>${names.map(escapeHTML).join("・")}</b>`;
 }
 
-// --- 筋トレカレンダー -----------------------------------------------------
-// 「どの日に何をやったか」を月表示で一目で追えるようにする。セルには部位を1文字
-// (胸・背・脚…)の文字で出し、正確な種目名は日付をタップして下の「記録一覧」で
-// 見る、という二段構えにしている。スマホ幅だとセルが40px前後しか無く、種目名を
-// そのまま並べると読めないため。
-// 色は上半身/下半身の2色だけ。部位ごとに7色を並べるとチカチカして、肝心の
-// 「どの日にやったか」が読み取りにくかったため。体幹・その他はどちらにも寄せず
-// 無彩色にしてある。
 
-// 部位 -> 上半身/下半身。体幹・腹筋とその他はどちらでもないので無彩色(neutral)。
 const WORKOUT_GROUP_BODY = {
   "胸": "upper",
   "背中": "upper",
@@ -923,11 +837,8 @@ const WORKOUT_GROUP_SHORT = {
   "その他": "他",
 };
 
-let workoutCalMonth = null; // 表示中の月 "YYYY-MM"
+let workoutCalMonth = null;
 
-// 新規記録は部位名(胸/背中/脚/肩/腕/体幹・腹筋)がそのまま name。
-// 種目選択UIがあった頃の記録(name が具体的な種目名)は、下の
-// LEGACY_EXERCISE_GROUP で部位に変換する。どちらにも当てはまらなければ「その他」。
 const CANONICAL_BODY_PARTS = ["胸", "背中", "脚", "肩", "腕", "体幹・腹筋"];
 const LEGACY_EXERCISE_GROUP = {
   "ベンチプレス": "胸",
@@ -983,8 +894,6 @@ function shiftWorkoutCalMonth(delta) {
   renderWorkoutCalendar();
 }
 
-// カレンダーの日付タップ = 記録日の選択。フォームの日付とも連動させて、
-// そのまま種目を追記できるようにする。
 function selectWorkoutDate(dateStr) {
   const input = document.getElementById("workoutsDate");
   if (input) input.value = dateStr;
@@ -1059,9 +968,6 @@ function renderWorkoutCalendar() {
   }
 }
 
-// -------------------------------------------------------------------------
-// Weight
-// -------------------------------------------------------------------------
 function initWeight() {
   document.getElementById("weightDate").value = todayStr();
   document.getElementById("weightTime").value = nowTimeStr();
@@ -1072,8 +978,6 @@ function initWeight() {
     const time = document.getElementById("weightTime").value || nowTimeStr();
     const weight = Number(document.getElementById("weightValue").value);
     if (!weight) return;
-    // 同じ日でも時刻が違えば別の記録として残す(朝晩それぞれ量れるように)。
-    // 同じ日時への記録だけは、打ち間違いの訂正とみなして上書きする。
     const existing = state.weightLogs.find((l) => l.date === date && (l.time || "") === time);
     if (existing) {
       existing.weight = weight;
@@ -1118,15 +1022,12 @@ function renderWeightTrend(logs) {
   const diffClass = diff > 0 ? "up" : diff < 0 ? "down" : "";
   const diffText = diff === 0 ? "±0kg" : diff > 0 ? `+${diff}kg` : `${diff}kg`;
 
-  // 「現在」の体重はグラフ内の見出しボックスにも出るため、ここでは重複させない
   const parts = [
     `<span>記録開始 ${first.weight}kg(${fmtDate(first.date)})</span>`,
     `<span>増減 <b class="${diffClass}">${diffText}</b></span>`,
     `<span>記録数 ${sorted.length}件</span>`,
   ];
 
-  // 1日に複数回量った日があると、グラフの値(その日の平均)と履歴の値が食い違って
-  // 見えるので、そのときだけ理由を添える。
   const daysWithMultiple = new Set(
     sorted.map((l) => l.date).filter((d, i, arr) => arr.indexOf(d) !== i)
   ).size;
@@ -1175,10 +1076,6 @@ function renderWeight() {
   renderWeightChart("weightChartFull", state.weightLogs, days, state.profile && state.profile.targetWeight);
 }
 
-// 体重・カロリーどちらの推移グラフも見た目とロジックは同じ(値と目標値が違うだけ)
-// なので、実際の描画はここに1本化してある。それぞれの呼び出し元(renderWeightChart/
-// renderCalorieChart)が「値をどう文字にするか」だけを opts で渡す。
-// points: [{date: "YYYY-MM-DD", value: number}, ...](順不同でよい)
 function renderLineChart(canvasId, points, days, opts) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
@@ -1189,23 +1086,16 @@ function renderLineChart(canvasId, points, days, opts) {
     anchor.setDate(anchor.getDate() - days);
     const cutoff = anchor.toISOString().slice(0, 10);
     windowed = sorted.filter((p) => p.date >= cutoff);
-    if (windowed.length < 2 && sorted.length >= 2) windowed = sorted.slice(-2); // always show a line if 2+ records exist
+    if (windowed.length < 2 && sorted.length >= 2) windowed = sorted.slice(-2);
   }
   const dpr = window.devicePixelRatio || 1;
   const cssWidth = canvas.clientWidth || canvas.parentElement.clientWidth || 320;
-  // The intended on-screen height is captured once. Assigning `canvas.height`
-  // below rewrites the height attribute to the device-pixel size, so re-reading
-  // that attribute on a later re-draw would multiply the height by the device
-  // pixel ratio again and again — on a 3x phone the chart grew taller every
-  // time the dashboard re-rendered.
   if (!canvas.dataset.baseHeight) {
     canvas.dataset.baseHeight = String(Number(canvas.getAttribute("height")) || 140);
   }
   const cssHeight = Number(canvas.dataset.baseHeight);
   canvas.width = cssWidth * dpr;
   canvas.height = cssHeight * dpr;
-  // The stylesheet only sets `width: 100%`, so without an explicit CSS height
-  // the element lays out at the device-pixel height (2-3x too tall).
   canvas.style.height = cssHeight + "px";
   const ctx = canvas.getContext("2d");
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -1232,11 +1122,6 @@ function renderLineChart(canvasId, points, days, opts) {
     return;
   }
 
-  // Headline (current value + date) as a single compact line at the top-left.
-  // A boxed callout used to sit here, but it plus its padding ate roughly half
-  // of the canvas height, squeezing the line chart itself into the remainder.
-  // Plain text keeps the "where am I now" answer while leaving the vertical
-  // space to the part that actually shows the trend.
   const latest = windowed[windowed.length - 1];
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
@@ -1270,8 +1155,6 @@ function renderLineChart(canvasId, points, days, opts) {
   const x = (i) => padL + (plotW * i) / (windowed.length - 1);
   const y = (v) => padT + plotH - ((v - min) / (max - min)) * plotH;
 
-  // horizontal gridlines + y-axis labels on the right
-  // (紙のテーマ: 目盛り線は鉛筆で薄く手引きしたように少し揺らす)
   const graphite = styles.getPropertyValue("--graphite").trim() || border;
   ctx.strokeStyle = graphite;
   ctx.fillStyle = muted;
@@ -1292,7 +1175,6 @@ function renderLineChart(canvasId, points, days, opts) {
     ctx.fillText(opts.axisLabel(val), cssWidth - padR + 6, yy + 3);
   }
 
-  // dashed vertical gridlines + evenly-spaced date labels along the bottom
   const labelCount = Math.min(5, windowed.length);
   const labelIndices = [...new Set(
     Array.from({ length: labelCount }, (_, i) =>
@@ -1322,7 +1204,6 @@ function renderLineChart(canvasId, points, days, opts) {
     ctx.fillText(label, tx, cssHeight - 4);
   });
 
-  // target reference line
   if (opts.targetValue) {
     const ty = y(Number(opts.targetValue));
     ctx.save();
@@ -1335,8 +1216,6 @@ function renderLineChart(canvasId, points, days, opts) {
     ctx.restore();
   }
 
-  // smoothed line path (quadratic curve through the midpoints of each
-  // segment), reused for both the stroke and the gradient fill below it
   const linePath = new Path2D();
   windowed.forEach((p, i) => {
     const px = x(i);
@@ -1353,8 +1232,6 @@ function renderLineChart(canvasId, points, days, opts) {
     }
   });
 
-  // fill under the line: colored-pencil hatching (paper theme) instead of a
-  // smooth gradient, falling back to the gradient if patterns are unavailable
   const fillPath = new Path2D(linePath);
   fillPath.lineTo(x(windowed.length - 1), padT + plotH);
   fillPath.lineTo(x(0), padT + plotH);
@@ -1369,8 +1246,6 @@ function renderLineChart(canvasId, points, days, opts) {
   ctx.fill(fillPath);
   ctx.restore();
 
-  // the line itself: one firm pencil pass plus a lighter, slightly offset
-  // second pass, like a line drawn twice by hand
   ctx.strokeStyle = primary;
   ctx.lineWidth = 2.1;
   ctx.lineJoin = "round";
@@ -1383,10 +1258,6 @@ function renderLineChart(canvasId, points, days, opts) {
   ctx.stroke(linePath);
   ctx.restore();
 
-  // points — open circles (colored ring, light fill) rather than solid dots,
-  // with the latest point drawn larger and solid to draw the eye to "now".
-  // 手で描いた丸: 少しゆがませて傾け、もう1回ずらして軽くなぞる。
-  // ゆがみは点の番号から決まる固定値なので、描き直しても形は変わらない。
   const jit = (i, k) => {
     const s = Math.sin(i * 12.9898 + k * 78.233) * 43758.5453;
     return s - Math.floor(s) - 0.5;
@@ -1411,7 +1282,6 @@ function renderLineChart(canvasId, points, days, opts) {
     ctx.globalAlpha = 1;
   });
 
-  // 線と塗りだけを紙の目でかすれさせる(字はくっきり残すので、目標の字はこのあとに書く)
   pencilGrain(ctx, padL - 6, padT - 6, plotW + 10, plotH + 10);
   if (opts.targetValue) {
     ctx.fillStyle = orange;
@@ -1420,9 +1290,6 @@ function renderLineChart(canvasId, points, days, opts) {
   }
 }
 
-// 鉛筆の線(グラフの見た目だけ): 14pxごとに線に垂直な向きへ最大0.9pxずらして、
-// 手で引いた線のようにわずかに揺らす。揺れは seed と区間番号から決まるので、
-// 再描画しても同じ形になる(ちらつかない)。
 function pencilLineTo(ctx, x1, y1, x2, y2, seed) {
   const len = Math.hypot(x2 - x1, y2 - y1) || 1;
   const steps = Math.max(2, Math.round(len / 14));
@@ -1436,8 +1303,6 @@ function pencilLineTo(ctx, x1, y1, x2, y2, seed) {
   }
 }
 
-// 紙のテーマのグラフ用の鉛筆の質感(css/tex/ の画像。3倍の解像度で作ってある)。
-// 読み込めないときは下の描き方にそのまま戻る。
 const PENCIL_TEX_SCALE = 3;
 const pencilTex = { hatch: null, grain: null };
 const pencilTexReady = Promise.all(
@@ -1458,7 +1323,6 @@ function pencilTexPattern(ctx, image) {
   return pattern;
 }
 
-// 紙の目のくぼみに当たるところだけ、描いた線と塗りを少し消して鉛筆のかすれにする
 function pencilGrain(ctx, x, y, w, h) {
   if (!pencilTex.grain) return;
   const pattern = pencilTexPattern(ctx, pencilTex.grain);
@@ -1470,8 +1334,6 @@ function pencilGrain(ctx, x, y, w, h) {
   ctx.restore();
 }
 
-// 色鉛筆の斜線で塗るためのパターン(グラフの見た目だけ)。画像があれば色鉛筆の斜線を
-// その色で塗り、なければ6px角に斜線1本の簡単なもの。
 function pencilHatch(ctx, hex, dpr) {
   if (pencilTex.hatch) {
     let tile = pencilHatchTiles.get(hex);
@@ -1514,8 +1376,6 @@ function pencilHatch(ctx, hex, dpr) {
   return pattern;
 }
 
-// createLinearGradient wants real rgba() stops, but our CSS vars are hex —
-// this fakes an alpha-blended color without pulling in a color-parsing lib.
 function color_mix_fallback(hex, alpha) {
   const h = hex.replace("#", "");
   const full = h.length === 3 ? h.split("").map((c) => c + c).join("") : h;
@@ -1525,9 +1385,6 @@ function color_mix_fallback(hex, alpha) {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-// 1日に何度も量ると同じ日に複数の記録が並ぶので、グラフはその日の平均を1点として
-// 描く。横軸が日付である以上、朝と晩を別の点として打っても線が上下に震えるだけで、
-// 肝心の増減の傾きが読めなくなるため。
 function dailyAverageWeights(logs) {
   const byDate = {};
   logs.forEach((l) => {
@@ -1555,7 +1412,6 @@ function renderWeightChart(canvasId, logs, days, targetWeight) {
   );
 }
 
-// 食事記録から日ごとの合計カロリーを集計する({date, calories}の配列。複数食を合算)
 function mealDailyTotals() {
   const byDate = {};
   state.meals.forEach((m) => {
@@ -1608,25 +1464,6 @@ function renderCalorieTrend(dailyTotals) {
   el.innerHTML = parts.join("");
 }
 
-// 種目名 -> 部位(胸/背中/脚/…)。種目リストの実体である
-// <select id="exerciseSelect"> の optgroup から引くので、二重管理にならない。
-// 自由入力の種目は対応する部位が無いので null。
-let exerciseGroupMap = null;
-function exerciseMuscleGroup(name) {
-  if (!exerciseGroupMap) {
-    exerciseGroupMap = {};
-    document.querySelectorAll("#exerciseSelect optgroup").forEach((g) => {
-      Array.from(g.children).forEach((opt) => {
-        exerciseGroupMap[opt.value] = g.label;
-      });
-    });
-  }
-  return exerciseGroupMap[name] || null;
-}
-
-// -------------------------------------------------------------------------
-// Settings
-// -------------------------------------------------------------------------
 function initSettings() {
   document.getElementById("profileForm").addEventListener("submit", (e) => {
     e.preventDefault();
@@ -1650,10 +1487,6 @@ function initSettings() {
   document.getElementById("hardRefreshBtn").addEventListener("click", hardRefreshApp);
 }
 
-// Manual escape hatch for a stuck/stale cached version: unregister the
-// service worker, clear every Cache Storage entry it made, then reload.
-// Deliberately does NOT touch localStorage — the user's recorded data (and
-// the yoshi-sync-enabled flag) survive this untouched.
 async function hardRefreshApp() {
   try {
     if ("serviceWorker" in navigator) {
@@ -1748,12 +1581,8 @@ function resetAllData() {
   toast("すべてのデータを削除しました");
 }
 
-// -------------------------------------------------------------------------
-// Toast
-// -------------------------------------------------------------------------
 let toastTimer = null;
 
-// onUndo を渡すと「元に戻す」ボタン付きになり、表示時間も長めになる。
 function toast(msg, onUndo) {
   const el = document.getElementById("toast");
   el.textContent = "";
@@ -1777,12 +1606,6 @@ function toast(msg, onUndo) {
   toastTimer = setTimeout(() => el.classList.add("hidden"), onUndo ? 6000 : 2400);
 }
 
-// -------------------------------------------------------------------------
-// 取り消せる削除
-// -------------------------------------------------------------------------
-// 削除の確認ダイアログは出さない。毎回「はい」を押させても誤操作は防げず、
-// 押した後に戻せないことのほうが困るので、すぐ消して数秒だけ取り消せるようにする。
-// 消した位置に戻すのは、並び順が記録順に依存する箇所があるため。
 function deleteWithUndo(listName, id, rerender, label) {
   const list = state[listName];
   const index = list.findIndex((item) => item.id === id);
@@ -1800,9 +1623,6 @@ function deleteWithUndo(listName, id, rerender, label) {
   });
 }
 
-// -------------------------------------------------------------------------
-// Init
-// -------------------------------------------------------------------------
 function renderAll() {
   renderDashboard();
   renderMeals();
@@ -1827,7 +1647,6 @@ function init() {
   if (document.fonts && document.fonts.ready) {
     document.fonts.ready.then(redrawCharts).catch(() => {});
   }
-  // 鉛筆の質感の画像が届いたら、その質感で描き直す(見た目だけ)
   pencilTexReady.then(redrawCharts).catch(() => {});
 }
 
@@ -1843,19 +1662,13 @@ function redrawCharts() {
 
 document.addEventListener("DOMContentLoaded", init);
 
-// Register the service worker so the app can be added to the home screen
-// and keeps working offline (all data lives in localStorage already; this
-// just caches the app shell itself). Safe to skip if unsupported (e.g. file://).
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker
       .register("sw.js")
-      .then((reg) => reg.update().catch(() => {})) // check for a newer sw.js on every load
+      .then((reg) => reg.update().catch(() => {}))
       .catch((err) => console.warn("Service worker registration failed:", err));
 
-    // When a new service worker takes over (after an update), reload once so
-    // the page picks up the latest index.html/js/css instead of staying on
-    // whatever was loaded before the update. Guarded so it only fires once.
     let reloadedForUpdate = false;
     navigator.serviceWorker.addEventListener("controllerchange", () => {
       if (reloadedForUpdate) return;

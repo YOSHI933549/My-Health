@@ -1,14 +1,3 @@
-/* ==========================================================================
-   栄養成分表示の写真から自動入力(任意機能)
-   ==========================================================================
-   Tesseract.js(OCRライブラリ)を使って、写真をブラウザ内だけで解析する。
-   サーバーには一切送信しない。画像は解析にのみ使い、保存もしない。
-
-   ライブラリ本体は初回利用時に初めてCDNから動的に読み込む(常にページの
-   読み込みを重くしないため)。「エネルギー/たんぱく質/脂質/炭水化物」の
-   行から数値を抜き出してカロリー・PFC入力欄に反映するが、OCRの誤読は
-   十分あり得るため、自動送信はせず必ず内容の確認を促す。
-   ========================================================================== */
 
 const TESSERACT_CDN_URL = "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js";
 
@@ -30,25 +19,16 @@ function loadTesseract() {
   return tesseractLoadPromise;
 }
 
-/**
- * 全角の数字・英字・記号(０-９Ａ-Ｚａ-ｚ／：－ｇ等)と全角スペースを半角化する。
- * OCRは日本語ラベルの数値や単位を全角で読み取ることがあり、そのままだと
- * 半角前提の正規表現(\d や kcal/g)にマッチしないため。
- */
+// OCRは日本語ラベルの数値や単位を全角で読み取ることがあり、そのままだと
+// 半角前提の正規表現(\d や kcal/g)にマッチしないため。
 function toHalfWidth(str) {
   return str
     .replace(/[！-～]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0xfee0))
     .replace(/　/g, " ");
 }
 
-/**
- * OCRで読み取ったテキストから栄養成分の数値を抜き出す。
- * 見つからない項目は null のまま返す(呼び出し側で既存の値を維持できるように)。
- */
 function parseNutritionLabel(text) {
   const norm = toHalfWidth(text.replace(/[\r\n]+/g, " "));
-  // 「1,234」のような桁区切りカンマは数値として読めないので、カンマの前後が
-  // 数字のときだけ取り除く(文中の読点と混同しないように限定的に)。
   const numPattern = "(\\d[\\d,]*(?:\\.\\d+)?)";
   const grab = (patterns) => {
     for (const re of patterns) {
@@ -81,7 +61,7 @@ function initLabelOcr() {
 
   input.addEventListener("change", async () => {
     const file = input.files[0];
-    input.value = ""; // 同じ写真を選び直せるようにその場でリセット(保存はしない)
+    input.value = "";
     if (!file) return;
 
     hint.hidden = false;
@@ -91,8 +71,6 @@ function initLabelOcr() {
       const { result, rawText } = await ocrNutritionLabel(file);
       const found = ["calories", "protein", "fat", "carbs"].filter((k) => result[k] != null);
       if (found.length === 0) {
-        // 何が読み取れたかコンソールに残しておく(表示は崩れるので画面には出さない)。
-        // 数値の行自体が読めていない/ラベルの文言が想定と違う、を切り分ける手掛かりになる。
         console.warn("OCRで栄養成分の数値を検出できませんでした。読み取った全文:", rawText);
         hint.textContent = "数値を読み取れませんでした。ピントが合っている・ラベル全体が写っているか確認して撮り直すか、お手数ですが手動で入力してください。";
         return;

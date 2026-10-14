@@ -1,26 +1,6 @@
-/* ==========================================================================
-   n8n経由の体重自動取り込み(任意機能)
-   ==========================================================================
-   仕組み:
-   - iPhoneの「ショートカット」自動化が、Apple Healthの最新体重を
-     n8nのWebhook(POST)に送信 → n8nがData Tableに保存
-   - このスクリプトは、n8nの別のWebhook(GET)を定期的に叩いて記録一覧を取得し、
-     まだこのアプリに存在しない日付だけを体重ログに追加する(「隙間を埋める」方式)
-   - 手動でこのアプリ上で入力・編集した記録は上書きしない(常にアプリ側が優先)
-
-   同じ仕組みで「食事」も取り込む(fetchMealsFromN8n)。こちらはチャットで
-   調べてもらった外食メニューなどの栄養を、n8nのData Table経由で受け取って
-   手入力なしで記録に追加するためのもの。体重と違い1日に何件も入るため、
-   日付ではなく n8n の行ID で重複を判定する。取り込み済みのIDを覚えておく
-   ことで、アプリ側で削除した記録が次の取得で復活しないようにしている。
-
-   取得用URL(トークンを含む)は、公開リポジトリのコードには一切含めず、
-   ユーザーがブラウザ内(localStorage)にのみ保存する。
-   ========================================================================== */
 
 const N8N_URL_KEY = "yoshi-n8n-fetch-url";
 const N8N_MEAL_URL_KEY = "yoshi-n8n-meal-url";
-// 体重・食事ログのうち n8n から取り込んだものに付ける印(手入力の記録と区別するため)
 const N8N_SOURCE = "n8n";
 let n8nFetchInFlight = false;
 let n8nMealFetchInFlight = false;
@@ -84,14 +64,11 @@ function initN8nSync() {
 
   if (saved) fetchFromN8n(false);
 
-  // Poll fairly aggressively while the app is open/visible so a weigh-in
-  // shows up as soon as possible after the iPhone side posts it — but pause
-  // entirely while backgrounded so it doesn't run forever in a hidden tab.
   setInterval(() => {
     if (document.visibilityState !== "visible") return;
     if (getN8nFetchUrl()) fetchFromN8n(false);
     if (getN8nMealUrl()) fetchMealsFromN8n(false);
-  }, 20000); // 20秒ごと(表示中のみ)
+  }, 20000);
 
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState !== "visible") return;
@@ -100,7 +77,6 @@ function initN8nSync() {
   });
 }
 
-// 食事の取り込み(設定タブのURL欄・ボタンの配線)。体重側と同じ形にしてある。
 function initN8nMealSync() {
   const urlInput = document.getElementById("n8nMealUrl");
   const saveBtn = document.getElementById("n8nMealSaveBtn");
@@ -144,8 +120,6 @@ async function fetchMealsFromN8n(showToast) {
     const rows = await res.json();
     if (!Array.isArray(rows)) throw new Error("unexpected response shape");
 
-    // 取り込み済みの行IDの控え。アプリ側で削除した記録を復活させないため、
-    // 「今ある食事記録」ではなく「一度でも取り込んだID」で判定する。
     const imported = new Set((state.importedMealIds || []).map(String));
     let added = 0;
     rows.forEach((row) => {
@@ -203,9 +177,6 @@ async function fetchFromN8n(showToast) {
     const rows = await res.json();
     if (!Array.isArray(rows)) throw new Error("unexpected response shape");
 
-    // 日付ごとに「n8n から取り込んだ記録」だけを引けるようにしておく。手入力の
-    // 記録(1日に何度でも残せる)は対象にしない。日付だけで引くと、その日すでに
-    // 手入力の記録があるときにn8nの分が引っかかって取り込まれなくなるため。
     const byDateFromN8n = new Map(
       state.weightLogs.filter((l) => l.source === N8N_SOURCE).map((l) => [l.date, l])
     );
@@ -218,9 +189,6 @@ async function fetchFromN8n(showToast) {
 
       const existing = byDateFromN8n.get(date);
       if (!existing) {
-        // その日にn8n取り込みの記録がまだ無ければ新規に追加する。手入力の記録が
-        // 同じ日に既にあっても構わない(体重は1日に何度でも記録できるため)。
-        // source を残しておくことで、次回以降この記録がn8n由来かどうかを判定する。
         const entry = { id: uid(), date, weight, source: N8N_SOURCE };
         state.weightLogs.push(entry);
         byDateFromN8n.set(date, entry);
@@ -228,8 +196,6 @@ async function fetchFromN8n(showToast) {
         return;
       }
 
-      // 同じ日にn8n取り込みの記録が既にあれば、最新の値で上書きする
-      // (体重計で測り直した場合や、以前の取り込みが古い値だった場合のため)。
       if (existing.weight !== weight) {
         existing.weight = weight;
         updated++;

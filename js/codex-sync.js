@@ -1,10 +1,3 @@
-/* ==========================================================================
-   Codex encrypted meal inbox
-
-   The app generates an RSA-OAEP key pair. Only the private key stays in this
-   browser. Codex receives the public key and writes hybrid-encrypted meal
-   envelopes to a public GitHub file; the plaintext never enters the repo.
-   ========================================================================== */
 
 const CODEX_DEVICE_ID_KEY = "yoshi-codex-device-id-v1";
 const CODEX_PUBLIC_KEY_KEY = "yoshi-codex-public-key-v1";
