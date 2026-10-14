@@ -1,13 +1,11 @@
-// Asset builders. Each returns { name, img (ImageData), type, q }.
 window.ASSETS = (() => {
-  const R = 3; // device px per CSS px (iPhone)
+  const R = 3;
   const C = {
     graphite: '#3a3936', graphiteDark: '#2b2825', terra: '#cc6445', terraDark: '#a8492c', tint: '#f3ddd3',
     notebook: '#f8f1de',
   };
   const out = {};
 
-  // ---------- double pencil frame, 9-slice (slice 12 CSS, middle 60 x 12 CSS) ----------
   function roundedRectPts(W, H, ins, r, o) {
     const [il, it, ir, ib] = ins; const x0 = il, y0 = it, x1 = W - ir, y1 = H - ib;
     const { s, mx, my } = o; const pts = [];
@@ -17,7 +15,6 @@ window.ASSETS = (() => {
     const wob = (x) => (x >= s && x <= s + mx ? o.wobble * Math.sin((2 * Math.PI * (x - s)) / mx) : 0);
     const step = 0.8;
     const arc = (cx, cy, a0, a1, pa, pb) => { const n = Math.ceil((Math.abs(a1 - a0) * r) / step); for (let i = 1; i < n; i++) { const t = i / n; const a = a0 + (a1 - a0) * t; pts.push({ x: cx + r * Math.cos(a), y: cy + r * Math.sin(a), p: pa + (pb - pa) * t, w: o.w }); } };
-    // top edge
     for (let x = x0 + r; x <= x1 - r; x += step) pts.push({ x, y: y0 + wob(x), p: PT(x), w: o.w });
     arc(x1 - r, y0 + r, -Math.PI / 2, 0, PT(x1 - r), PR(y0 + r));
     for (let y = y0 + r; y <= y1 - r; y += step) pts.push({ x: x1, y, p: PR(y), w: o.w });
@@ -46,19 +43,16 @@ window.ASSETS = (() => {
     out[name] = { img: P.compose(W, H, [{ L, color }]), note: `9-slice ${W}x${H}px, slice ${s}` };
   }
 
-  // ---------- seamless diagonal hatch (colored pencil), torus-friendly direction (1,-2) ----------
   function hatch(name, seed, o = {}) {
     const T = (o.T || 72) * R; const tooth = P.tooth(T, T, { seed }); const L = P.layer(T, T, { tooth, wrap: true });
     const rnd = P.rng(seed); const dir = [1 / Math.sqrt(5), -2 / Math.sqrt(5)]; const nrm = [2 / Math.sqrt(5), 1 / Math.sqrt(5)];
     const spacingN = P.noise1(T * Math.sqrt(5), (o.cluster || 9) * R, seed + 7);
-    // offsets (in c = 2x + y units) of the hatch lines, rescaled to wrap exactly
-    const gaps = []; let sum = 0; const target = T; // c in [0, T)
+    const gaps = []; let sum = 0; const target = T;
     while (sum < target) { const g = (o.spacing || 2.3) * R * Math.sqrt(5) * (0.45 + 1.1 * spacingN(sum)) / Math.sqrt(5) * Math.sqrt(5); gaps.push(g); sum += g; }
     const scale = target / sum; let c = 0;
     const lineLen = T * Math.sqrt(5);
     for (const g of gaps) {
       c += g * scale;
-      // point on line: x = c/2, y = 0 satisfies 2x + y = c
       const ox = c / 2, oy = 0;
       let t = rnd() * lineLen;
       const end = t + lineLen;
@@ -76,7 +70,6 @@ window.ASSETS = (() => {
     out[name] = { img: P.maskImage(L, o.opacity ?? 1), note: `tile ${T}px = ${T / R} CSS` };
   }
 
-  // ---------- hand-drawn circle(s) ----------
   function circlePts(cx, cy, r, o) {
     const pts = []; const n = Math.ceil((o.sweep * r * Math.max(o.sx || 1, o.sy || 1)) / 0.8); const wob = P.noise1(1000, 40, o.seed); const pv = P.noise1(1000, 30, o.seed + 1);
     for (let i = 0; i <= n; i++) {
@@ -105,7 +98,6 @@ window.ASSETS = (() => {
     out[name] = { img: P.maskImage(L), note: '20 CSS mask' };
   }
 
-  // ---------- underline swoosh, 3-slice (caps 24 CSS, middle 48 CSS, height 12 CSS) ----------
   function swoosh(name, color, seed, o = {}) {
     const cap = 24 * R, mid = 48 * R, W = 2 * cap + mid, H = 12 * R; const tooth = P.tooth(W, H, { px: mid, py: H, seed }); const L = P.layer(W, H, { tooth });
     const y0 = (o.y ?? 7.2) * R; const pv = P.noise1(mid, 22, seed + 1); const pts = [];
@@ -117,7 +109,6 @@ window.ASSETS = (() => {
       else { const t = (x - cap - mid) / (cap - 9 * R); y = midY(cap + mid) + (o.endDy ?? 0.3) * R * t; p = 0.9 * (1 - 0.18 * pv(x - cap)); w = 1.95 * R; }
       pts.push({ x, y, p, w });
     }
-    // the hook: curls up at the right end and lifts off
     const lx = pts[pts.length - 1].x, ly = pts[pts.length - 1].y; const hook = o.hook ?? 1;
     for (let i = 1; i <= 30; i++) { const t = i / 30; pts.push({ x: lx + 6.2 * R * Math.sin(t * 1.35) / Math.sin(1.35), y: ly - 5.0 * R * hook * Math.pow(t, 1.6), p: 0.9 * (1 - 0.75 * Math.pow(t, 1.3)), w: 1.95 * R * (1 - 0.5 * t) }); }
     P.stroke(L, pts, { k: 1.28, soft: 0.16, dmin: 0.66, base: 0.34 });
@@ -129,7 +120,6 @@ window.ASSETS = (() => {
     out[name] = { img: P.compose(W, H, [{ L, color }]), note: '42x8 CSS' };
   }
 
-  // ---------- seamless horizontal rule and wavy divider ----------
   function rule(name, color, seed, o = {}) {
     const W = 120 * R, H = (o.h || 6) * R; const tooth = P.tooth(W, H, { px: W, py: H, seed }); const L = P.layer(W, H, { tooth, wrapX: true });
     const pv = P.noise1(W, 20, seed + 1); const pts = [];
@@ -145,7 +135,6 @@ window.ASSETS = (() => {
     out[name] = { img: P.compose(W, H, [{ L, color }]), note: 'repeat-x 120x10 CSS' };
   }
 
-  // ---------- torn paper edge (tab bar top), seamless ----------
   function torn(name, paper, seed, shadow) {
     const W = 120 * R, H = 14 * R; const n1 = P.noise1(W, 34, seed), n2 = P.noise1(W, 9, seed + 1), n3 = P.noise1(W, 3, seed + 2), fib = P.noise(W, H, 1.2, 4, seed + 5);
     const img = new ImageData(W, H); const pc = P.hex(paper);
@@ -155,18 +144,15 @@ window.ASSETS = (() => {
         const j = (y * W + x) * 4; let a;
         if (shadow) { a = P.sstep(e - 2.4 * R, e + 1.2 * R, y) * 0.26; img.data[j] = 70; img.data[j + 1] = 52; img.data[j + 2] = 28; img.data[j + 3] = Math.round(a * 255); continue; }
         a = P.sstep(e - 0.5, e + 0.7, y);
-        // white fibres fringing the torn edge
         const fringe = P.sstep(e - 1.6 * R, e - 0.2 * R, y) * (1 - a) * (fib(x, y) > 0.55 ? 0.8 : 0.25);
-        const lighten = 1 - a; // fringe colour is whiter than the paper
         const al = Math.max(a, fringe);
         const mixW = fringe > a ? 0.7 : 0;
-        img.data[j] = Math.round(pc[0] * (1 - mixW) + 255 * mixW); img.data[j + 1] = Math.round(pc[1] * (1 - mixW) + 253 * mixW); img.data[j + 2] = Math.round(pc[2] * (1 - mixW) + 246 * mixW); img.data[j + 3] = Math.round(al * 255); void lighten;
+        img.data[j] = Math.round(pc[0] * (1 - mixW) + 255 * mixW); img.data[j + 1] = Math.round(pc[1] * (1 - mixW) + 253 * mixW); img.data[j + 2] = Math.round(pc[2] * (1 - mixW) + 246 * mixW); img.data[j + 3] = Math.round(al * 255);
       }
     }
     out[name] = { img, note: 'border-image top 14 CSS, repeat-x 120 CSS' };
   }
 
-  // ---------- papers (opaque, 2x) ----------
   function paper(name, baseHex, seed, o = {}) {
     const D = 2, T = (o.T || 160) * D; const b = P.hex(baseHex); const img = new ImageData(T, T);
     const m1 = P.noise(T, T, (o.mottle || 40) * D, (o.mottle || 40) * D * 0.8, seed), m2 = P.noise(T, T, 12 * D, 9 * D, seed + 1), g = P.noise(T, T, 0.9 * D, 0.9 * D, seed + 2), g2 = P.noise(T, T, 2.2 * D, 1.6 * D, seed + 3);
@@ -176,7 +162,6 @@ window.ASSETS = (() => {
       if (o.weave) { const wx = Math.sin((2 * Math.PI * x) / (o.weave * D)), wy = Math.sin((2 * Math.PI * y) / (o.weave * D)); v += (Math.max(wx, 0) - Math.max(wy, 0)) * 0.006 + wx * wy * 0.004; }
       lum[y * T + x] = v;
     }
-    // fibres: short faint curved strokes, lighter and darker
     const rnd = P.rng(seed + 9);
     for (let i = 0; i < (o.fibres ?? 60); i++) {
       let x = rnd() * T, y = rnd() * T, a = rnd() * Math.PI * 2; const len = (6 + rnd() * 22) * D; const s = rnd() < 0.55 ? 1 : -1; const amt = (0.012 + rnd() * 0.02) * s;
@@ -186,23 +171,17 @@ window.ASSETS = (() => {
     out[name] = { img, type: 'image/webp', q: 0.86, note: `tile ${T / D} CSS @${D}x` };
   }
 
-  // ---------- mascot: flexed arm in the style of the reference pig ----------
   const ARM = 'M6 30.5C9 23 14 19.5 20 19.5c5.5 0 8.5 4 9.5 8.5 1-4 1.5-8 .7-11.2-2.6-1.2-3.2-5.4-1.6-8.4 2-3.6 8.9-4.8 12.6-2 3 2.4 2.8 7-.2 10.2 1.4 6.4 2.6 14.4 1.4 20.4-1 5-5.4 7.6-10.8 7.6-10 .8-19 .4-26-.4';
   function mascot(name, seed) {
     const S = 208, sc = S / 50, dx = 1 * sc, dy = 1 * sc; const tooth = P.tooth(S, S, { seed, scale: 1.2 });
     const mask = P.pathMask(S, S, ARM + 'z', { scale: sc, dx: dx + 1.5, dy: dy + 1.2 });
     const fill = P.layer(S, S, { tooth }); const rnd = P.rng(seed);
-    // broad translucent cross strokes (like the pig): two directions, overlapping bands
-    // light wash so no bare paper shows inside the outline
     const wash = P.layer(S, S, { tooth });
     for (let i = 0; i < 14; i++) { const y = (4 + i * 3.4) * sc; P.stroke(wash, P.line(-10, y + 30, S + 10, y - 30, { w: 4.2 * sc, p: 0.9, seed: 500 + i, pvar: 0.1 }), { k: 1.5, soft: 0.3, dmin: 0.85, base: 0.8, mask }); }
-    // broad translucent cross strokes (like the pig): a few wide bands in two directions
     const bands = (ang, offs) => { const dxv = Math.cos(ang), dyv = Math.sin(ang), nx = -dyv, ny = dxv; offs.forEach((o, i) => { const cx = S / 2 + nx * o * sc, cy = S / 2 + ny * o * sc; P.stroke(fill, P.line(cx - dxv * S, cy - dyv * S, cx + dxv * S, cy + dyv * S, { w: (6 + rnd() * 2) * sc, p: 0.85, seed: i + 40 * offs.length, pvar: 0.12, wobble: 0.8 * sc }), { k: 1.4, soft: 0.25, dmin: 0.85, base: 0.7, mask, opacity: 0.2 + rnd() * 0.16 }); }); };
     bands(-Math.PI / 4, [-15, -6.5, 2, 10.5, 18]); bands(Math.PI / 4.4, [-17, -8, 1, 9.5, 17.5]);
-    // a darker shade on the lower side of the arm
     const shade = P.layer(S, S, { tooth });
     for (let i = 0; i < 16; i++) { const x = (8 + i * 2.2) * sc + dx, y0 = 44 * sc + dy; P.stroke(shade, P.line(x, y0 + 1.5 * sc, x + 3.5 * sc, y0 - 9 * sc, { w: 1.1 * sc, p: 0.7, taperIn: 0.2, taperOut: 0.5, seed: 300 + i }), { k: 1, soft: 0.12, dmin: 0.5, mask }); }
-    // outline and details
     const line = P.layer(S, S, { tooth });
     P.stroke(line, P.path(ARM, { scale: sc, dx, dy, w: 1.75 * sc, p: 0.95, pvar: 0.12, from: 0.012, to: 0.985, taperIn: 0.03, taperOut: 0.04, seed }), { k: 1.4, soft: 0.14, dmin: 0.72, base: 0.55 });
     for (const d of ['M31 10.6c2-.9 4.4-.9 6.2.3', 'M30.8 13.8c2.1-.8 4.6-.6 6.5.5', 'M29.4 28.4c-.3 1.8 0 3.4.9 4.6']) P.stroke(line, P.path(d, { scale: sc, dx, dy, w: 0.9 * sc, p: 0.85, taperIn: 0.2, taperOut: 0.3, seed: seed + d.length }), { k: 1.15, soft: 0.1, dmin: 0.6, base: 0.3 });
@@ -210,8 +189,6 @@ window.ASSETS = (() => {
     out[name] = { img: P.compose(S, S, [{ L: wash, color: '#e08c6c', opacity: 0.92 }, { L: fill, color: '#c95a38' }, { L: shade, color: '#9c4027', opacity: 0.5 }, { L: line, color: C.graphiteDark }]), note: '50 CSS @4x' };
   }
 
-  // handwriting mask: the same paper-tooth skipping, lighter, plus uneven pressure,
-  // so text masked with it reads as written in pencil instead of printed
   function lead(name, seed) {
     const T = 48 * R; const tooth = P.tooth(T, T, { seed }); const tone = P.noise(T, T, 9 * R, 9 * R, seed + 5); const img = new ImageData(T, T);
     for (let i = 0; i < T * T; i++) {
@@ -221,7 +198,6 @@ window.ASSETS = (() => {
     }
     out[name] = { img, note: 'mask tile 48 CSS @3x' };
   }
-  // paper-tooth eraser for canvas charts: where the paper dips, the lead skips
   function grain(name, seed) {
     const T = 64 * R; const tooth = P.tooth(T, T, { seed }); const img = new ImageData(T, T);
     for (let i = 0; i < T * T; i++) { const e = P.clamp((0.46 - tooth[i]) / 0.34, 0, 1) * 0.85; img.data[i * 4 + 3] = Math.round(e * 255); }

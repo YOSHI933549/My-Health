@@ -1,9 +1,3 @@
-// 紙とペン風テーマの鉛筆テクスチャ(css/tex/)を作り直すスクリプト。
-// 紙の凹凸に芯の粉が乗る様子を lib.js で計算し、assets.js の各部品を画像にする。
-// 使い方と注意点は css/tex/README.md を参照。
-//
-//   node scripts/pencil-textures/gen.mjs                 … 全部作り直す
-//   node scripts/pencil-textures/gen.mjs css/tex rule    … 指定した部品だけ
 import { chromium } from "playwright";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
@@ -13,8 +7,6 @@ const out = resolve(process.argv[2] || resolve(here, "../../css/tex"));
 const only = process.argv.slice(3);
 await mkdir(out, { recursive: true });
 
-// ブラウザの canvas で PNG / WebP に書き出すので Chromium を使う。
-// 手元の Chromium を使うときは CHROMIUM_PATH にその実行ファイルを指定する。
 const browser = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
 const page = await browser.newPage();
 page.on("pageerror", (e) => console.error("page error:", e));

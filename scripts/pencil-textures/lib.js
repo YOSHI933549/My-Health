@@ -1,5 +1,3 @@
-// Pencil simulation: graphite / coloured pencil deposited on the peaks of a paper-tooth
-// height field. Runs in the browser (canvas only used for encoding).
 window.P = (() => {
   const P = {};
   P.rng = (seed) => { let a = seed >>> 0; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; };
@@ -8,7 +6,6 @@ window.P = (() => {
   const sstep = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
   P.clamp = clamp; P.sstep = sstep;
 
-  // periodic 2D value noise (period px,py in pixels)
   P.noise = (px, py, cellX, cellY, seed) => {
     const cx = Math.max(1, Math.round(px / cellX)), cy = Math.max(1, Math.round(py / cellY));
     const r = P.rng(seed); const g = new Float32Array(cx * cy); for (let i = 0; i < g.length; i++) g[i] = r();
@@ -32,7 +29,6 @@ window.P = (() => {
     return f;
   };
 
-  // paper tooth: fine grain + medium tooth + slight anisotropy (paper fibres run horizontally)
   P.tooth = (W, H, o = {}) => {
     const px = o.px || W, py = o.py || H, s = o.scale || 1, seed = o.seed || 1;
     const n1 = P.noise(px, py, 1.25 * s, 1.1 * s, seed + 11);
@@ -56,8 +52,6 @@ window.P = (() => {
     return out;
   };
 
-  // deposit one stroke. o.k: how deep the lead reaches into the tooth; o.soft: grain softness;
-  // o.dmin: pigment density at light pressure; o.base: film in the valleys at high pressure
   P.stroke = (L, pts, o = {}) => {
     const { W, H, S, a, tooth } = L;
     const k = o.k ?? 1.0, soft = o.soft ?? 0.1, dmin = o.dmin ?? 0.5, op = o.opacity ?? 1, base = o.base ?? 0.1, edge = o.edge ?? 0.9;
@@ -86,7 +80,6 @@ window.P = (() => {
     }
   };
 
-  // straight-ish stroke with taper, bow, wobble and pressure variation
   P.line = (x0, y0, x1, y1, o = {}) => {
     const len = Math.hypot(x1 - x0, y1 - y0) || 1; const n = Math.max(2, Math.ceil(len / 0.8));
     const nx = -(y1 - y0) / len, ny = (x1 - x0) / len; const seed = o.seed || 1;
@@ -102,7 +95,6 @@ window.P = (() => {
     return pts;
   };
 
-  // points along an SVG path (browser geometry), transformed by scale/offset
   P.path = (d, o = {}) => {
     const ns = 'http://www.w3.org/2000/svg'; const svg = document.createElementNS(ns, 'svg'); const path = document.createElementNS(ns, 'path');
     path.setAttribute('d', d); svg.appendChild(path); document.body.appendChild(svg);
@@ -119,17 +111,14 @@ window.P = (() => {
     return pts;
   };
 
-  // coverage mask of a filled SVG path (for clipping fills)
   P.pathMask = (W, H, d, o = {}) => {
     const c = document.createElement('canvas'); c.width = W; c.height = H; const ctx = c.getContext('2d');
     ctx.setTransform(o.scale || 1, 0, 0, o.scale || 1, o.dx || 0, o.dy || 0); ctx.fillStyle = '#000'; ctx.fill(new Path2D(d));
-    if (o.blur) { /* soft edge */ }
     const im = ctx.getImageData(0, 0, W, H).data; const m = new Float32Array(W * H); for (let i = 0; i < W * H; i++) m[i] = im[i * 4 + 3] / 255; return m;
   };
 
   const hex = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
   P.hex = hex;
-  // layers: [{L, color:'#rrggbb', opacity}], bg optional '#rrggbb'
   P.compose = (W, H, layers, bg) => {
     const out = new Float32Array(W * H * 4);
     if (bg) { const c = hex(bg); for (let i = 0; i < W * H; i++) { out[i * 4] = c[0]; out[i * 4 + 1] = c[1]; out[i * 4 + 2] = c[2]; out[i * 4 + 3] = 1; } }
@@ -138,11 +127,9 @@ window.P = (() => {
       for (let i = 0; i < W * H; i++) {
         const al = A[i] * op; if (!al) continue; const j = i * 4;
         if (ly.multiply && out[j + 3] > 0) {
-          // pigment over pigment: multiply-ish darkening
           for (let ch = 0; ch < 3; ch++) { const dst = out[j + ch] / Math.max(out[j + 3], 1e-6); const mix = dst * (1 - al) + (dst * c[ch] / 255) * al; out[j + ch] = mix * (out[j + 3] + al * (1 - out[j + 3])); }
           const na = out[j + 3] + al * (1 - out[j + 3]);
-          // add the part of the new pigment that lands on bare paper
-          const bare = al * (1 - out[j + 3]); for (let ch = 0; ch < 3; ch++) out[j + ch] = (out[j + ch] / Math.max(na, 1e-6)) * na; out[j + 3] = na; void bare;
+          for (let ch = 0; ch < 3; ch++) out[j + ch] = (out[j + ch] / Math.max(na, 1e-6)) * na; out[j + 3] = na;
         } else {
           for (let ch = 0; ch < 3; ch++) out[j + ch] = c[ch] * al + out[j + ch] * (1 - al);
           out[j + 3] = al + out[j + 3] * (1 - al);
@@ -153,7 +140,6 @@ window.P = (() => {
     for (let i = 0; i < W * H; i++) { const j = i * 4; const a = out[j + 3]; img.data[j + 3] = Math.round(clamp(a, 0, 1) * 255); if (a > 0) { img.data[j] = Math.round(clamp(out[j] / (bg ? 1 : a), 0, 255)); img.data[j + 1] = Math.round(clamp(out[j + 1] / (bg ? 1 : a), 0, 255)); img.data[j + 2] = Math.round(clamp(out[j + 2] / (bg ? 1 : a), 0, 255)); } }
     return img;
   };
-  // a layer as a black alpha mask
   P.maskImage = (L, op = 1) => { const img = new ImageData(L.W, L.H); for (let i = 0; i < L.W * L.H; i++) { img.data[i * 4 + 3] = Math.round(clamp(L.a[i] * op, 0, 1) * 255); } return img; };
   P.encode = (img, type = 'image/png', q) => { const c = document.createElement('canvas'); c.width = img.width; c.height = img.height; c.getContext('2d').putImageData(img, 0, 0); return c.toDataURL(type, q); };
   return P;
