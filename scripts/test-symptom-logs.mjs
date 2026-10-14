@@ -209,4 +209,68 @@ const legacy = {
   assert.deepEqual(saved().meals, meals);
 }
 
+{
+  const { context, saved, raw, before } = loadApp({
+    ...legacy,
+    symptomLogs: [
+      {
+        id: "s9",
+        date: "2026-01-02",
+        fatigue: 4,
+        nausea: 1,
+        fatigueSlots: { morning: 2, night: 5 },
+        fatigueEntries: [
+          { id: "e1", time: "15:40", score: 5 },
+          { id: "bad", time: "25:00", score: 3 },
+          { id: "e2", time: "08:05", score: "2" },
+        ],
+      },
+    ],
+  });
+  assert.equal(raw(), before);
+  const loaded = plain(context.loadState());
+  assert.equal(loaded.symptomLogs[0].fatigue, 4);
+  assert.equal(loaded.symptomLogs[0].nausea, 1);
+  assert.equal(loaded.symptomLogs[0].id, "s9");
+  assert.deepEqual(loaded.symptomLogs[0].fatigueSlots, { morning: 2, night: 5 });
+  assert.deepEqual(
+    loaded.symptomLogs[0].fatigueEntries.map(({ id, ...rest }) => ({ id, ...rest })),
+    [
+      { id: "e2", time: "08:05", score: 2 },
+      { id: "e1", time: "15:40", score: 5 },
+    ]
+  );
+  assert.deepEqual(loaded.meals, meals);
+
+  context.addFatigueEntry("2026-01-02", 3, "12:10");
+  context.addFatigueEntry("2026-01-02", 1, "08:05");
+  const stored = saved();
+  assert.equal(stored.symptomLogs[0].fatigue, 4);
+  assert.equal(stored.symptomLogs[0].nausea, 1);
+  assert.deepEqual(stored.symptomLogs[0].fatigueSlots, { morning: 2, night: 5 });
+  assert.equal(stored.symptomLogs[0].fatigueEntries.filter((entry) => entry.time === "08:05").length, 2);
+  assert.equal(stored.meals[0].name, meals[0].name);
+  assert.equal(stored.weightLogs[0].weight, weightLogs[0].weight);
+
+  const added = stored.symptomLogs[0].fatigueEntries.find((entry) => entry.time === "12:10");
+  context.updateFatigueEntryTime("2026-01-02", added.id, "12:45");
+  assert.equal(saved().symptomLogs[0].fatigueEntries.find((entry) => entry.id === added.id).time, "12:45");
+  assert.equal(saved().symptomLogs[0].fatigue, 4);
+  context.updateFatigueEntryTime("2026-01-02", added.id, "99:99");
+  assert.equal(saved().symptomLogs[0].fatigueEntries.find((entry) => entry.id === added.id).time, "12:45");
+
+  context.deleteFatigueEntry("2026-01-02", added.id);
+  const afterDelete = saved().symptomLogs[0];
+  assert.equal(afterDelete.fatigueEntries.some((entry) => entry.id === added.id), false);
+  assert.equal(afterDelete.fatigue, 4);
+  assert.equal(afterDelete.nausea, 1);
+  assert.deepEqual(afterDelete.fatigueSlots, { morning: 2, night: 5 });
+  assert.deepEqual(saved().meals, meals);
+  assert.match(context.symptomSummaryText(), /時間なし4/);
+  assert.match(context.symptomSummaryText(), /朝2/);
+  assert.match(context.symptomSummaryText(), /08:05は2/);
+  assert.match(context.symptomSummaryText(), /15:40は5/);
+  assert.doesNotMatch(context.symptomSummaryText(), /12:45/);
+}
+
 console.log("symptom log tests passed");

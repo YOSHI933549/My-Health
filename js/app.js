@@ -267,16 +267,42 @@ function sanitizeSymptomLogs(logs) {
     };
     const slots = sanitizeFatigueSlots(raw.fatigueSlots);
     if (slots) entry.fatigueSlots = slots;
-    if (entry.fatigue == null && entry.nausea == null && !slots) continue;
+    const entries = sanitizeFatigueEntries(raw.fatigueEntries);
+    if (entries) entry.fatigueEntries = entries;
+    if (entry.fatigue == null && entry.nausea == null && !slots && !entries) continue;
     byDate.set(date, entry);
   }
   return [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
 }
 
+function isHmTime(value) {
+  return typeof value === "string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
+}
+
+function sanitizeFatigueEntries(raw) {
+  if (!Array.isArray(raw)) return null;
+  const entries = [];
+  for (const item of raw) {
+    if (!item || typeof item !== "object") continue;
+    const score = symptomScore(item.score);
+    const time = String(item.time || "");
+    if (score == null || !isHmTime(time)) continue;
+    entries.push({
+      id: typeof item.id === "string" && item.id ? item.id : uid(),
+      time,
+      score,
+    });
+  }
+  if (!entries.length) return null;
+  entries.sort((a, b) => a.time.localeCompare(b.time) || String(a.id).localeCompare(String(b.id)));
+  return entries;
+}
+
 function symptomLogIsEmpty(log) {
   if (!log) return true;
   if (log.fatigue != null || log.nausea != null) return false;
-  return !log.fatigueSlots || !FATIGUE_SLOTS.some((slot) => log.fatigueSlots[slot.key] != null);
+  if (log.fatigueSlots && FATIGUE_SLOTS.some((slot) => log.fatigueSlots[slot.key] != null)) return false;
+  return !log.fatigueEntries || log.fatigueEntries.length === 0;
 }
 
 function fatigueSlotScore(log, key) {
@@ -333,6 +359,56 @@ function setFatigueSlot(date, slot, score) {
   renderSymptoms(date);
 }
 
+function sortedFatigueEntries(log) {
+  if (!log || !Array.isArray(log.fatigueEntries)) return [];
+  return [...log.fatigueEntries].sort((a, b) => a.time.localeCompare(b.time) || String(a.id).localeCompare(String(b.id)));
+}
+
+function addFatigueEntry(date, score, time) {
+  if (!isIsoDate(date) || !isHmTime(time)) return;
+  const value = symptomScore(score);
+  if (value == null) return;
+  if (!Array.isArray(state.symptomLogs)) state.symptomLogs = [];
+  let log = state.symptomLogs.find((item) => item.date === date);
+  if (!log) {
+    log = { id: uid(), date, fatigue: null, nausea: null };
+    state.symptomLogs.push(log);
+  }
+  if (!Array.isArray(log.fatigueEntries)) log.fatigueEntries = [];
+  log.fatigueEntries.push({ id: uid(), time, score: value });
+  saveState();
+  renderSymptoms(date);
+}
+
+function updateFatigueEntryTime(date, id, time) {
+  if (!isIsoDate(date)) return;
+  const log = getSymptomLog(date);
+  const entry = log && Array.isArray(log.fatigueEntries) ? log.fatigueEntries.find((item) => item.id === id) : null;
+  if (!entry) return;
+  if (!isHmTime(time)) {
+    renderSymptoms(date);
+    return;
+  }
+  if (entry.time === time) return;
+  entry.time = time;
+  saveState();
+  renderSymptoms(date);
+}
+
+function deleteFatigueEntry(date, id) {
+  const log = getSymptomLog(date);
+  if (!log || !Array.isArray(log.fatigueEntries)) return;
+  const next = log.fatigueEntries.filter((item) => item.id !== id);
+  if (next.length === log.fatigueEntries.length) return;
+  if (next.length === 0) delete log.fatigueEntries;
+  else log.fatigueEntries = next;
+  if (symptomLogIsEmpty(log)) {
+    state.symptomLogs = state.symptomLogs.filter((item) => item.date !== date);
+  }
+  saveState();
+  renderSymptoms(date);
+}
+
 function fatigueRecordText(log, emptyLabel) {
   const parts = [];
   if (log && log.fatigue != null) parts.push(`時間なし${log.fatigue}`);
@@ -340,7 +416,54 @@ function fatigueRecordText(log, emptyLabel) {
     const score = fatigueSlotScore(log, slot.key);
     if (score != null) parts.push(`${slot.label}${score}`);
   }
+  for (const entry of sortedFatigueEntries(log)) parts.push(`${entry.time}は${entry.score}`);
   return parts.length ? parts.join(" ") : emptyLabel;
+}
+
+function minutesOfTime(time) {
+  const [hour, minute] = time.split(":").map(Number);
+  return hour * 60 + minute;
+}
+
+function fatigueChartHTML(entries) {
+  if (!entries.length) {
+    return `<p class="hint fatigue-time-empty">この日の時刻の記録はまだありません。</p>`;
+  }
+  const placed = entries.map((entry) => {
+    const duplicates = entries.filter((item) => item.time === entry.time);
+    const offset = duplicates.findIndex((item) => item.id === entry.id);
+    const x = Math.min(96, (minutesOfTime(entry.time) / 1440) * 100 + offset * 1.4);
+    const y = ((entry.score - 1) / 4) * 76 + 10;
+    return { ...entry, x, y };
+  });
+  const poly = placed.map((point) => `${(point.x / 100) * 1440},${100 - point.y}`).join(" ");
+  const dots = placed
+    .map(
+      (point) =>
+        `<span class="fatigue-time-dot" style="left:${point.x}%;bottom:${point.y}%">${point.score}<small>${point.time}</small></span>`
+    )
+    .join("");
+  const label = entries.map((entry) => `${entry.time} ${entry.score}`).join("、");
+  return `<div class="fatigue-time-chart" role="img" aria-label="${label}">
+    <div class="fatigue-time-plot">
+      <svg viewBox="0 0 1440 100" preserveAspectRatio="none" aria-hidden="true"><polyline points="${poly}" /></svg>
+      ${dots}
+    </div>
+    <div class="fatigue-time-ticks" aria-hidden="true"><span>0時</span><span>6</span><span>12</span><span>18</span><span>24時</span></div>
+  </div>`;
+}
+
+function fatigueEntryListHTML(entries) {
+  if (!entries.length) return "";
+  return entries
+    .map(
+      (entry) => `<div class="fatigue-entry">
+        <input type="time" value="${entry.time}" data-entry-id="${entry.id}" aria-label="${entry.time} の時刻">
+        <span class="fatigue-entry-score">${entry.score}</span>
+        <button type="button" class="fatigue-entry-delete" data-fatigue-delete="${entry.id}">削除</button>
+      </div>`
+    )
+    .join("");
 }
 
 function symptomLine(log, emptyLabel) {
@@ -437,26 +560,36 @@ function initDashboard() {
   dateInput.addEventListener("change", renderDashboard);
   document.getElementById("copyDayForClaudeBtn").addEventListener("click", copyDayForClaude);
   document.getElementById("conditionCard").addEventListener("click", onSymptomScaleClick);
+  document.getElementById("fatigueEntryList").addEventListener("change", onFatigueTimeChange);
   document.getElementById("symptomHistory").addEventListener("click", onSymptomHistoryClick);
   document.getElementById("copySymptomsBtn").addEventListener("click", copySymptomLog);
 }
 
+function onFatigueTimeChange(event) {
+  const input = event.target.closest("input[type='time']");
+  if (!input) return;
+  const dateStr = document.getElementById("dashboardDate").value || todayStr();
+  updateFatigueEntryTime(dateStr, input.dataset.entryId, input.value);
+}
+
 function onSymptomScaleClick(event) {
+  const dateStr = document.getElementById("dashboardDate").value || todayStr();
+  const remove = event.target.closest("[data-fatigue-delete]");
+  if (remove) {
+    deleteFatigueEntry(dateStr, remove.dataset.fatigueDelete);
+    return;
+  }
   const button = event.target.closest("[data-symptom]");
   if (!button) return;
   const key = button.dataset.symptom;
   const score = symptomScore(button.dataset.score);
   if (!score) return;
-  const dateStr = document.getElementById("dashboardDate").value || todayStr();
-  const current = getSymptomLog(dateStr);
   if (key === "fatigue") {
-    const slot = button.dataset.slot;
-    if (!FATIGUE_SLOTS.some((item) => item.key === slot)) return;
-    const existing = fatigueSlotScore(current, slot);
-    setFatigueSlot(dateStr, slot, existing === score ? null : score);
+    addFatigueEntry(dateStr, score, nowTimeStr());
     return;
   }
   if (key !== "nausea") return;
+  const current = getSymptomLog(dateStr);
   setSymptom(dateStr, key, current && current[key] === score ? null : score);
 }
 
@@ -490,38 +623,31 @@ function renderSymptoms(dateStr) {
   if (!hint || !summary || !history) return;
 
   const day = isIsoDate(dateStr) ? dateStr : todayStr();
-  hint.textContent = `${fmtDate(day)}(${weekdayChar(day)})の記録です。1が軽い、5が強い。同じ数字をもう一度押すと消せます。`;
+  hint.textContent = `${fmtDate(day)}(${weekdayChar(day)})の記録です。1が軽い、5が強い。`;
 
   const log = getSymptomLog(day);
-  document.querySelectorAll("#conditionCard .symptom-score").forEach((button) => {
-    const score = Number(button.dataset.score);
-    const selected =
-      button.dataset.symptom === "nausea"
-        ? !!log && log.nausea === score
-        : fatigueSlotScore(log, button.dataset.slot) === score;
+  document.querySelectorAll("#conditionCard [data-symptom='nausea']").forEach((button) => {
+    const selected = !!log && log.nausea === Number(button.dataset.score);
     button.classList.toggle("is-selected", selected);
     button.setAttribute("aria-pressed", selected ? "true" : "false");
   });
 
+  const entries = sortedFatigueEntries(log);
   const axis = document.getElementById("fatigueAxis");
-  if (axis) {
-    axis.innerHTML = FATIGUE_SLOTS.map((slot) => {
-      const score = fatigueSlotScore(log, slot.key);
-      const level = score == null ? 0 : score;
-      return `<div class="fatigue-axis-col">
-        <div class="fatigue-axis-bar${level ? "" : " is-empty"}" style="--level:${level}"></div>
-        <span class="fatigue-axis-score">${level ? level : "—"}</span>
-        <span class="fatigue-axis-label">${slot.label}</span>
-        <span class="fatigue-axis-range">${slot.range}</span>
-      </div>`;
-    }).join("");
-  }
+  if (axis) axis.innerHTML = fatigueChartHTML(entries);
+  const entryList = document.getElementById("fatigueEntryList");
+  if (entryList) entryList.innerHTML = fatigueEntryListHTML(entries);
 
   const legacy = document.getElementById("legacyFatigueNote");
   if (legacy) {
-    const showLegacy = !!(log && log.fatigue != null);
-    legacy.classList.toggle("hidden", !showLegacy);
-    legacy.textContent = showLegacy ? `時間の指定がない記録: ${log.fatigue}` : "";
+    const notes = [];
+    if (log && log.fatigue != null) notes.push(`時間の指定がない記録: ${log.fatigue}`);
+    const slotText = FATIGUE_SLOTS.filter((slot) => fatigueSlotScore(log, slot.key) != null)
+      .map((slot) => `${slot.label}${fatigueSlotScore(log, slot.key)}`)
+      .join(" ");
+    if (slotText) notes.push(`以前の時間帯: ${slotText}`);
+    legacy.classList.toggle("hidden", notes.length === 0);
+    legacy.textContent = notes.join("　");
   }
 
   const logs = [...(state.symptomLogs || [])].sort((a, b) => b.date.localeCompare(a.date));

@@ -1557,51 +1557,92 @@ code, .mono { font-family: var(--font-type); }
   margin-top: 12px;
 }
 
-.fatigue-slot + .fatigue-slot { margin-top: 10px; }
+.fatigue-time-empty { margin: 8px 0 0; }
 
-.fatigue-axis {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  align-items: end;
-  gap: 8px;
-  margin: 0 0 8px;
-  padding-top: 4px;
+.fatigue-time-plot {
+  position: relative;
+  height: 132px;
+  margin-top: 12px;
   border-bottom: 1px solid var(--border);
 }
 
-.fatigue-axis-col {
+.fatigue-time-plot svg {
+  position: absolute;
+  inset: 8px 0 16px;
+  width: 100%;
+  height: calc(100% - 24px);
+  overflow: visible;
+}
+
+.fatigue-time-plot polyline {
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.fatigue-time-dot {
+  position: absolute;
+  width: 36px;
+  min-height: 36px;
+  margin-left: -18px;
+  transform: translateY(50%);
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-end;
-  gap: 2px;
-  min-height: 118px;
-}
-
-.fatigue-axis-bar {
-  width: 28px;
-  height: calc(var(--level) * 16px);
-  background: var(--primary-tint);
+  justify-content: center;
   border: 1px solid var(--primary);
-  border-bottom: none;
-}
-
-.fatigue-axis-bar.is-empty {
-  height: 2px;
-  background: var(--border);
-  border-color: var(--border);
-}
-
-.fatigue-axis-score,
-.fatigue-axis-label,
-.fatigue-axis-range {
+  background: var(--primary-tint);
+  color: var(--text);
   font-family: var(--font-hand);
-  line-height: 1.1;
-  -webkit-text-stroke: 0.3px currentColor;
-  -webkit-mask: var(--lead);
-  mask: var(--lead);
+  font-size: 16px;
+  line-height: 1;
+  pointer-events: none;
 }
 
-.fatigue-axis-score { font-size: 16px; color: var(--text); }
-.fatigue-axis-label { font-size: 16px; color: var(--text); }
-.fatigue-axis-range { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+.fatigue-time-dot small {
+  font-size: 9px;
+  color: var(--text-muted);
+}
+
+.fatigue-time-ticks {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2px;
+  font-family: var(--font-hand);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.fatigue-entry {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px auto;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.fatigue-entry input[type="time"] {
+  min-height: 44px;
+  font-size: 18px;
+}
+
+.fatigue-entry-score {
+  min-height: 44px;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-hand);
+  font-size: 22px;
+}
+
+.fatigue-entry-delete {
+  min-height: 44px;
+  min-width: 64px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  font-family: var(--font-hand);
+  font-size: 16px;
+  cursor: pointer;
+}

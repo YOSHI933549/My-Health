@@ -110,6 +110,7 @@
 
       <div class="symptom-block">
         <div class="symptom-label" id="symptomLabelNausea">吐き気</div>
+        <p class="hint">同じ数字をもう一度押すと消せます。</p>
         <div class="symptom-scale" role="group" aria-labelledby="symptomLabelNausea">
           <button type="button" class="body-part-btn symptom-score" data-symptom="nausea" data-score="1" aria-pressed="false" aria-label="吐き気 1">1</button>
           <button type="button" class="body-part-btn symptom-score" data-symptom="nausea" data-score="2" aria-pressed="false" aria-label="吐き気 2">2</button>
@@ -121,49 +122,17 @@
 
       <div class="symptom-block">
         <div class="symptom-label" id="symptomLabelFatigue">疲労</div>
-        <p class="hint">時間帯ごとに1〜5。グラフは左から朝、昼、夕、夜です。</p>
-        <div id="fatigueAxis" class="fatigue-axis"></div>
+        <p class="hint">数字を押すと、その時刻で1件追加されます。</p>
+        <div class="symptom-scale" role="group" aria-labelledby="symptomLabelFatigue">
+          <button type="button" class="body-part-btn symptom-score" data-symptom="fatigue" data-score="1" aria-label="疲労 1 を今の時刻で追加">1</button>
+          <button type="button" class="body-part-btn symptom-score" data-symptom="fatigue" data-score="2" aria-label="疲労 2 を今の時刻で追加">2</button>
+          <button type="button" class="body-part-btn symptom-score" data-symptom="fatigue" data-score="3" aria-label="疲労 3 を今の時刻で追加">3</button>
+          <button type="button" class="body-part-btn symptom-score" data-symptom="fatigue" data-score="4" aria-label="疲労 4 を今の時刻で追加">4</button>
+          <button type="button" class="body-part-btn symptom-score" data-symptom="fatigue" data-score="5" aria-label="疲労 5 を今の時刻で追加">5</button>
+        </div>
+        <div id="fatigueAxis"></div>
         <p class="hint hidden" id="legacyFatigueNote"></p>
-        <div class="fatigue-slot">
-          <div class="symptom-label" id="fatigueLabelMorning">朝</div>
-          <div class="symptom-scale" role="group" aria-labelledby="fatigueLabelMorning">
-            <button type="button" class="body-part-btn symptom-score" data-symptom="fatigue" data-slot="morning" data-score="1" aria-pressed="false" aria-label="朝の疲労 1">1</button>
-            <button type="button" class="body-part-btn symptom-score" data-symptom="fatigue" data-slot="morning" data-score="2" aria-pressed="false" aria-label="朝の疲労 2">2</button>
-            <button type="button" class="body-part-btn symptom-score" data-symptom="fatigue" data-slot="morning" data-score="3" aria-pressed="false" aria-label="朝の疲労 3">3</button>
-            <button type="button" class="body-part-btn symptom-score" data-symptom="fatigue" data-slot="morning" data-score="4" aria-pressed="false" aria-label="朝の疲労 4">4</button>
-            <button type="button" class="body-part-btn symptom-score" data-symptom="fatigue" data-slot="morning" data-score="5" aria-pressed="false" aria-label="朝の疲労 5">5</button>
-          </div>
-        </div>
-        <div class="fatigue-slot">
-          <div class="symptom-label" id="fatigueLabelNoon">昼</div>
-          <div class="symptom-scale" role="group" aria-labelledby="fatigueLabelNoon">
-            <button type="button" class="body-part-btn symptom-score" data-symptom="fatigue" data-slot="noon" data-score="1" aria-pressed="false" aria-label="昼の疲労 1">1</button>
-            <button type="button" class="body-part-btn symptom-score" data-symptom="fatigue" data-slot="noon" data-score="2" aria-pressed="false" aria-label="昼の疲労 2">2</button>
-            <button type="button" class="body-part-btn symptom-score" data-symptom="fatigue" data-slot="noon" data-score="3" aria-pressed="false" aria-label="昼の疲労 3">3</button>
-            <button type="button" class="body-part-btn symptom-score" data-symptom="fatigue" data-slot="noon" data-score="4" aria-pressed="false" aria-label="昼の疲労 4">4</button>
-            <button type="button" class="body-part-btn symptom-score" data-symptom="fatigue" data-slot="noon" data-score="5" aria-pressed="false" aria-label="昼の疲労 5">5</button>
-          </div>
-        </div>
-        <div class="fatigue-slot">
-          <div class="symptom-label" id="fatigueLabelEvening">夕</div>
-          <div class="symptom-scale" role="group" aria-labelledby="fatigueLabelEvening">
-            <button type="button" class="body-part-btn symptom-score" data-symptom="fatigue" data-slot="evening" data-score="1" aria-pressed="false" aria-label="夕の疲労 1">1</button>
-            <button type="button" class="body-part-btn symptom-score" data-symptom="fatigue" data-slot="evening" data-score="2" aria-pressed="false" aria-label="夕の疲労 2">2</button>
-            <button type="button" class="body-part-btn symptom-score" data-symptom="fatigue" data-slot="evening" data-score="3" aria-pressed="false" aria-label="夕の疲労 3">3</button>
-            <button type="button" class="body-part-btn symptom-score" data-symptom="fatigue" data-slot="evening" data-score="4" aria-pressed="false" aria-label="夕の疲労 4">4</button>
-            <button type="button" class="body-part-btn symptom-score" data-symptom="fatigue" data-slot="evening" data-score="5" aria-pressed="false" aria-label="夕の疲労 5">5</button>
-          </div>
-        </div>
-        <div class="fatigue-slot">
-          <div class="symptom-label" id="fatigueLabelNight">夜</div>
-          <div class="symptom-scale" role="group" aria-labelledby="fatigueLabelNight">
-            <button type="button" class="body-part-btn symptom-score" data-symptom="fatigue" data-slot="night" data-score="1" aria-pressed="false" aria-label="夜の疲労 1">1</button>
-            <button type="button" class="body-part-btn symptom-score" data-symptom="fatigue" data-slot="night" data-score="2" aria-pressed="false" aria-label="夜の疲労 2">2</button>
-            <button type="button" class="body-part-btn symptom-score" data-symptom="fatigue" data-slot="night" data-score="3" aria-pressed="false" aria-label="夜の疲労 3">3</button>
-            <button type="button" class="body-part-btn symptom-score" data-symptom="fatigue" data-slot="night" data-score="4" aria-pressed="false" aria-label="夜の疲労 4">4</button>
-            <button type="button" class="body-part-btn symptom-score" data-symptom="fatigue" data-slot="night" data-score="5" aria-pressed="false" aria-label="夜の疲労 5">5</button>
-          </div>
-        </div>
+        <div id="fatigueEntryList" class="fatigue-entries"></div>
       </div>
 
       <details class="symptom-history" id="symptomHistoryCard">
