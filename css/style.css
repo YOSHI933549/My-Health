@@ -1478,6 +1478,7 @@ code, .mono { font-family: var(--font-type); }
   min-height: 48px;
   padding: 8px 0;
   font-size: 22px;
+  font-weight: 400;
   line-height: 1;
   cursor: pointer;
   touch-action: manipulation;
@@ -1485,7 +1486,9 @@ code, .mono { font-family: var(--font-type); }
 
 .symptom-history {
   margin-top: 16px;
-  border-top: 1px solid var(--border);
+  padding-top: 8px;
+  border-top: none;
+  background: url("tex/wave.png") left top / 120px 10px repeat-x;
 }
 
 .symptom-history > summary {
@@ -1509,6 +1512,7 @@ code, .mono { font-family: var(--font-type); }
 }
 
 .symptom-day {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1519,7 +1523,7 @@ code, .mono { font-family: var(--font-type); }
   margin: 0;
   padding: 8px 2px;
   border: none;
-  border-bottom: 1px solid var(--border);
+  border-bottom: none;
   background: transparent;
   color: inherit;
   font: inherit;
@@ -1528,6 +1532,18 @@ code, .mono { font-family: var(--font-type); }
   touch-action: manipulation;
   appearance: none;
   -webkit-appearance: none;
+}
+
+.symptom-day + .symptom-day::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 6px;
+  background: url("tex/rule.png") left top / 120px 6px repeat-x;
+  opacity: 0.45;
+  pointer-events: none;
 }
 
 .symptom-day-date,
@@ -1555,4 +1571,151 @@ code, .mono { font-family: var(--font-type); }
 #copySymptomsBtn {
   width: 100%;
   margin-top: 12px;
+}
+
+.fatigue-chart {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  margin-top: 8px;
+  font-family: var(--font-hand);
+}
+
+.fatigue-chart-y {
+  position: relative;
+  height: 188px;
+}
+
+.fatigue-chart-y span,
+.fatigue-chart-x span,
+.fatigue-chart-empty,
+.fatigue-entry-score {
+  -webkit-mask: var(--lead);
+  mask: var(--lead);
+}
+
+.fatigue-chart-y span {
+  position: absolute;
+  right: 6px;
+  transform: translateY(-50%);
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--text-muted);
+  -webkit-text-stroke: 0.3px currentColor;
+}
+
+.fatigue-chart-plot {
+  position: relative;
+  height: 188px;
+  background: none;
+  border: none;
+}
+
+.fatigue-chart-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.fatigue-chart-x {
+  position: relative;
+  grid-column: 2;
+  height: 22px;
+  margin-top: 2px;
+}
+
+.fatigue-chart-x span {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--text-muted);
+  white-space: nowrap;
+  -webkit-text-stroke: 0.3px currentColor;
+}
+
+.fatigue-chart-empty {
+  position: absolute;
+  left: 12%;
+  right: 8%;
+  top: 50%;
+  z-index: 1;
+  transform: translateY(-50%);
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-hand);
+  font-size: 16px;
+  line-height: 1.35;
+  color: var(--text-muted);
+}
+
+.fatigue-entry {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 36px 44px;
+  gap: 8px;
+  align-items: center;
+  min-height: 48px;
+  margin-top: 2px;
+}
+
+.fatigue-entry + .fatigue-entry::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 6px;
+  background: url("tex/rule.png") left top / 120px 6px repeat-x;
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.fatigue-entry input[type="time"] {
+  min-height: 44px;
+  font-size: 18px;
+}
+
+.fatigue-entry-score {
+  min-height: 44px;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-hand);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  -webkit-text-stroke: 0.3px currentColor;
+}
+
+.fatigue-entry-delete {
+  position: relative;
+  width: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: transparent;
+  font-family: var(--font-hand);
+  font-size: 16px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.fatigue-entry-delete::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  margin: -9px 0 0 -9px;
+  background: var(--ink-red);
+  -webkit-mask: url("tex/cross.png") center / contain no-repeat;
+  mask: url("tex/cross.png") center / contain no-repeat;
+  pointer-events: none;
 }

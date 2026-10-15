@@ -17,6 +17,13 @@ const SYMPTOMS = [
   { key: "nausea", label: "吐き気" },
 ];
 
+const FATIGUE_SLOTS = [
+  { key: "morning", label: "朝", range: "6–10" },
+  { key: "noon", label: "昼", range: "10–15" },
+  { key: "evening", label: "夕", range: "15–19" },
+  { key: "night", label: "夜", range: "19–24" },
+];
+
 let state = loadState();
 let weightChartRange = "all";
 let calorieChartRange = "all";
@@ -232,6 +239,19 @@ function symptomScore(value) {
   return value;
 }
 
+function sanitizeFatigueSlots(raw) {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const slots = {};
+  let any = false;
+  for (const slot of FATIGUE_SLOTS) {
+    const score = symptomScore(raw[slot.key]);
+    if (score == null) continue;
+    slots[slot.key] = score;
+    any = true;
+  }
+  return any ? slots : null;
+}
+
 function sanitizeSymptomLogs(logs) {
   if (!Array.isArray(logs)) return [];
   const byDate = new Map();
@@ -239,17 +259,55 @@ function sanitizeSymptomLogs(logs) {
     if (!raw || typeof raw !== "object") continue;
     const date = String(raw.date || "");
     if (!isIsoDate(date)) continue;
-    const entry = { id: typeof raw.id === "string" && raw.id ? raw.id : uid(), date };
-    let hasScore = false;
-    for (const symptom of SYMPTOMS) {
-      const score = symptomScore(raw[symptom.key]);
-      entry[symptom.key] = score;
-      if (score != null) hasScore = true;
-    }
-    if (!hasScore) continue;
+    const entry = {
+      id: typeof raw.id === "string" && raw.id ? raw.id : uid(),
+      date,
+      fatigue: symptomScore(raw.fatigue),
+      nausea: symptomScore(raw.nausea),
+    };
+    const slots = sanitizeFatigueSlots(raw.fatigueSlots);
+    if (slots) entry.fatigueSlots = slots;
+    const entries = sanitizeFatigueEntries(raw.fatigueEntries);
+    if (entries) entry.fatigueEntries = entries;
+    if (entry.fatigue == null && entry.nausea == null && !slots && !entries) continue;
     byDate.set(date, entry);
   }
   return [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
+}
+
+function isHmTime(value) {
+  return typeof value === "string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
+}
+
+function sanitizeFatigueEntries(raw) {
+  if (!Array.isArray(raw)) return null;
+  const entries = [];
+  for (const item of raw) {
+    if (!item || typeof item !== "object") continue;
+    const score = symptomScore(item.score);
+    const time = String(item.time || "");
+    if (score == null || !isHmTime(time)) continue;
+    entries.push({
+      id: typeof item.id === "string" && item.id ? item.id : uid(),
+      time,
+      score,
+    });
+  }
+  if (!entries.length) return null;
+  entries.sort((a, b) => a.time.localeCompare(b.time) || String(a.id).localeCompare(String(b.id)));
+  return entries;
+}
+
+function symptomLogIsEmpty(log) {
+  if (!log) return true;
+  if (log.fatigue != null || log.nausea != null) return false;
+  if (log.fatigueSlots && FATIGUE_SLOTS.some((slot) => log.fatigueSlots[slot.key] != null)) return false;
+  return !log.fatigueEntries || log.fatigueEntries.length === 0;
+}
+
+function fatigueSlotScore(log, key) {
+  if (!log || !log.fatigueSlots) return null;
+  return symptomScore(log.fatigueSlots[key]);
 }
 
 function getSymptomLog(date) {
@@ -269,24 +327,324 @@ function setSymptom(date, key, score) {
     state.symptomLogs.push(log);
   }
   log[key] = value;
-  if (SYMPTOMS.every((symptom) => log[symptom.key] == null)) {
+  if (symptomLogIsEmpty(log)) {
     state.symptomLogs = state.symptomLogs.filter((item) => item.date !== date);
   }
   saveState();
   renderSymptoms(date);
 }
 
+function setFatigueSlot(date, slot, score) {
+  if (!isIsoDate(date) || !FATIGUE_SLOTS.some((item) => item.key === slot)) return;
+  const value = score == null ? null : symptomScore(score);
+  if (score != null && value == null) return;
+
+  if (!Array.isArray(state.symptomLogs)) state.symptomLogs = [];
+  let log = state.symptomLogs.find((item) => item.date === date);
+  if (!log) {
+    if (value == null) return;
+    log = { id: uid(), date, fatigue: null, nausea: null };
+    state.symptomLogs.push(log);
+  }
+  if (!log.fatigueSlots || typeof log.fatigueSlots !== "object" || Array.isArray(log.fatigueSlots)) {
+    log.fatigueSlots = {};
+  }
+  if (value == null) delete log.fatigueSlots[slot];
+  else log.fatigueSlots[slot] = value;
+  if (Object.keys(log.fatigueSlots).length === 0) delete log.fatigueSlots;
+  if (symptomLogIsEmpty(log)) {
+    state.symptomLogs = state.symptomLogs.filter((item) => item.date !== date);
+  }
+  saveState();
+  renderSymptoms(date);
+}
+
+function sortedFatigueEntries(log) {
+  if (!log || !Array.isArray(log.fatigueEntries)) return [];
+  return [...log.fatigueEntries].sort((a, b) => a.time.localeCompare(b.time) || String(a.id).localeCompare(String(b.id)));
+}
+
+function addFatigueEntry(date, score, time) {
+  if (!isIsoDate(date) || !isHmTime(time)) return;
+  const value = symptomScore(score);
+  if (value == null) return;
+  if (!Array.isArray(state.symptomLogs)) state.symptomLogs = [];
+  let log = state.symptomLogs.find((item) => item.date === date);
+  if (!log) {
+    log = { id: uid(), date, fatigue: null, nausea: null };
+    state.symptomLogs.push(log);
+  }
+  if (!Array.isArray(log.fatigueEntries)) log.fatigueEntries = [];
+  log.fatigueEntries.push({ id: uid(), time, score: value });
+  saveState();
+  renderSymptoms(date);
+}
+
+function updateFatigueEntryTime(date, id, time) {
+  if (!isIsoDate(date)) return;
+  const log = getSymptomLog(date);
+  const entry = log && Array.isArray(log.fatigueEntries) ? log.fatigueEntries.find((item) => item.id === id) : null;
+  if (!entry) return;
+  if (!isHmTime(time)) {
+    renderSymptoms(date);
+    return;
+  }
+  if (entry.time === time) return;
+  entry.time = time;
+  saveState();
+  renderSymptoms(date);
+}
+
+function deleteFatigueEntry(date, id) {
+  const log = getSymptomLog(date);
+  if (!log || !Array.isArray(log.fatigueEntries)) return;
+  const next = log.fatigueEntries.filter((item) => item.id !== id);
+  if (next.length === log.fatigueEntries.length) return;
+  if (next.length === 0) delete log.fatigueEntries;
+  else log.fatigueEntries = next;
+  if (symptomLogIsEmpty(log)) {
+    state.symptomLogs = state.symptomLogs.filter((item) => item.date !== date);
+  }
+  saveState();
+  renderSymptoms(date);
+}
+
+function fatigueRecordText(log, emptyLabel) {
+  const parts = [];
+  if (log && log.fatigue != null) parts.push(`時間なし${log.fatigue}`);
+  for (const slot of FATIGUE_SLOTS) {
+    const score = fatigueSlotScore(log, slot.key);
+    if (score != null) parts.push(`${slot.label}${score}`);
+  }
+  for (const entry of sortedFatigueEntries(log)) parts.push(`${entry.time}は${entry.score}`);
+  return parts.length ? parts.join(" ") : emptyLabel;
+}
+
+function minutesOfTime(time) {
+  const [hour, minute] = time.split(":").map(Number);
+  return hour * 60 + minute;
+}
+
+const FATIGUE_CHART_X_INSET = 13;
+const FATIGUE_CHART_Y_INSET = 12;
+
+function fatigueChartX(minutes, nudge = 0) {
+  const span = 100 - FATIGUE_CHART_X_INSET * 2;
+  const x = FATIGUE_CHART_X_INSET + (minutes / 1440) * span + nudge;
+  return Math.max(FATIGUE_CHART_X_INSET, Math.min(100 - FATIGUE_CHART_X_INSET, x));
+}
+
+function fatigueChartY(score) {
+  const span = 100 - FATIGUE_CHART_Y_INSET * 2;
+  return FATIGUE_CHART_Y_INSET + ((5 - score) / 4) * span;
+}
+
+function fatigueChartMarks(entries) {
+  const groups = new Map();
+  for (const entry of entries) {
+    const key = `${entry.time}:${entry.score}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(entry);
+  }
+  const marks = entries.map((entry) => {
+    const group = groups.get(`${entry.time}:${entry.score}`);
+    const index = group.findIndex((item) => item.id === entry.id);
+    const nudge = (index - (group.length - 1) / 2) * 5;
+    return {
+      ...entry,
+      x: fatigueChartX(minutesOfTime(entry.time), nudge),
+      y: fatigueChartY(entry.score),
+    };
+  });
+  marks.sort((a, b) => a.x - b.x || a.y - b.y || String(a.id).localeCompare(String(b.id)));
+  return marks;
+}
+
+function fatigueChartHTML(entries) {
+  const sorted = [...entries].sort(
+    (a, b) => a.time.localeCompare(b.time) || String(a.id).localeCompare(String(b.id))
+  );
+  const marks = fatigueChartMarks(sorted);
+  const yLabels = [5, 4, 3, 2, 1]
+    .map((score) => `<span style="top:${fatigueChartY(score)}%">${score}</span>`)
+    .join("");
+  const xLabels = [0, 6, 12, 18, 24]
+    .map((hour) => {
+      const label = hour === 0 || hour === 24 ? `${hour}時` : String(hour);
+      return `<span style="left:${fatigueChartX(hour * 60)}%">${label}</span>`;
+    })
+    .join("");
+  const empty = sorted.length
+    ? ""
+    : `<p class="fatigue-chart-empty">この日の時刻の記録はまだありません。</p>`;
+  const label = sorted.length
+    ? `疲労の推移。${sorted.map((entry) => `${entry.time} は ${entry.score}`).join("、")}`
+    : "この日の時刻の記録はまだありません";
+  const points = marks.length >= 2 ? ` data-points="${marks.map((mark) => `${mark.x},${mark.y}`).join(" ")}"` : "";
+  return `<div class="fatigue-chart${sorted.length === 0 ? " is-empty" : ""}" role="img" aria-label="${label}">
+    <div class="fatigue-chart-y" aria-hidden="true">${yLabels}</div>
+    <div class="fatigue-chart-plot">
+      <canvas class="fatigue-chart-canvas"${points} aria-hidden="true"></canvas>
+      ${empty}
+    </div>
+    <div class="fatigue-chart-x" aria-hidden="true">${xLabels}</div>
+  </div>`;
+}
+
+let fatigueChartPaintEntries = [];
+let fatigueChartObserver = null;
+
+function paintFatigueChart(entries) {
+  fatigueChartPaintEntries = entries;
+  const draw = () => {
+    const canvas = document.querySelector("#fatigueAxis .fatigue-chart-canvas");
+    if (canvas) drawFatigueChart(canvas, fatigueChartPaintEntries);
+  };
+  draw();
+  if (typeof pencilTexReady !== "undefined" && pencilTexReady && typeof pencilTexReady.then === "function") {
+    pencilTexReady.then(draw);
+  }
+  if (typeof ResizeObserver !== "function") return;
+  if (!fatigueChartObserver) {
+    fatigueChartObserver = new ResizeObserver(() => {
+      const canvas = document.querySelector("#fatigueAxis .fatigue-chart-canvas");
+      if (canvas) drawFatigueChart(canvas, fatigueChartPaintEntries);
+    });
+  }
+  fatigueChartObserver.disconnect();
+  const plot = document.querySelector("#fatigueAxis .fatigue-chart-plot");
+  if (plot) fatigueChartObserver.observe(plot);
+}
+
+function drawFatigueChart(canvas, entries) {
+  const plot = canvas.parentElement;
+  if (!plot) return;
+  const cssWidth = plot.clientWidth;
+  const cssHeight = plot.clientHeight;
+  if (cssWidth < 2 || cssHeight < 2) return;
+  const dpr = window.devicePixelRatio || 1;
+  const bitmapW = Math.round(cssWidth * dpr);
+  const bitmapH = Math.round(cssHeight * dpr);
+  if (canvas.width !== bitmapW || canvas.height !== bitmapH) {
+    canvas.width = bitmapW;
+    canvas.height = bitmapH;
+  }
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, cssWidth, cssHeight);
+
+  const styles = getComputedStyle(document.documentElement);
+  const primary = styles.getPropertyValue("--primary").trim() || "#cc6445";
+  const graphite = styles.getPropertyValue("--graphite").trim() || "#3a3936";
+  const surfaceAlt = styles.getPropertyValue("--surface-alt").trim() || "#efe9dc";
+  const px = (pct) => (pct / 100) * cssWidth;
+  const py = (pct) => (pct / 100) * cssHeight;
+  const sorted = [...entries].sort(
+    (a, b) => a.time.localeCompare(b.time) || String(a.id).localeCompare(String(b.id))
+  );
+  const marks = fatigueChartMarks(sorted);
+
+  ctx.save();
+  ctx.strokeStyle = graphite;
+  ctx.globalAlpha = 0.22;
+  ctx.lineWidth = 1;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  for (const score of [5, 4, 3, 2, 1]) {
+    const y = py(fatigueChartY(score));
+    ctx.beginPath();
+    pencilLineTo(ctx, 0, y, cssWidth, y, score + 1);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 0.16;
+  for (const hour of [6, 12, 18]) {
+    const x = px(fatigueChartX(hour * 60));
+    ctx.beginPath();
+    pencilLineTo(ctx, x, py(fatigueChartY(5)), x, py(fatigueChartY(1)), hour + 2);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 0.4;
+  ctx.lineWidth = 1.15;
+  ctx.beginPath();
+  pencilLineTo(ctx, 0.6, py(fatigueChartY(5)), 0.6, py(fatigueChartY(1)), 9);
+  ctx.stroke();
+  ctx.restore();
+
+  if (marks.length >= 2) {
+    ctx.beginPath();
+    for (let i = 1; i < marks.length; i++) {
+      pencilLineTo(
+        ctx,
+        px(marks[i - 1].x),
+        py(marks[i - 1].y),
+        px(marks[i].x),
+        py(marks[i].y),
+        i + 4
+      );
+    }
+    ctx.strokeStyle = primary;
+    ctx.lineWidth = 2.1;
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+    ctx.stroke();
+    ctx.save();
+    ctx.translate(0.8, -0.7);
+    ctx.globalAlpha = 0.45;
+    ctx.lineWidth = 1.1;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  const jit = (i, k) => {
+    const s = Math.sin(i * 12.9898 + k * 78.233) * 43758.5453;
+    return s - Math.floor(s) - 0.5;
+  };
+  marks.forEach((mark, i) => {
+    const r = 4.4;
+    const cx = px(mark.x);
+    const cy = py(mark.y);
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, r + jit(i, 1) * 0.7, r + jit(i, 2) * 0.7, jit(i, 3), 0, Math.PI * 2);
+    ctx.fillStyle = surfaceAlt;
+    ctx.fill();
+    ctx.lineWidth = 1.7;
+    ctx.strokeStyle = primary;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(cx + 0.4, cy - 0.4, r + 0.5, -2.4 + jit(i, 4), 0.9 + jit(i, 5));
+    ctx.save();
+    ctx.lineWidth = 0.8;
+    ctx.globalAlpha = 0.5;
+    ctx.stroke();
+    ctx.restore();
+  });
+
+  pencilGrain(ctx, 0, 0, cssWidth, cssHeight);
+}
+
+function fatigueEntryListHTML(entries) {
+  if (!entries.length) return "";
+  return entries
+    .map(
+      (entry) => `<div class="fatigue-entry">
+        <input type="time" value="${entry.time}" data-entry-id="${entry.id}" aria-label="${entry.time} の時刻">
+        <span class="fatigue-entry-score">${entry.score}</span>
+        <button type="button" class="fatigue-entry-delete" data-fatigue-delete="${entry.id}" aria-label="削除">削除</button>
+      </div>`
+    )
+    .join("");
+}
+
+function symptomLine(log, emptyLabel) {
+  const nausea = !log || log.nausea == null ? emptyLabel : String(log.nausea);
+  return `吐き気 ${nausea} ・ 疲労 ${fatigueRecordText(log, emptyLabel)}`;
+}
+
 function symptomSummaryText() {
   const logs = sanitizeSymptomLogs(state.symptomLogs);
   if (!logs.length) return "";
   const lines = ["疲労と吐き気（1が軽い、5が強い）"];
-  for (const log of logs) {
-    const parts = SYMPTOMS.map((symptom) => {
-      const score = log[symptom.key];
-      return `${symptom.label} ${score == null ? "未記録" : score}`;
-    });
-    lines.push(`${log.date} ${parts.join(" ")}`);
-  }
+  for (const log of logs) lines.push(`${log.date} ${symptomLine(log, "未記録")}`);
   return lines.join("\n");
 }
 
@@ -370,18 +728,36 @@ function initDashboard() {
   dateInput.value = todayStr();
   dateInput.addEventListener("change", renderDashboard);
   document.getElementById("copyDayForClaudeBtn").addEventListener("click", copyDayForClaude);
-  document.getElementById("symptomScales").addEventListener("click", onSymptomScaleClick);
+  document.getElementById("conditionCard").addEventListener("click", onSymptomScaleClick);
+  document.getElementById("fatigueEntryList").addEventListener("change", onFatigueTimeChange);
   document.getElementById("symptomHistory").addEventListener("click", onSymptomHistoryClick);
   document.getElementById("copySymptomsBtn").addEventListener("click", copySymptomLog);
 }
 
+function onFatigueTimeChange(event) {
+  const input = event.target.closest("input[type='time']");
+  if (!input) return;
+  const dateStr = document.getElementById("dashboardDate").value || todayStr();
+  updateFatigueEntryTime(dateStr, input.dataset.entryId, input.value);
+}
+
 function onSymptomScaleClick(event) {
+  const dateStr = document.getElementById("dashboardDate").value || todayStr();
+  const remove = event.target.closest("[data-fatigue-delete]");
+  if (remove) {
+    deleteFatigueEntry(dateStr, remove.dataset.fatigueDelete);
+    return;
+  }
   const button = event.target.closest("[data-symptom]");
   if (!button) return;
   const key = button.dataset.symptom;
   const score = symptomScore(button.dataset.score);
-  if (!score || !SYMPTOMS.some((symptom) => symptom.key === key)) return;
-  const dateStr = document.getElementById("dashboardDate").value || todayStr();
+  if (!score) return;
+  if (key === "fatigue") {
+    addFatigueEntry(dateStr, score, nowTimeStr());
+    return;
+  }
+  if (key !== "nausea") return;
   const current = getSymptomLog(dateStr);
   setSymptom(dateStr, key, current && current[key] === score ? null : score);
 }
@@ -392,7 +768,7 @@ function onSymptomHistoryClick(event) {
   const dateInput = document.getElementById("dashboardDate");
   dateInput.value = row.dataset.date;
   renderDashboard();
-  document.getElementById("symptomCard").scrollIntoView({ block: "nearest" });
+  document.getElementById("conditionCard").scrollIntoView({ block: "nearest" });
 }
 
 async function copySymptomLog() {
@@ -416,26 +792,46 @@ function renderSymptoms(dateStr) {
   if (!hint || !summary || !history) return;
 
   const day = isIsoDate(dateStr) ? dateStr : todayStr();
-  hint.textContent = `${fmtDate(day)}(${weekdayChar(day)})の記録です。1が軽い、5が強い。同じ数字をもう一度押すと消せます。`;
+  hint.textContent = `${fmtDate(day)}(${weekdayChar(day)})の記録です。1が軽い、5が強い。`;
 
   const log = getSymptomLog(day);
-  document.querySelectorAll("#symptomScales .symptom-score").forEach((button) => {
-    const selected = !!log && log[button.dataset.symptom] === Number(button.dataset.score);
+  document.querySelectorAll("#conditionCard [data-symptom='nausea']").forEach((button) => {
+    const selected = !!log && log.nausea === Number(button.dataset.score);
     button.classList.toggle("is-selected", selected);
     button.setAttribute("aria-pressed", selected ? "true" : "false");
   });
+
+  const entries = sortedFatigueEntries(log);
+  const axis = document.getElementById("fatigueAxis");
+  if (axis) {
+    axis.innerHTML = fatigueChartHTML(entries);
+    paintFatigueChart(entries);
+  }
+  const entryList = document.getElementById("fatigueEntryList");
+  if (entryList) entryList.innerHTML = fatigueEntryListHTML(entries);
+
+  const legacy = document.getElementById("legacyFatigueNote");
+  if (legacy) {
+    const notes = [];
+    if (log && log.fatigue != null) notes.push(`時間の指定がない記録: ${log.fatigue}`);
+    const slotText = FATIGUE_SLOTS.filter((slot) => fatigueSlotScore(log, slot.key) != null)
+      .map((slot) => `${slot.label}${fatigueSlotScore(log, slot.key)}`)
+      .join(" ");
+    if (slotText) notes.push(`以前の時間帯: ${slotText}`);
+    legacy.classList.toggle("hidden", notes.length === 0);
+    legacy.textContent = notes.join("　");
+  }
 
   const logs = [...(state.symptomLogs || [])].sort((a, b) => b.date.localeCompare(a.date));
   summary.textContent = logs.length ? `これまでの記録（${logs.length}日）` : "これまでの記録";
   history.innerHTML = logs.length
     ? logs
         .map((item) => {
-          const scores = SYMPTOMS.map((symptom) => `${symptom.label} ${item[symptom.key] == null ? "—" : item[symptom.key]}`).join(" ・ ");
           const current = item.date === day ? " is-current" : "";
           const currentAttr = item.date === day ? ' aria-current="date"' : "";
           return `<button type="button" class="symptom-day${current}" data-date="${item.date}"${currentAttr}>
             <span class="symptom-day-date">${fmtDate(item.date)}(${weekdayChar(item.date)})</span>
-            <span class="symptom-day-scores">${scores}</span>
+            <span class="symptom-day-scores">${symptomLine(item, "—")}</span>
           </button>`;
         })
         .join("")

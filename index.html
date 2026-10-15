@@ -69,39 +69,6 @@
       <input type="date" id="dashboardDate">
     </div>
 
-    <div class="card" id="symptomCard">
-      <h3>疲労と吐き気</h3>
-      <p class="hint" id="symptomDateHint">1が軽い、5が強い。同じ数字をもう一度押すと消せます。</p>
-      <div id="symptomScales">
-        <div class="symptom-block">
-          <div class="symptom-label" id="symptomLabelFatigue">疲労</div>
-          <div class="symptom-scale" role="group" aria-labelledby="symptomLabelFatigue">
-            <button type="button" class="body-part-btn symptom-score" data-symptom="fatigue" data-score="1" aria-pressed="false">1</button>
-            <button type="button" class="body-part-btn symptom-score" data-symptom="fatigue" data-score="2" aria-pressed="false">2</button>
-            <button type="button" class="body-part-btn symptom-score" data-symptom="fatigue" data-score="3" aria-pressed="false">3</button>
-            <button type="button" class="body-part-btn symptom-score" data-symptom="fatigue" data-score="4" aria-pressed="false">4</button>
-            <button type="button" class="body-part-btn symptom-score" data-symptom="fatigue" data-score="5" aria-pressed="false">5</button>
-          </div>
-        </div>
-        <div class="symptom-block">
-          <div class="symptom-label" id="symptomLabelNausea">吐き気</div>
-          <div class="symptom-scale" role="group" aria-labelledby="symptomLabelNausea">
-            <button type="button" class="body-part-btn symptom-score" data-symptom="nausea" data-score="1" aria-pressed="false">1</button>
-            <button type="button" class="body-part-btn symptom-score" data-symptom="nausea" data-score="2" aria-pressed="false">2</button>
-            <button type="button" class="body-part-btn symptom-score" data-symptom="nausea" data-score="3" aria-pressed="false">3</button>
-            <button type="button" class="body-part-btn symptom-score" data-symptom="nausea" data-score="4" aria-pressed="false">4</button>
-            <button type="button" class="body-part-btn symptom-score" data-symptom="nausea" data-score="5" aria-pressed="false">5</button>
-          </div>
-        </div>
-      </div>
-      <details class="symptom-history" id="symptomHistoryCard">
-        <summary id="symptomHistorySummary">これまでの記録</summary>
-        <p class="hint">日付を押すと、その日を表示します。</p>
-        <div id="symptomHistory" class="symptom-log"></div>
-        <button type="button" class="btn ghost" id="copySymptomsBtn">記録をコピー</button>
-      </details>
-    </div>
-
     <div id="noProfileNotice" class="notice hidden">
       <p>まずは <b>設定</b> タブで身長・年齢・性別・現在の体重を入力してください。目標カロリー・たんぱく質などを自動計算します。</p>
       <button class="btn" data-goto="settings">設定へ移動</button>
@@ -135,6 +102,45 @@
         <p class="hint">この日の食事・目標・体重・筋トレをまとめてコピーします。Claudeのプロジェクトに貼ると、足りない点と具体的な解決策を返します。</p>
         <button type="button" class="btn primary" id="copyDayForClaudeBtn">この日の記録をコピー</button>
       </div>
+    </div>
+
+    <div class="card" id="conditionCard">
+      <h3>体調</h3>
+      <p class="hint" id="symptomDateHint">1が軽い、5が強い。同じ数字をもう一度押すと消せます。</p>
+
+      <div class="symptom-block">
+        <div class="symptom-label" id="symptomLabelNausea">吐き気</div>
+        <p class="hint">同じ数字をもう一度押すと消せます。</p>
+        <div class="symptom-scale" role="group" aria-labelledby="symptomLabelNausea">
+          <button type="button" class="body-part-btn symptom-score" data-symptom="nausea" data-score="1" aria-pressed="false" aria-label="吐き気 1">1</button>
+          <button type="button" class="body-part-btn symptom-score" data-symptom="nausea" data-score="2" aria-pressed="false" aria-label="吐き気 2">2</button>
+          <button type="button" class="body-part-btn symptom-score" data-symptom="nausea" data-score="3" aria-pressed="false" aria-label="吐き気 3">3</button>
+          <button type="button" class="body-part-btn symptom-score" data-symptom="nausea" data-score="4" aria-pressed="false" aria-label="吐き気 4">4</button>
+          <button type="button" class="body-part-btn symptom-score" data-symptom="nausea" data-score="5" aria-pressed="false" aria-label="吐き気 5">5</button>
+        </div>
+      </div>
+
+      <div class="symptom-block">
+        <div class="symptom-label" id="symptomLabelFatigue">疲労</div>
+        <p class="hint">数字を押すと、その時刻で1件追加されます。</p>
+        <div class="symptom-scale" role="group" aria-labelledby="symptomLabelFatigue">
+          <button type="button" class="body-part-btn symptom-score" data-symptom="fatigue" data-score="1" aria-label="疲労 1 を今の時刻で追加">1</button>
+          <button type="button" class="body-part-btn symptom-score" data-symptom="fatigue" data-score="2" aria-label="疲労 2 を今の時刻で追加">2</button>
+          <button type="button" class="body-part-btn symptom-score" data-symptom="fatigue" data-score="3" aria-label="疲労 3 を今の時刻で追加">3</button>
+          <button type="button" class="body-part-btn symptom-score" data-symptom="fatigue" data-score="4" aria-label="疲労 4 を今の時刻で追加">4</button>
+          <button type="button" class="body-part-btn symptom-score" data-symptom="fatigue" data-score="5" aria-label="疲労 5 を今の時刻で追加">5</button>
+        </div>
+        <div id="fatigueAxis"></div>
+        <p class="hint hidden" id="legacyFatigueNote"></p>
+        <div id="fatigueEntryList" class="fatigue-entries"></div>
+      </div>
+
+      <details class="symptom-history" id="symptomHistoryCard">
+        <summary id="symptomHistorySummary">これまでの記録</summary>
+        <p class="hint">日付を押すと、その日を表示します。</p>
+        <div id="symptomHistory" class="symptom-log"></div>
+        <button type="button" class="btn ghost" id="copySymptomsBtn">記録をコピー</button>
+      </details>
     </div>
   </section>
 
