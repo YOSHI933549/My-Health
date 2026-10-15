@@ -665,6 +665,7 @@ function switchTab(tab) {
   document.querySelectorAll(".tab-btn").forEach((b) => b.classList.toggle("active", b.dataset.tab === tab));
   document.querySelectorAll(".tab-panel").forEach((p) => p.classList.toggle("active", p.id === `panel-${tab}`));
   if (tab === "dashboard") renderDashboard();
+  if (tab === "condition") renderSymptoms(conditionDateStr());
   if (tab === "meals") renderMeals();
   if (tab === "workouts") renderWorkouts();
   if (tab === "weight") renderWeight();
@@ -728,21 +729,31 @@ function initDashboard() {
   dateInput.value = todayStr();
   dateInput.addEventListener("change", renderDashboard);
   document.getElementById("copyDayForClaudeBtn").addEventListener("click", copyDayForClaude);
+}
+
+function initCondition() {
+  const dateInput = document.getElementById("conditionDate");
+  dateInput.value = todayStr();
+  dateInput.addEventListener("change", () => renderSymptoms(conditionDateStr()));
   document.getElementById("conditionCard").addEventListener("click", onSymptomScaleClick);
   document.getElementById("fatigueEntryList").addEventListener("change", onFatigueTimeChange);
   document.getElementById("symptomHistory").addEventListener("click", onSymptomHistoryClick);
   document.getElementById("copySymptomsBtn").addEventListener("click", copySymptomLog);
 }
 
+function conditionDateStr() {
+  const input = document.getElementById("conditionDate");
+  return (input && input.value) || todayStr();
+}
+
 function onFatigueTimeChange(event) {
   const input = event.target.closest("input[type='time']");
   if (!input) return;
-  const dateStr = document.getElementById("dashboardDate").value || todayStr();
-  updateFatigueEntryTime(dateStr, input.dataset.entryId, input.value);
+  updateFatigueEntryTime(conditionDateStr(), input.dataset.entryId, input.value);
 }
 
 function onSymptomScaleClick(event) {
-  const dateStr = document.getElementById("dashboardDate").value || todayStr();
+  const dateStr = conditionDateStr();
   const remove = event.target.closest("[data-fatigue-delete]");
   if (remove) {
     deleteFatigueEntry(dateStr, remove.dataset.fatigueDelete);
@@ -765,10 +776,10 @@ function onSymptomScaleClick(event) {
 function onSymptomHistoryClick(event) {
   const row = event.target.closest("[data-date]");
   if (!row || !isIsoDate(row.dataset.date)) return;
-  const dateInput = document.getElementById("dashboardDate");
+  const dateInput = document.getElementById("conditionDate");
   dateInput.value = row.dataset.date;
-  renderDashboard();
-  document.getElementById("conditionCard").scrollIntoView({ block: "nearest" });
+  renderSymptoms(row.dataset.date);
+  document.getElementById("panel-condition").scrollIntoView({ block: "start" });
 }
 
 async function copySymptomLog() {
@@ -932,7 +943,6 @@ async function copyDayForClaude() {
 
 function renderDashboard() {
   const dateStr = document.getElementById("dashboardDate").value || todayStr();
-  renderSymptoms(dateStr);
   const notice = document.getElementById("noProfileNotice");
   const content = document.getElementById("dashboardContent");
 
@@ -2190,6 +2200,7 @@ function renderAll() {
 function init() {
   initTabs();
   initDashboard();
+  initCondition();
   initMeals();
   initWorkouts();
   initWeight();

@@ -141,18 +141,22 @@ main#app {
 }
 
 .tab-btn {
-  flex: 1;
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 48px;
   border: none;
   background: transparent;
   color: var(--text-muted);
-  padding: 9px 4px 8px;
+  padding: 8px 0 6px;
   font-size: 11px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
+  justify-content: center;
+  gap: 2px;
   cursor: pointer;
   position: relative;
+  touch-action: manipulation;
 }
 
 .tab-btn svg {
@@ -1431,14 +1435,14 @@ code, .mono { font-family: var(--font-type); }
   transform: translateY(-1px);
 }
 .tab-btn { font-family: var(--font-hand); color: var(--text-muted); }
-.tab-btn span { font-size: 12.5px; }
-.tab-btn svg { stroke-width: 1.7; }
+.tab-btn span { font-size: 12.5px; white-space: nowrap; letter-spacing: 0; }
+.tab-btn svg { width: 22px; height: 22px; stroke-width: 1.7; }
 .tab-btn.active { color: var(--text); }
 .tab-btn.active::before {
   top: auto;
-  bottom: 4px;
-  width: 42px;
-  height: 8px;
+  bottom: 2px;
+  width: 28px;
+  height: 7px;
   border-radius: 0;
   background: url("tex/swoosh-terra.png") center / 100% 100% no-repeat;
 }
