@@ -494,24 +494,10 @@ function fatigueChartHTML(entries) {
       return `<span style="left:${fatigueChartX(hour * 60)}%">${label}</span>`;
     })
     .join("");
-  const rules = [5, 4, 3, 2, 1]
-    .map((score) => {
-      const y = fatigueChartY(score);
-      return `<line class="fatigue-chart-rule" x1="0" y1="${y}" x2="100" y2="${y}" />`;
-    })
-    .join("");
-  const guides = [6, 12, 18]
-    .map((hour) => {
-      const x = fatigueChartX(hour * 60);
-      return `<line class="fatigue-chart-guide" x1="${x}" y1="0" x2="${x}" y2="100" />`;
-    })
-    .join("");
-  const poly =
-    marks.length >= 2 ? `<polyline points="${marks.map((mark) => `${mark.x},${mark.y}`).join(" ")}" />` : "";
   const dots = marks
     .map((mark) => {
       const time = mark.showTime ? `<small>${mark.time}</small>` : "";
-      return `<span class="fatigue-mark place-${mark.place}" style="left:${mark.x}%;top:${mark.y}%"><span class="fatigue-mark-dot"></span><span class="fatigue-mark-label"><b>${mark.score}</b>${time}</span></span>`;
+      return `<span class="fatigue-mark place-${mark.place}" style="left:${mark.x}%;top:${mark.y}%"><span class="fatigue-mark-label"><b>${mark.score}</b>${time}</span></span>`;
     })
     .join("");
   const empty = sorted.length
@@ -520,14 +506,146 @@ function fatigueChartHTML(entries) {
   const label = sorted.length
     ? `疲労の推移。${sorted.map((entry) => `${entry.time} は ${entry.score}`).join("、")}`
     : "この日の時刻の記録はまだありません";
+  const points = marks.length >= 2 ? ` data-points="${marks.map((mark) => `${mark.x},${mark.y}`).join(" ")}"` : "";
   return `<div class="fatigue-chart${sorted.length === 0 ? " is-empty" : ""}" role="img" aria-label="${label}">
     <div class="fatigue-chart-y" aria-hidden="true">${yLabels}</div>
     <div class="fatigue-chart-plot">
-      <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${rules}${guides}${poly}</svg>
+      <canvas class="fatigue-chart-canvas"${points} aria-hidden="true"></canvas>
       ${dots}${empty}
     </div>
     <div class="fatigue-chart-x" aria-hidden="true">${xLabels}</div>
   </div>`;
+}
+
+let fatigueChartPaintEntries = [];
+let fatigueChartObserver = null;
+
+function paintFatigueChart(entries) {
+  fatigueChartPaintEntries = entries;
+  const draw = () => {
+    const canvas = document.querySelector("#fatigueAxis .fatigue-chart-canvas");
+    if (canvas) drawFatigueChart(canvas, fatigueChartPaintEntries);
+  };
+  draw();
+  if (typeof pencilTexReady !== "undefined" && pencilTexReady && typeof pencilTexReady.then === "function") {
+    pencilTexReady.then(draw);
+  }
+  if (typeof ResizeObserver !== "function") return;
+  if (!fatigueChartObserver) {
+    fatigueChartObserver = new ResizeObserver(() => {
+      const canvas = document.querySelector("#fatigueAxis .fatigue-chart-canvas");
+      if (canvas) drawFatigueChart(canvas, fatigueChartPaintEntries);
+    });
+  }
+  fatigueChartObserver.disconnect();
+  const plot = document.querySelector("#fatigueAxis .fatigue-chart-plot");
+  if (plot) fatigueChartObserver.observe(plot);
+}
+
+function drawFatigueChart(canvas, entries) {
+  const plot = canvas.parentElement;
+  if (!plot) return;
+  const cssWidth = plot.clientWidth;
+  const cssHeight = plot.clientHeight;
+  if (cssWidth < 2 || cssHeight < 2) return;
+  const dpr = window.devicePixelRatio || 1;
+  const bitmapW = Math.round(cssWidth * dpr);
+  const bitmapH = Math.round(cssHeight * dpr);
+  if (canvas.width !== bitmapW || canvas.height !== bitmapH) {
+    canvas.width = bitmapW;
+    canvas.height = bitmapH;
+  }
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, cssWidth, cssHeight);
+
+  const styles = getComputedStyle(document.documentElement);
+  const primary = styles.getPropertyValue("--primary").trim() || "#cc6445";
+  const graphite = styles.getPropertyValue("--graphite").trim() || "#3a3936";
+  const surfaceAlt = styles.getPropertyValue("--surface-alt").trim() || "#efe9dc";
+  const px = (pct) => (pct / 100) * cssWidth;
+  const py = (pct) => (pct / 100) * cssHeight;
+  const sorted = [...entries].sort(
+    (a, b) => a.time.localeCompare(b.time) || String(a.id).localeCompare(String(b.id))
+  );
+  const marks = fatigueChartMarks(sorted);
+
+  ctx.save();
+  ctx.strokeStyle = graphite;
+  ctx.globalAlpha = 0.22;
+  ctx.lineWidth = 1;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  for (const score of [5, 4, 3, 2, 1]) {
+    const y = py(fatigueChartY(score));
+    ctx.beginPath();
+    pencilLineTo(ctx, 0, y, cssWidth, y, score + 1);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 0.16;
+  for (const hour of [6, 12, 18]) {
+    const x = px(fatigueChartX(hour * 60));
+    ctx.beginPath();
+    pencilLineTo(ctx, x, py(fatigueChartY(5)), x, py(fatigueChartY(1)), hour + 2);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 0.4;
+  ctx.lineWidth = 1.15;
+  ctx.beginPath();
+  pencilLineTo(ctx, 0.6, py(fatigueChartY(5)), 0.6, py(fatigueChartY(1)), 9);
+  ctx.stroke();
+  ctx.restore();
+
+  if (marks.length >= 2) {
+    ctx.beginPath();
+    for (let i = 1; i < marks.length; i++) {
+      pencilLineTo(
+        ctx,
+        px(marks[i - 1].x),
+        py(marks[i - 1].y),
+        px(marks[i].x),
+        py(marks[i].y),
+        i + 4
+      );
+    }
+    ctx.strokeStyle = primary;
+    ctx.lineWidth = 2.1;
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+    ctx.stroke();
+    ctx.save();
+    ctx.translate(0.8, -0.7);
+    ctx.globalAlpha = 0.45;
+    ctx.lineWidth = 1.1;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  const jit = (i, k) => {
+    const s = Math.sin(i * 12.9898 + k * 78.233) * 43758.5453;
+    return s - Math.floor(s) - 0.5;
+  };
+  marks.forEach((mark, i) => {
+    const r = 4.4;
+    const cx = px(mark.x);
+    const cy = py(mark.y);
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, r + jit(i, 1) * 0.7, r + jit(i, 2) * 0.7, jit(i, 3), 0, Math.PI * 2);
+    ctx.fillStyle = surfaceAlt;
+    ctx.fill();
+    ctx.lineWidth = 1.7;
+    ctx.strokeStyle = primary;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(cx + 0.4, cy - 0.4, r + 0.5, -2.4 + jit(i, 4), 0.9 + jit(i, 5));
+    ctx.save();
+    ctx.lineWidth = 0.8;
+    ctx.globalAlpha = 0.5;
+    ctx.stroke();
+    ctx.restore();
+  });
+
+  pencilGrain(ctx, 0, 0, cssWidth, cssHeight);
 }
 
 function fatigueEntryListHTML(entries) {
@@ -537,7 +655,7 @@ function fatigueEntryListHTML(entries) {
       (entry) => `<div class="fatigue-entry">
         <input type="time" value="${entry.time}" data-entry-id="${entry.id}" aria-label="${entry.time} の時刻">
         <span class="fatigue-entry-score">${entry.score}</span>
-        <button type="button" class="fatigue-entry-delete" data-fatigue-delete="${entry.id}">削除</button>
+        <button type="button" class="fatigue-entry-delete" data-fatigue-delete="${entry.id}" aria-label="削除">削除</button>
       </div>`
     )
     .join("");
@@ -711,7 +829,10 @@ function renderSymptoms(dateStr) {
 
   const entries = sortedFatigueEntries(log);
   const axis = document.getElementById("fatigueAxis");
-  if (axis) axis.innerHTML = fatigueChartHTML(entries);
+  if (axis) {
+    axis.innerHTML = fatigueChartHTML(entries);
+    paintFatigueChart(entries);
+  }
   const entryList = document.getElementById("fatigueEntryList");
   if (entryList) entryList.innerHTML = fatigueEntryListHTML(entries);
 

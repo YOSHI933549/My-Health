@@ -287,13 +287,14 @@ const legacy = {
   assert.match(chart, />12</);
   assert.match(chart, />18</);
   assert.match(chart, />24時</);
-  assert.match(chart, /<polyline /);
+  assert.match(chart, /fatigue-chart-canvas/);
+  assert.match(chart, /data-points="/);
   assert.match(chart, /fatigue-mark-label"><b>2<\/b>/);
   assert.match(chart, /fatigue-mark-label"><b>5<\/b>/);
   function markPos(html, score) {
     const chunk = html.match(
       new RegExp(
-        `style="left:([0-9.]+)%;top:([0-9.]+)%"><span class="fatigue-mark-dot"></span><span class="fatigue-mark-label"><b>${score}</b>`
+        `style="left:([0-9.]+)%;top:([0-9.]+)%"><span class="fatigue-mark-label"><b>${score}</b>`
       )
     );
     assert.ok(chunk, `mark ${score}`);
@@ -307,7 +308,8 @@ const legacy = {
   const one = context.fatigueChartHTML([{ id: "a", time: "16:20", score: 4 }]);
   assert.match(one, /16:20/);
   assert.match(one, /<b>4<\/b>/);
-  assert.doesNotMatch(one, /<polyline /);
+  assert.match(one, /fatigue-chart-canvas/);
+  assert.doesNotMatch(one, /data-points=/);
 
   const empty = context.fatigueChartHTML([]);
   assert.match(empty, /この日の時刻の記録はまだありません/);
