@@ -289,25 +289,22 @@ const legacy = {
   assert.match(chart, />24時</);
   assert.match(chart, /fatigue-chart-canvas/);
   assert.match(chart, /data-points="/);
-  assert.match(chart, /fatigue-mark-label"><b>2<\/b>/);
-  assert.match(chart, /fatigue-mark-label"><b>5<\/b>/);
-  function markPos(html, score) {
-    const chunk = html.match(
-      new RegExp(
-        `style="left:([0-9.]+)%;top:([0-9.]+)%"><span class="fatigue-mark-label"><b>${score}</b>`
-      )
-    );
-    assert.ok(chunk, `mark ${score}`);
-    return { x: Number(chunk[1]), y: Number(chunk[2]) };
-  }
-  const at2 = markPos(chart, 2);
-  const at5 = markPos(chart, 5);
-  assert.ok(at5.y < at2.y);
-  assert.ok(at2.x < at5.x);
+  assert.doesNotMatch(chart, /fatigue-mark/);
+  assert.doesNotMatch(chart, /<b>2<\/b>/);
+  assert.doesNotMatch(chart, /<b>5<\/b>/);
+  const plotted = chart.match(/data-points="([^"]+)"/)[1].split(" ").map((pair) => {
+    const [x, y] = pair.split(",").map(Number);
+    return { x, y };
+  });
+  assert.equal(plotted.length, 2);
+  assert.ok(plotted[0].x < plotted[1].x);
+  assert.ok(plotted[1].y < plotted[0].y);
 
   const one = context.fatigueChartHTML([{ id: "a", time: "16:20", score: 4 }]);
-  assert.match(one, /16:20/);
-  assert.match(one, /<b>4<\/b>/);
+  assert.match(one, /aria-label="疲労の推移。16:20 は 4"/);
+  assert.doesNotMatch(one, /fatigue-mark/);
+  assert.doesNotMatch(one, /<b>4<\/b>/);
+  assert.doesNotMatch(one, /<small>16:20<\/small>/);
   assert.match(one, /fatigue-chart-canvas/);
   assert.doesNotMatch(one, /data-points=/);
 

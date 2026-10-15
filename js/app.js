@@ -454,29 +454,9 @@ function fatigueChartMarks(entries) {
       ...entry,
       x: fatigueChartX(minutesOfTime(entry.time), nudge),
       y: fatigueChartY(entry.score),
-      place: "n",
     };
   });
   marks.sort((a, b) => a.x - b.x || a.y - b.y || String(a.id).localeCompare(String(b.id)));
-  for (const mark of marks) {
-    if (mark.y < 22) mark.place = "s";
-  }
-  if (marks.length === 1) {
-    marks[0].place = marks[0].x > 70 ? "w" : "e";
-    marks[0].showTime = true;
-    return marks;
-  }
-  for (let i = 0; i < marks.length; i++) {
-    for (let j = 0; j < i; j++) {
-      const dx = Math.abs(marks[i].x - marks[j].x);
-      const dy = Math.abs(marks[i].y - marks[j].y);
-      if (dx > 16 || dy > 30) continue;
-      marks[i].place = marks[i].x > 76 ? "w" : "e";
-      if (marks[j].place === "n" || marks[j].place === "s") {
-        marks[j].place = marks[j].x < 24 ? "e" : "w";
-      }
-    }
-  }
   return marks;
 }
 
@@ -494,12 +474,6 @@ function fatigueChartHTML(entries) {
       return `<span style="left:${fatigueChartX(hour * 60)}%">${label}</span>`;
     })
     .join("");
-  const dots = marks
-    .map((mark) => {
-      const time = mark.showTime ? `<small>${mark.time}</small>` : "";
-      return `<span class="fatigue-mark place-${mark.place}" style="left:${mark.x}%;top:${mark.y}%"><span class="fatigue-mark-label"><b>${mark.score}</b>${time}</span></span>`;
-    })
-    .join("");
   const empty = sorted.length
     ? ""
     : `<p class="fatigue-chart-empty">この日の時刻の記録はまだありません。</p>`;
@@ -511,7 +485,7 @@ function fatigueChartHTML(entries) {
     <div class="fatigue-chart-y" aria-hidden="true">${yLabels}</div>
     <div class="fatigue-chart-plot">
       <canvas class="fatigue-chart-canvas"${points} aria-hidden="true"></canvas>
-      ${dots}${empty}
+      ${empty}
     </div>
     <div class="fatigue-chart-x" aria-hidden="true">${xLabels}</div>
   </div>`;

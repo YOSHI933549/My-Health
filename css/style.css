@@ -1587,8 +1587,6 @@ code, .mono { font-family: var(--font-type); }
 
 .fatigue-chart-y span,
 .fatigue-chart-x span,
-.fatigue-mark-label b,
-.fatigue-mark-label small,
 .fatigue-chart-empty,
 .fatigue-entry-score {
   -webkit-mask: var(--lead);
@@ -1620,43 +1618,6 @@ code, .mono { font-family: var(--font-type); }
   height: 100%;
   display: block;
 }
-
-.fatigue-mark {
-  position: absolute;
-  width: 0;
-  height: 0;
-  z-index: 1;
-  pointer-events: none;
-}
-
-.fatigue-mark-label {
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  line-height: 1;
-  white-space: nowrap;
-  color: var(--text);
-}
-
-.fatigue-mark-label b {
-  font-family: var(--font-hand);
-  font-size: 20px;
-  font-weight: 700;
-  -webkit-text-stroke: 0.3px currentColor;
-}
-
-.fatigue-mark-label small {
-  margin-top: 1px;
-  font-family: var(--font-hand);
-  font-size: 14px;
-  font-weight: 400;
-  color: var(--text-muted);
-}
-
-.fatigue-mark.place-n .fatigue-mark-label { left: 0; bottom: 12px; transform: translateX(-50%); align-items: center; }
-.fatigue-mark.place-s .fatigue-mark-label { left: 0; top: 12px; transform: translateX(-50%); align-items: center; }
-.fatigue-mark.place-e .fatigue-mark-label { left: 12px; top: 0; transform: translateY(-50%); align-items: flex-start; }
-.fatigue-mark.place-w .fatigue-mark-label { right: 12px; top: 0; transform: translateY(-50%); align-items: flex-end; }
 
 .fatigue-chart-x {
   position: relative;
