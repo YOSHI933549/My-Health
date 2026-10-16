@@ -1642,8 +1642,16 @@ function renderWeight() {
 }
 
 function renderLineChart(canvasId, points, days, opts) {
+  const syncLegend = (visible) => {
+    if (!opts.legendId) return;
+    const legend = document.getElementById(opts.legendId);
+    if (legend) legend.classList.toggle("hidden", !visible);
+  };
   const canvas = document.getElementById(canvasId);
-  if (!canvas) return;
+  if (!canvas) {
+    syncLegend(false);
+    return;
+  }
   const sorted = [...points].sort((a, b) => a.date.localeCompare(b.date));
   let windowed = sorted;
   if (days && sorted.length > 0) {
@@ -1652,6 +1660,13 @@ function renderLineChart(canvasId, points, days, opts) {
     const cutoff = anchor.toISOString().slice(0, 10);
     windowed = sorted.filter((p) => p.date >= cutoff);
     if (windowed.length < 2 && sorted.length >= 2) windowed = sorted.slice(-2);
+  }
+  const averageByDate = new Map();
+  if (Array.isArray(opts.averagePoints)) {
+    opts.averagePoints.forEach((point) => {
+      if (!point || !Number.isFinite(point.value)) return;
+      averageByDate.set(point.date, point.value);
+    });
   }
   const dpr = window.devicePixelRatio || 1;
   const cssWidth = canvas.clientWidth || canvas.parentElement.clientWidth || 320;
@@ -1678,12 +1693,14 @@ function renderLineChart(canvasId, points, days, opts) {
     ctx.fillStyle = muted;
     ctx.font = "12px 'Gaegu', 'Yomogi', sans-serif";
     ctx.fillText(opts.noDataText, 8, cssHeight / 2);
+    syncLegend(false);
     return;
   }
   if (windowed.length === 1) {
     ctx.fillStyle = muted;
     ctx.font = "12px 'Gaegu', 'Yomogi', sans-serif";
     ctx.fillText(opts.singlePointText(windowed[0].value, windowed[0].date), 8, cssHeight / 2);
+    syncLegend(false);
     return;
   }
 
@@ -1706,6 +1723,10 @@ function renderLineChart(canvasId, points, days, opts) {
   const plotH = cssHeight - padT - padB;
 
   const values = windowed.map((p) => p.value);
+  windowed.forEach((p) => {
+    const average = averageByDate.get(p.date);
+    if (Number.isFinite(average)) values.push(average);
+  });
   if (opts.targetValue) values.push(Number(opts.targetValue));
   let min = Math.min(...values);
   let max = Math.max(...values);
@@ -1823,6 +1844,53 @@ function renderLineChart(canvasId, points, days, opts) {
   ctx.stroke(linePath);
   ctx.restore();
 
+  let averageLineDrawn = false;
+  if (averageByDate.size > 0) {
+    const ink = styles.getPropertyValue("--ink-blue").trim() || "#3b5ba5";
+    ctx.save();
+    ctx.strokeStyle = ink;
+    ctx.globalAlpha = 0.92;
+    ctx.lineWidth = 1.25;
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+    ctx.setLineDash([5, 4]);
+    let segment = [];
+    const strokeAverageSegment = () => {
+      if (segment.length < 2) {
+        segment = [];
+        return;
+      }
+      ctx.beginPath();
+      segment.forEach((point, index) => {
+        const px = x(point.index);
+        const py = y(point.value);
+        if (index === 0) {
+          ctx.moveTo(px, py);
+          return;
+        }
+        const prevX = x(segment[index - 1].index);
+        const prevY = y(segment[index - 1].value);
+        const midX = (prevX + px) / 2;
+        const midY = (prevY + py) / 2;
+        ctx.quadraticCurveTo(prevX, prevY, midX, midY);
+        ctx.quadraticCurveTo(midX, midY, px, py);
+      });
+      ctx.stroke();
+      averageLineDrawn = true;
+      segment = [];
+    };
+    windowed.forEach((p, index) => {
+      const average = averageByDate.get(p.date);
+      if (!Number.isFinite(average)) {
+        strokeAverageSegment();
+        return;
+      }
+      segment.push({ index, value: average });
+    });
+    strokeAverageSegment();
+    ctx.restore();
+  }
+
   const jit = (i, k) => {
     const s = Math.sin(i * 12.9898 + k * 78.233) * 43758.5453;
     return s - Math.floor(s) - 0.5;
@@ -1853,6 +1921,7 @@ function renderLineChart(canvasId, points, days, opts) {
     ctx.font = "10px 'Gaegu', 'Yomogi', sans-serif";
     ctx.fillText(opts.targetLabel(opts.targetValue), padL + 4, y(Number(opts.targetValue)) - 4);
   }
+  syncLegend(averageLineDrawn);
 }
 
 function pencilLineTo(ctx, x1, y1, x2, y2, seed) {
@@ -1961,20 +2030,56 @@ function dailyAverageWeights(logs) {
   }));
 }
 
-function renderWeightChart(canvasId, logs, days, targetWeight) {
-  renderLineChart(
-    canvasId,
-    dailyAverageWeights(logs),
-    days,
-    {
-      targetValue: targetWeight,
-      targetLabel: (v) => `目標 ${v}kg`,
-      headline: (v) => `${v}kg`,
-      axisLabel: (v) => v.toFixed(1),
-      noDataText: "体重の記録がありません",
-      singlePointText: (v, date) => `${v}kg (${fmtDate(date)}) — 記録を増やすとグラフが表示されます`,
+// 体重グラフの7日移動平均。
+// 各日の値は、その日を含む直近7暦日のうち記録がある日の日平均だけを平均する。
+// 記録のない日は0にも前日の繰り越しにもしない。窓の中が2日未満の日は null。
+// 7日に満たない最初の期間は、入っている日だけで平均する。表示は0.1kg単位。
+const WEIGHT_MOVING_AVERAGE_DAYS = 7;
+
+function sevenDayWeightAverages(dailyPoints) {
+  const byDate = new Map();
+  for (const point of dailyPoints || []) {
+    if (!point || !isIsoDate(point.date)) continue;
+    const value = Number(point.value);
+    if (!Number.isFinite(value)) continue;
+    const bucket = byDate.get(point.date);
+    if (bucket) bucket.push(value);
+    else byDate.set(point.date, [value]);
+  }
+  const sorted = [...byDate.keys()].sort().map((date) => {
+    const values = byDate.get(date);
+    return {
+      date,
+      value: +(values.reduce((sum, value) => sum + value, 0) / values.length).toFixed(1),
+    };
+  });
+  return sorted.map((point) => {
+    const start = shiftDateStr(point.date, 1 - WEIGHT_MOVING_AVERAGE_DAYS);
+    let sum = 0;
+    let count = 0;
+    for (const sample of sorted) {
+      if (sample.date < start) continue;
+      if (sample.date > point.date) break;
+      sum += sample.value;
+      count += 1;
     }
-  );
+    if (count < 2) return { date: point.date, value: null };
+    return { date: point.date, value: +(sum / count).toFixed(1) };
+  });
+}
+
+function renderWeightChart(canvasId, logs, days, targetWeight) {
+  const daily = dailyAverageWeights(logs);
+  renderLineChart(canvasId, daily, days, {
+    targetValue: targetWeight,
+    targetLabel: (v) => `目標 ${v}kg`,
+    headline: (v) => `${v}kg`,
+    axisLabel: (v) => v.toFixed(1),
+    noDataText: "体重の記録がありません",
+    singlePointText: (v, date) => `${v}kg (${fmtDate(date)}) — 記録を増やすとグラフが表示されます`,
+    averagePoints: sevenDayWeightAverages(daily),
+    legendId: `${canvasId}Legend`,
+  });
 }
 
 function mealDailyTotals() {

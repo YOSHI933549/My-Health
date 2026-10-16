@@ -924,6 +924,31 @@ canvas { width: 100%; display: block; }
 .weight-trend .up { color: var(--accent-orange); }
 .weight-trend .down { color: var(--accent-blue); }
 
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin: 0 0 8px;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1;
+}
+.chart-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.chart-legend i {
+  display: block;
+  width: 22px;
+  height: 0;
+  border-top: 2.5px solid var(--primary);
+}
+.chart-legend .is-average { color: var(--ink-blue); }
+.chart-legend .is-average i {
+  border-top: 1.5px dashed var(--ink-blue);
+}
 
 :root,
 :root:not([data-theme="light"]),
@@ -1019,7 +1044,7 @@ h1, h2, h3, .tab-btn span, .macro-ring-card .mrc-label, .list-item .title-row .n
 .ring-gauge-sm .rg-value, .macro-ring-card .mrc-label, .macro-ring-card .mrc-value,
 .list-item .title-row .name, .list-item .meta, .list-item .macros, .empty-state,
 .wcal-title, .wcal-weekdays, .wcal-day, .wcal-foot > *,
-.target-summary .ts-item, .weight-trend, .hint, .settings-group > summary, .settings-details > summary,
+.target-summary .ts-item, .weight-trend, .chart-legend, .hint, .settings-group > summary, .settings-details > summary,
 form.form label, .btn {
   -webkit-mask: var(--lead);
   mask: var(--lead);
@@ -1400,7 +1425,7 @@ input[type="file"]::file-selector-button {
   color: var(--text-muted);
 }
 .prev-workout-hint b, .notice b { color: var(--text); }
-.weight-trend { font-family: var(--font-body); }
+.weight-trend, .chart-legend { font-family: var(--font-body); }
 .weight-trend b { font-family: var(--font-hand); font-size: 17px; font-weight: 700; color: var(--text); padding: 0 1px; }
 .hint { font-family: var(--font-body); }
 code, .mono { font-family: var(--font-type); }
