@@ -83,6 +83,10 @@
 
       <div class="card">
         <h3>体重推移(直近)</h3>
+        <p class="chart-legend hidden" id="weightChartLegend">
+          <span><i aria-hidden="true"></i>実測</span>
+          <span class="is-average"><i aria-hidden="true"></i>7日平均</span>
+        </p>
         <canvas id="weightChart" height="115"></canvas>
       </div>
 
@@ -348,6 +352,10 @@
         </div>
       </div>
       <div id="weightTrend" class="weight-trend"></div>
+      <p class="chart-legend hidden" id="weightChartFullLegend">
+        <span><i aria-hidden="true"></i>実測</span>
+        <span class="is-average"><i aria-hidden="true"></i>7日平均</span>
+      </p>
       <canvas id="weightChartFull" height="130"></canvas>
     </div>
 
