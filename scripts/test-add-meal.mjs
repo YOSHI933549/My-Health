@@ -108,6 +108,13 @@ try {
   assert.throws(() => prepareMeal(meal("夜食")), { message: MESSAGES.invalidMeal });
   assert.throws(() => prepareMeal(meal("昼食", { date: "2026/10/17" })), { message: MESSAGES.invalidDateTime });
   assert.throws(() => prepareMeal(meal("昼食", { time: "7:30" })), { message: MESSAGES.invalidDateTime });
+  assert.throws(() => prepareMeal(meal("昼食", { time: "25:00" })), { message: MESSAGES.invalidDateTime });
+  assert.throws(() => prepareMeal(meal("昼食", { time: "12:60" })), { message: MESSAGES.invalidDateTime });
+  assert.throws(() => prepareMeal(meal("昼食", { date: "2026-02-30" })), { message: MESSAGES.invalidDateTime });
+  assert.throws(() => prepareMeal(meal("昼食", { date: "2026-13-01" })), { message: MESSAGES.invalidDateTime });
+  assert.deepEqual(prepareMeal(meal("昼食", { date: "2026-02-28", time: "08:27" })), meal("昼食", { date: "2026-02-28", time: "08:27" }));
+  assert.deepEqual(prepareMeal(meal("間食", { date: "2024-02-29", time: "00:00" })), meal("間食", { date: "2024-02-29", time: "00:00" }));
+  assert.deepEqual(prepareMeal(meal("夕食", { date: "2026-12-31", time: "23:59" })), meal("夕食", { date: "2026-12-31", time: "23:59" }));
   assert.throws(() => prepareMeal(meal("昼食", { calories: "101.25" })), { message: MESSAGES.invalidMeal });
 
   const leaked = meal();
@@ -161,11 +168,25 @@ try {
   assert.equal(Buffer.compare(readFileSync(devicePath), deviceBefore), 0);
   assert.deepEqual(readdirSync(join(root, "codex-inbox")), [`${deviceId}.json`]);
 
+  const clockMeal = meal("昼食", { date: "2026-02-28", time: "08:27" });
+  const clockResult = run(root, [deviceId], JSON.stringify(clockMeal));
+  assert.equal(clockResult.status, 0, clockResult.stderr);
+  assert.equal(clockResult.stdout, "昼食を暗号化受け取り箱に追加\n");
+  assert.equal(clockResult.stderr, "");
+  assertNoLeak(clockResult, clockMeal);
+  const clockInbox = JSON.parse(readFileSync(inboxPath, "utf8"));
+  assert.equal(clockInbox.entries.length, 6);
+  assert.deepEqual(await decryptEntry(clockInbox.entries[5]), clockMeal);
+
   const beforeFailure = readFileSync(inboxPath);
   const failures = [
     { args: [deviceId], stdin: "{", stderr: MESSAGES.invalidMeal },
     { args: [deviceId], stdin: JSON.stringify(meal("昼食", { date: "17-10-2026" })), stderr: MESSAGES.invalidDateTime },
     { args: [deviceId], stdin: JSON.stringify(meal("昼食", { time: "12:0" })), stderr: MESSAGES.invalidDateTime },
+    { args: [deviceId], stdin: JSON.stringify(meal("昼食", { time: "25:00" })), stderr: MESSAGES.invalidDateTime },
+    { args: [deviceId], stdin: JSON.stringify(meal("昼食", { time: "12:60" })), stderr: MESSAGES.invalidDateTime },
+    { args: [deviceId], stdin: JSON.stringify(meal("昼食", { date: "2026-02-30" })), stderr: MESSAGES.invalidDateTime },
+    { args: [deviceId], stdin: JSON.stringify(meal("昼食", { date: "2026-13-01" })), stderr: MESSAGES.invalidDateTime },
     { args: [deviceId], stdin: JSON.stringify(meal("夜食")), stderr: MESSAGES.invalidMeal },
     { args: [deviceId], stdin: JSON.stringify(meal("昼食", { calories: "101.25" })), stderr: MESSAGES.invalidMeal },
     { args: [deviceId], stdin: JSON.stringify(meal("昼食", { protein: -1 })), stderr: MESSAGES.invalidMeal },
