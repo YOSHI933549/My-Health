@@ -1,66 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import vm from "node:vm";
-
-const source = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
-
-function loadApp() {
-  const store = {};
-  const localStorage = {
-    getItem(key) {
-      return Object.prototype.hasOwnProperty.call(store, key) ? store[key] : null;
-    },
-    setItem(key, value) {
-      store[key] = String(value);
-    },
-    removeItem(key) {
-      delete store[key];
-    },
-  };
-  class Image {
-    set src(_value) {
-      if (typeof this.onload === "function") this.onload();
-    }
-  }
-  const context = {
-    localStorage,
-    document: {
-      addEventListener() {},
-      getElementById() {
-        return null;
-      },
-      querySelectorAll() {
-        return [];
-      },
-      createElement() {
-        return { textContent: "" };
-      },
-    },
-    navigator: {},
-    location: { hash: "", pathname: "/", search: "" },
-    history: { replaceState() {} },
-    console,
-    structuredClone,
-    Image,
-    atob,
-    TextDecoder,
-    Uint8Array,
-    Map,
-    Set,
-    Date,
-    JSON,
-    Math,
-    Number,
-    String,
-    Object,
-    Array,
-    Promise,
-  };
-  context.window = context;
-  vm.createContext(context);
-  vm.runInContext(source, context, { filename: "js/app.js" });
-  return context;
-}
+import { loadApp } from "./test-helpers/load-app.mjs";
 
 function points(startDate, values) {
   const [year, month, day] = startDate.split("-").map(Number);
@@ -71,7 +10,7 @@ function points(startDate, values) {
   });
 }
 
-const { sevenDayWeightAverages, dailyAverageWeights } = loadApp();
+const { sevenDayWeightAverages, dailyAverageWeights } = loadApp().context;
 
 function plain(value) {
   return JSON.parse(JSON.stringify(value));
