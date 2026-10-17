@@ -230,7 +230,7 @@ GitHub Pages で公開するための Actions ワークフロー(`.github/workfl
 
 1. GitHubでこのリポジトリの **Settings → Pages** を開く
 2. 「Build and deployment」の **Source** を **GitHub Actions** に変更
-3. このブランチを `main` にマージ(またはmainにpush)すると、Actionsが自動でデプロイします
+3. `main` に入ると Actions が動きます。アプリのコードを含む更新は `npm run check` が成功したときだけ公開されます。`codex-inbox/` と `codex-devices/` だけの直接 push は、このチェックでは止まらず、今まで通り公開されます
 4. 数分後、`https://<ユーザー名>.github.io/<リポジトリ名>/` でアクセスできるようになります
    (Actionsタブのデプロイログ、またはPages設定画面にURLが表示されます)
 
@@ -281,7 +281,7 @@ README.md       この説明書(人向け)
 CLAUDE.md       Claude Code 向けの作業ルール
 AGENTS.md       Codex 向けの作業ルール
 .claude/skills/record-meal/  食事を調べて記録する Claude Code のスキル
-.github/workflows/deploy-pages.yml  GitHub Pagesへの自動デプロイ
+.github/workflows/deploy-pages.yml  GitHub Pagesへの自動デプロイ（check 成功後。受け取り箱だけの push は check を待たない）
 ```
 
 Web版は外部ライブラリやビルドツールに依存していないため、`index.html` を開くだけで動き、
