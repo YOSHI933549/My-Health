@@ -79,8 +79,19 @@ UTF-8 JSONをbase64url形式にします。
 
 ```bash
 node scripts/encrypt-meal.mjs codex-devices/<deviceId>.json < meal.json
+node scripts/check-codex-inbox.mjs
 npm run test:encrypted-inbox
 ```
+
+受け取り箱または公開鍵を変更するコミットメッセージは、次のどれか1行だけにします。料理名や栄養値は書きません。
+
+- `朝食を暗号化受け取り箱に追加`
+- `昼食を暗号化受け取り箱に追加`
+- `夕食を暗号化受け取り箱に追加`
+- `間食を暗号化受け取り箱に追加`
+- `暗号化受け取り箱の公開鍵を追加`
+- `暗号化受け取り箱の公開鍵を更新`
+- `暗号化受け取り箱を接続`
 
 ## 体重計との自動連携(iPhone ヘルスケア → n8n、任意)
 
@@ -269,7 +280,10 @@ codex-devices/  暗号化受け取り箱の公開鍵(端末ごと)。Codex と C
 codex-inbox/    暗号化された食事データの受け取り箱(端末ごと)。Codex と Claude Code で共通
 
 scripts/encrypt-meal.mjs          食事JSONを受け取り箱用に暗号化する
+scripts/check-codex-inbox.mjs     受け取り箱が暗号文と公開鍵だけかを確かめる
+scripts/check-inbox-commit-message.mjs  食事コミットの文言を確かめる
 scripts/test-encrypted-inbox.mjs  暗号化受け取り箱のテスト(npm run test:encrypted-inbox)
+scripts/test-inbox-guard.mjs      受け取り箱の形とコミット文言のテスト
 scripts/build-web.mjs             iPhoneアプリ用に www/ へWeb版をコピーする(npm run build:web)
 scripts/pencil-textures/          css/tex/ の画像を作るスクリプト
 

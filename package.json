@@ -7,7 +7,7 @@
     "build:web": "node scripts/build-web.mjs",
     "ios:sync": "npm run build:web && cap sync ios",
     "ios:open": "npm run ios:sync && cap open ios",
-    "check": "node --check js/app.js && node --check js/codex-sync.js && node --check js/n8n-sync.js && node --check js/ocr.js && node --check scripts/encrypt-meal.mjs && node --check scripts/test-encrypted-inbox.mjs && node --check scripts/test-capacitor-delegate.mjs && node --check scripts/test-symptom-logs.mjs && node --check scripts/test-weight-average.mjs && node --check sw.js && node scripts/test-capacitor-delegate.mjs && node scripts/test-symptom-logs.mjs && node scripts/test-weight-average.mjs",
+    "check": "node --check js/app.js && node --check js/codex-sync.js && node --check js/n8n-sync.js && node --check js/ocr.js && node --check scripts/encrypt-meal.mjs && node --check scripts/check-codex-inbox.mjs && node --check scripts/check-inbox-commit-message.mjs && node --check scripts/test-encrypted-inbox.mjs && node --check scripts/test-inbox-guard.mjs && node --check scripts/test-capacitor-delegate.mjs && node --check scripts/test-symptom-logs.mjs && node --check scripts/test-weight-average.mjs && node --check sw.js && node scripts/check-codex-inbox.mjs && node scripts/test-inbox-guard.mjs && node scripts/test-capacitor-delegate.mjs && node scripts/test-symptom-logs.mjs && node scripts/test-weight-average.mjs",
     "test:encrypted-inbox": "node scripts/test-encrypted-inbox.mjs"
   },
   "dependencies": {

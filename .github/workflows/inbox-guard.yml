@@ -1,0 +1,33 @@
+name: Inbox guard
+
+# 受け取り箱の形と、食事コミットの文言を確かめる。
+# 公開ワークフローとは別なので、ここで失敗しても GitHub Pages の公開は止まらない。
+# アプリは main の raw から受け取り箱を読む。このジョブが失敗しても受け取りは止まらない。
+# 失敗は、このワークフローの赤い×で知らせる。
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  guard:
+    name: Inbox shape and commit message
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check inbox file shape
+        run: node scripts/check-codex-inbox.mjs
+      - name: Check inbox commit messages
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE_SHA: ${{ github.event_name == 'push' && github.event.before || '' }}
+          HEAD_SHA: ${{ github.sha }}
+          BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || '' }}
+          PR_HEAD_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || '' }}
+        run: node scripts/check-inbox-commit-message.mjs
