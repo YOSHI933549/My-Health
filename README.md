@@ -74,16 +74,19 @@ UTF-8 JSONをbase64url形式にします。
 
 ### 暗号化受け取り箱の開発用コマンド
 
-接続コードから作成した公開情報を `codex-devices/<deviceId>.json` に保存し、平文の食事JSONを
-標準入力から渡します。出力される暗号化エンベロープだけを対応する受け取り箱へ追加します。
+接続コードから作成した公開情報を `codex-devices/<deviceId>.json` に保存します。
+食事の平文JSONはリポジトリに置かず、標準入力だけで渡します。引数は端末IDだけです。
 
 ```bash
-node scripts/encrypt-meal.mjs codex-devices/<deviceId>.json < meal.json
-node scripts/check-codex-inbox.mjs
-npm run test:encrypted-inbox
+node scripts/add-meal.mjs <deviceId> < meal.json
 ```
 
-受け取り箱または公開鍵を変更するコミットメッセージは、次のどれか1行だけにします。料理名や栄養値は書きません。
+このコマンドが、項目と型、日付（`YYYY-MM-DD`）と時刻（`HH:MM`）、公開鍵での暗号化、
+受け取り箱への追加、暗号文だけであることの確認までを1回で行います。
+成功すると、使うコミットメッセージを1行だけ表示します。食事の中身は表示しません。
+失敗したときは受け取り箱のファイルを変えません。コミットとプッシュは行いません。
+
+受け取り箱または公開鍵を変更するコミットメッセージは、表示された行、または次のどれか1行だけにします。料理名や栄養値は書きません。
 
 - `朝食を暗号化受け取り箱に追加`
 - `昼食を暗号化受け取り箱に追加`
@@ -202,7 +205,7 @@ n8n側が自動的に探して取り込みます)。
 ### 調べて記録する作業自体の自動化(record-meal スキル)
 
 `.claude/skills/record-meal/` に、この一連の作業(栄養成分を調べる → 数値を検算する →
-受け取り箱に書き込む → 確認する)をまとめたスキルを置いています。
+`scripts/add-meal.mjs` で受け取り箱に書き込む → 確認する)をまとめたスキルを置いています。
 
 「松屋の牛めし大盛を反映して」のように食べたものを伝えるだけで、Claudeがこの手順を
 たどって記録まで済ませます。スキルには、サイズ違いの数値を拾い間違えないための
@@ -279,9 +282,11 @@ icons/          ホーム画面アイコン(192/512/Apple touch icon/favicon)
 codex-devices/  暗号化受け取り箱の公開鍵(端末ごと)。Codex と Claude Code で共通
 codex-inbox/    暗号化された食事データの受け取り箱(端末ごと)。Codex と Claude Code で共通
 
-scripts/encrypt-meal.mjs          食事JSONを受け取り箱用に暗号化する
+scripts/add-meal.mjs              標準入力の食事JSONを暗号化して受け取り箱へ追加する
+scripts/encrypt-meal.mjs          食事JSONの暗号化（add-meal が使う）
 scripts/check-codex-inbox.mjs     受け取り箱が暗号文と公開鍵だけかを確かめる
 scripts/check-inbox-commit-message.mjs  食事コミットの文言を確かめる
+scripts/test-add-meal.mjs         食事追加コマンドのテスト
 scripts/test-encrypted-inbox.mjs  暗号化受け取り箱のテスト(npm run test:encrypted-inbox)
 scripts/test-inbox-guard.mjs      受け取り箱の形とコミット文言のテスト
 scripts/build-web.mjs             iPhoneアプリ用に www/ へWeb版をコピーする(npm run build:web)

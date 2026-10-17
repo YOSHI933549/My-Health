@@ -16,10 +16,11 @@ This repository contains the owner's personal health-support application. It tra
 1. Read `README.md` and the files related to the requested feature before editing.
 2. Preserve existing localStorage data formats unless a backward-compatible migration is included.
 3. Never commit plaintext health records, exported backups, OAuth access tokens, n8n webhook URLs, secrets, private keys, or screenshots containing personal health data. The encrypted Codex inbox described below is the only health-record exception: commit only its hybrid-encrypted envelopes.
-4. Run `npm run check` after JavaScript changes.
+4. Run `npm run check` after JavaScript changes. A new test is picked up when it is named `scripts/test-*.mjs`; `npm run check` runs those files on its own.
 5. Run `npm run build:web` and `npm run ios:sync` after changes that affect the iPhone app.
 6. Review `git diff` and confirm that generated files contain no personal data or secrets.
 7. Do not push to `main` without a successful check. Prefer a focused branch and pull request for non-trivial changes.
+8. After raising `CACHE_VERSION` in `sw.js`, run `node scripts/check-references.mjs --write-cache-stamp`.
 
 ## Health and safety rules
 
@@ -37,14 +38,16 @@ This repository contains the owner's personal health-support application. It tra
 
 ## Food-recording automation
 
-The existing `.claude/skills/record-meal/SKILL.md` documents the previous Claude workflow. Use it only as product history. Do not claim that a meal was recorded unless the required n8n connection is available and the inserted row has been read back successfully.
+`.claude/skills/record-meal/SKILL.md` is the procedure for looking up a meal and sending it to the app. Do not add health advice unless the user asks for it.
 
-The preferred Codex workflow is the encrypted inbox:
+The preferred workflow is the encrypted inbox:
 
 1. For first-time setup, decode the connection code as base64url JSON and validate `version`, `deviceId`, and the RSA-OAEP-256 public JWK. Commit only that public device document to `codex-devices/<deviceId>.json`, then create `codex-inbox/<deviceId>.json` with `version`, `deviceId`, and an empty `entries` array. A public key is not a secret; never request or store the private key.
 2. Research nutrition values from an official or otherwise reliable source and state any important assumptions. Do not add health advice unless the user asks for it.
-3. Prepare the validated meal JSON outside the repository and pipe it into `node scripts/encrypt-meal.mjs codex-devices/<deviceId>.json`. Append only the resulting envelope to that device's inbox. Never write the plaintext meal, shell history containing it, or a generated meal link into the repository.
-4. After the encrypted envelope is present on `main`, tell the user it was sent and to open the app. Do not claim it has been reflected locally until the user confirms it. The app deduplicates envelopes by ID.
-5. Routine encrypted inbox updates may be committed directly to `main` after validating the JSON and confirming the diff contains ciphertext only. Application code changes still require the normal checked branch and pull-request workflow. The commit message for an inbox or public-key change must be exactly one of these lines, with no dish name, nutrient value, or weight: `朝食を暗号化受け取り箱に追加`, `昼食を暗号化受け取り箱に追加`, `夕食を暗号化受け取り箱に追加`, `間食を暗号化受け取り箱に追加`, `暗号化受け取り箱の公開鍵を追加`, `暗号化受け取り箱の公開鍵を更新`, `暗号化受け取り箱を接続`.
+3. Prepare the meal JSON outside the repository and pipe it to `node scripts/add-meal.mjs <deviceId>`. The device id is the only argument. The command checks the fields, types, and `YYYY-MM-DD` / `HH:MM` shape, encrypts with that device's public key, appends the envelope, and checks that `scripts/check-codex-inbox.mjs` passes and that the meal name and nutrient values are not stored in plaintext. It prints the commit message. It does not commit or push. If it fails, the inbox file is left unchanged. Never write the plaintext meal, shell history containing it, or a generated meal link into the repository. The command must not print the meal body.
+4. Commit and push with the one line the command printed. After that envelope is on `main`, tell the user it was sent and to open the app. Do not claim it has been reflected locally until the user confirms it. The app deduplicates envelopes by ID.
+5. Routine encrypted inbox updates may be committed directly to `main` after the command succeeds. Application code changes still require the normal checked branch and pull-request workflow. The commit message for an inbox or public-key change must be exactly one of these lines, with no dish name, nutrient value, or weight: `朝食を暗号化受け取り箱に追加`, `昼食を暗号化受け取り箱に追加`, `夕食を暗号化受け取り箱に追加`, `間食を暗号化受け取り箱に追加`, `暗号化受け取り箱の公開鍵を追加`, `暗号化受け取り箱の公開鍵を更新`, `暗号化受け取り箱を接続`.
+
+n8n remains a compatibility path for a device that has no encrypted inbox. Claim that an n8n row was recorded only after the inserted row has been read back.
 
 If the encrypted inbox is not configured, fall back to the app's one-tap meal-link format. Encode a validated meal JSON payload as UTF-8 base64url and append it to the deployed app URL as `#meal=<payload>`. Use a new random `importId` for each meal. Tell the user that tapping the link performs the local registration; do not claim the record is present until the user confirms it in the app. Never commit the generated link or its health data to the repository.
