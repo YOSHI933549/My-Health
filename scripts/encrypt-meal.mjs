@@ -26,6 +26,24 @@ export function validateDevice(device) {
   return device;
 }
 
+function isRealDate(value) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return false;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const utc = new Date(Date.UTC(year, month - 1, day));
+  return utc.getUTCFullYear() === year && utc.getUTCMonth() === month - 1 && utc.getUTCDate() === day;
+}
+
+function isRealTime(value) {
+  const match = /^(\d{2}):(\d{2})$/.exec(value);
+  if (!match) return false;
+  const hour = Number(match[1]);
+  const minute = Number(match[2]);
+  return hour <= 23 && minute <= 59;
+}
+
 export function validateMeal(meal) {
   const result = {
     date: String(meal?.date || ""),
@@ -38,8 +56,8 @@ export function validateMeal(meal) {
     carbs: validatedNumber(meal?.carbs, "carbs"),
     memo: String(meal?.memo || "").slice(0, 500),
   };
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(result.date)) throw new Error("Invalid date");
-  if (!/^\d{2}:\d{2}$/.test(result.time)) throw new Error("Invalid time");
+  if (!isRealDate(result.date)) throw new Error("Invalid date");
+  if (!isRealTime(result.time)) throw new Error("Invalid time");
   if (!MEAL_TYPES.has(result.type)) throw new Error("Invalid meal type");
   if (!result.name || result.name.length > 160) throw new Error("Invalid meal name");
   return result;
