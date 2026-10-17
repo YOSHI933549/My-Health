@@ -3,20 +3,72 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
 
+# check と変更の判定は読み取りだけで足りる。Pages へ書く権限は公開ジョブだけが持つ。
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
+# main への push と手動実行は、これまでと同じグループ "pages" で、
+# 新しい実行が進行中の公開をキャンセルする。
+# PR の check は別グループなので、受け取り箱の公開をキャンセルしない。
 concurrency:
-  group: pages
+  group: "${{ github.event_name == 'pull_request' && format('pages-pr-{0}', github.event.pull_request.number) || 'pages' }}"
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  changes:
+    name: Classify push
     runs-on: ubuntu-latest
+    outputs:
+      inbox_only: ${{ steps.scope.outputs.inbox_only }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: scope
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE_SHA: ${{ github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          inbox_only="$(bash scripts/github-pages-scope.sh)"
+          case "$inbox_only" in
+            true | false) ;;
+            *)
+              echo "unexpected scope result" >&2
+              exit 1
+              ;;
+          esac
+          echo "inbox_only=${inbox_only}" >> "$GITHUB_OUTPUT"
+
+  check:
+    name: npm run check
+    needs: changes
+    # 受け取り箱（codex-inbox / codex-devices）だけの main 直 push では実行しない。
+    # それ以外の push、PR、手動実行では npm run check を実行する。
+    if: ${{ !cancelled() && (github.event_name != 'push' || needs.changes.outputs.inbox_only != 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: npm run check
+        run: npm run check
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: [changes, check]
+    # PR では公開しない。
+    # 受け取り箱だけの push は check がスキップされても公開する。
+    # それ以外は check が成功したときだけ公開する。
+    # キャンセルされた実行では公開を続けない。
+    if: ${{ !cancelled() && github.event_name != 'pull_request' && (needs.changes.outputs.inbox_only == 'true' || needs.check.result == 'success') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
