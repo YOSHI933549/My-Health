@@ -22,6 +22,18 @@ This repository contains the owner's personal health-support application. It tra
 7. Do not push to `main` without a successful check. Prefer a focused branch and pull request for non-trivial changes.
 8. After raising `CACHE_VERSION` in `sw.js`, run `node scripts/check-references.mjs --write-cache-stamp`.
 
+## 完了と見直し
+
+`CLAUDE.md` の「完了と見直し」と同じ内容である。見どころは `REVIEW.md`。上の Required workflow と、下の食事登録の禁止事項・コミットメッセージの許可リストは、この節で弱めない。main へ直接置いてよい受け取り箱の既存の例外も残す。
+
+1. 完了と言う前に `npm run check` を実際に実行する。画面や iPhone アプリに関係する変更では `npm run build:web` も実行する。iPhone アプリに影響する変更では、これまでどおり `npm run ios:sync` も実行する。成功か失敗か分かる出力を、報告と PR 本文に載せる。実行していないなら完了と言わない。
+2. 変更のあと、PR を出す前に、Claude Code では `/code-review`（不具合探し）と `/security-review`（安全面の確認）を走らせる。このコマンドが使えない環境では、同じ観点で差分を自分で見直す。安全面の確認には、平文の健康記録、秘密鍵、接続コード全体、n8n の URL、トークンが差分やコミットメッセージに入っていないかを含める。
+3. AI の見直しと修正の往復は3回まで。それでも直らないときは、同じ修正を続けず、やり方そのものを見直して、何が問題かを報告する。
+
+`scripts/add-meal.mjs` での暗号化受け取り箱への食事追加（既定の登録）は、この見直しの対象外である。その完了の判断とコミットは、下の Food-recording automation に従う。
+
+見直しで繰り返した指摘は `REVIEW.md` に足す。指摘にはファイルと行を添える。直すことがなければ、その旨を書く。
+
 ## Health and safety rules
 
 - Treat all analysis shown by the app as rule-based guidance, not diagnosis or medical advice.
