@@ -460,11 +460,33 @@ function fatigueChartMarks(entries) {
   return marks;
 }
 
+// 体調グラフに引く、その日の疲労の単純平均。
+// 対象はグラフの点と同じ時刻つきの記録だけ。時間なしの fatigue と fatigueSlots は見ない。
+// 正しい score が2件未満なら null。小数点1桁（四捨五入）。
+function fatigueDayAverage(entries) {
+  if (!Array.isArray(entries)) return null;
+  let sum = 0;
+  let count = 0;
+  for (const entry of entries) {
+    const score = symptomScore(entry && typeof entry === "object" ? entry.score : undefined);
+    if (score == null) continue;
+    sum += score;
+    count += 1;
+  }
+  if (count < 2) return null;
+  return +(sum / count).toFixed(1);
+}
+
+function fatigueAverageText(average) {
+  return `平均 ${average.toFixed(1)}`;
+}
+
 function fatigueChartHTML(entries) {
   const sorted = [...entries].sort(
     (a, b) => a.time.localeCompare(b.time) || String(a.id).localeCompare(String(b.id))
   );
   const marks = fatigueChartMarks(sorted);
+  const average = fatigueDayAverage(sorted);
   const yLabels = [5, 4, 3, 2, 1]
     .map((score) => `<span style="top:${fatigueChartY(score)}%">${score}</span>`)
     .join("");
@@ -478,7 +500,9 @@ function fatigueChartHTML(entries) {
     ? ""
     : `<p class="fatigue-chart-empty">この日の時刻の記録はまだありません。</p>`;
   const label = sorted.length
-    ? `疲労の推移。${sorted.map((entry) => `${entry.time} は ${entry.score}`).join("、")}`
+    ? `疲労の推移。${sorted.map((entry) => `${entry.time} は ${entry.score}`).join("、")}${
+        average == null ? "" : `。${fatigueAverageText(average)}`
+      }`
     : "この日の時刻の記録はまだありません";
   const points = marks.length >= 2 ? ` data-points="${marks.map((mark) => `${mark.x},${mark.y}`).join(" ")}"` : "";
   return `<div class="fatigue-chart${sorted.length === 0 ? " is-empty" : ""}" role="img" aria-label="${label}">
@@ -494,12 +518,14 @@ function fatigueChartHTML(entries) {
 let fatigueChartPaintEntries = [];
 let fatigueChartObserver = null;
 
+function redrawFatigueChart() {
+  const canvas = document.querySelector("#fatigueAxis .fatigue-chart-canvas");
+  if (canvas) drawFatigueChart(canvas, fatigueChartPaintEntries);
+}
+
 function paintFatigueChart(entries) {
   fatigueChartPaintEntries = entries;
-  const draw = () => {
-    const canvas = document.querySelector("#fatigueAxis .fatigue-chart-canvas");
-    if (canvas) drawFatigueChart(canvas, fatigueChartPaintEntries);
-  };
+  const draw = () => redrawFatigueChart();
   draw();
   if (typeof pencilTexReady !== "undefined" && pencilTexReady && typeof pencilTexReady.then === "function") {
     pencilTexReady.then(draw);
@@ -507,8 +533,7 @@ function paintFatigueChart(entries) {
   if (typeof ResizeObserver !== "function") return;
   if (!fatigueChartObserver) {
     fatigueChartObserver = new ResizeObserver(() => {
-      const canvas = document.querySelector("#fatigueAxis .fatigue-chart-canvas");
-      if (canvas) drawFatigueChart(canvas, fatigueChartPaintEntries);
+      redrawFatigueChart();
     });
   }
   fatigueChartObserver.disconnect();
@@ -543,6 +568,7 @@ function drawFatigueChart(canvas, entries) {
     (a, b) => a.time.localeCompare(b.time) || String(a.id).localeCompare(String(b.id))
   );
   const marks = fatigueChartMarks(sorted);
+  const average = fatigueDayAverage(sorted);
 
   ctx.save();
   ctx.strokeStyle = graphite;
@@ -569,6 +595,22 @@ function drawFatigueChart(canvas, entries) {
   pencilLineTo(ctx, 0.6, py(fatigueChartY(5)), 0.6, py(fatigueChartY(1)), 9);
   ctx.stroke();
   ctx.restore();
+
+  if (average != null) {
+    const ink = styles.getPropertyValue("--ink-blue").trim() || "#3b5ba5";
+    const y = py(fatigueChartY(average));
+    ctx.save();
+    ctx.strokeStyle = ink;
+    ctx.globalAlpha = 0.92;
+    ctx.lineWidth = 1.25;
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+    ctx.setLineDash([5, 4]);
+    ctx.beginPath();
+    pencilLineTo(ctx, 0, y, cssWidth, y, 21);
+    ctx.stroke();
+    ctx.restore();
+  }
 
   if (marks.length >= 2) {
     ctx.beginPath();
@@ -620,6 +662,38 @@ function drawFatigueChart(canvas, entries) {
   });
 
   pencilGrain(ctx, 0, 0, cssWidth, cssHeight);
+  if (average != null) drawFatigueAverageLabel(ctx, average, py(fatigueChartY(average)), cssHeight, styles);
+}
+
+function drawFatigueAverageLabel(ctx, average, y, cssHeight, styles) {
+  const ink = styles.getPropertyValue("--ink-blue").trim() || "#3b5ba5";
+  const paper = styles.getPropertyValue("--surface-alt").trim() || "#efe9dc";
+  const label = fatigueAverageText(average);
+  ctx.save();
+  ctx.globalAlpha = 1;
+  ctx.font = "16px 'Gaegu', 'Yomogi', sans-serif";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
+  ctx.lineJoin = "round";
+  ctx.miterLimit = 2;
+  const measured = ctx.measureText(label);
+  const ascent = measured.actualBoundingBoxAscent || 13;
+  const descent = measured.actualBoundingBoxDescent || 4;
+  const halo = 2;
+  const clear = 4;
+  const x = 4;
+  const above = y - clear - halo - descent;
+  const below = y + clear + halo + ascent;
+  const topOf = (baseline) => baseline - ascent - halo;
+  const bottomOf = (baseline) => baseline + descent + halo;
+  let baseline = above;
+  if (topOf(above) < 1 && bottomOf(below) <= cssHeight - 1) baseline = below;
+  ctx.lineWidth = halo * 2;
+  ctx.strokeStyle = paper;
+  ctx.strokeText(label, x, baseline);
+  ctx.fillStyle = ink;
+  ctx.fillText(label, x, baseline);
+  ctx.restore();
 }
 
 function fatigueEntryListHTML(entries) {
@@ -2330,6 +2404,7 @@ function redrawCharts() {
   renderCalorieChart("calorieChart", dailyTotals, 30, currentTargetCalories());
   const calorieDays = calorieChartRange === "all" ? null : Number(calorieChartRange);
   renderCalorieChart("calorieChartFull", dailyTotals, calorieDays, currentTargetCalories());
+  redrawFatigueChart();
 }
 
 document.addEventListener("DOMContentLoaded", init);
