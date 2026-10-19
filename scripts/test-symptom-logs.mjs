@@ -206,7 +206,7 @@ const legacy = {
     { id: "b", time: "21:10", score: 5 },
     { id: "a", time: "08:05", score: 2 },
   ]);
-  assert.match(chart, /aria-label="疲労の推移。08:05 は 2、21:10 は 5"/);
+  assert.match(chart, /aria-label="疲労の推移。08:05 は 2、21:10 は 5。平均 3\.5"/);
   assert.match(chart, /fatigue-chart-y/);
   for (const score of [1, 2, 3, 4, 5]) assert.match(chart, new RegExp(`>${score}<`));
   assert.match(chart, />0時</);
@@ -229,6 +229,7 @@ const legacy = {
 
   const one = context.fatigueChartHTML([{ id: "a", time: "16:20", score: 4 }]);
   assert.match(one, /aria-label="疲労の推移。16:20 は 4"/);
+  assert.doesNotMatch(one, /平均/);
   assert.doesNotMatch(one, /fatigue-mark/);
   assert.doesNotMatch(one, /<b>4<\/b>/);
   assert.doesNotMatch(one, /<small>16:20<\/small>/);
@@ -237,6 +238,7 @@ const legacy = {
 
   const empty = context.fatigueChartHTML([]);
   assert.match(empty, /この日の時刻の記録はまだありません/);
+  assert.doesNotMatch(empty, /平均/);
   assert.match(empty, />5</);
   assert.match(empty, />0時</);
   assert.match(empty, />24時</);
